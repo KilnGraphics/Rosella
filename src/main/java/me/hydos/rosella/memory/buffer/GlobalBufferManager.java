@@ -1,0 +1,207 @@
+package me.hydos.rosella.memory.buffer;
+
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.longs.LongHash;
+import me.hydos.rosella.Rosella;
+import me.hydos.rosella.memory.BufferInfo;
+import me.hydos.rosella.memory.ManagedBuffer;
+import me.hydos.rosella.memory.Memory;
+import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.vkobjects.VkCommon;
+import net.jpountz.xxhash.XXHash64;
+import net.jpountz.xxhash.XXHashFactory;
+import org.lwjgl.system.MemoryStack;
+
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_GPU_ONLY;
+import static org.lwjgl.vulkan.VK10.*;
+
+/**
+ * To do what all the cool kids do, we make 2 big nut buffers TM
+ */
+public class GlobalBufferManager {
+
+    /**
+     * xxHash64 is faster than xxHash32, so even if it may be overkill it makes more sense to use it anyway.
+     */
+    private static final XXHash64 BUFFER_HASH_FUNCTION = XXHashFactory.fastestInstance().hash64();
+    private static final long HASH_SEED = System.currentTimeMillis();
+    private static final LongHash.Strategy PREHASHED_STRATEGY = new LongHash.Strategy() {
+        @Override
+        public int hashCode(long e) {
+            return (int) e;
+        }
+
+        @Override
+        public boolean equals(long a, long b) {
+            return (int) a == (int) b;
+        }
+    };
+
+    private final Memory memory;
+    private final VkCommon common;
+    private final Renderer renderer;
+
+    private final Long2ObjectMap<BufferInfo> vertexHashToBufferMap = new Long2ObjectOpenCustomHashMap<>(PREHASHED_STRATEGY);
+    private final Long2ObjectMap<AtomicInteger> vertexHashToInvocationsFrameMap = new Long2ObjectOpenCustomHashMap<>(PREHASHED_STRATEGY);
+
+    private final Long2ObjectMap<BufferInfo> indexHashToBufferMap = new Long2ObjectOpenCustomHashMap<>(PREHASHED_STRATEGY);
+    private final Long2ObjectMap<AtomicInteger> indexHashToInvocationsFrameMap = new Long2ObjectOpenCustomHashMap<>(PREHASHED_STRATEGY);
+
+    public GlobalBufferManager(Rosella rosella) {
+        this.memory = rosella.common.memory;
+        this.common = rosella.common;
+        this.renderer = rosella.renderer;
+    }
+
+    public void postDraw() {
+        for (Long2ObjectMap.Entry<AtomicInteger> entry : vertexHashToInvocationsFrameMap.long2ObjectEntrySet()) {
+            if (entry.getValue().getAcquire() < 1) {
+                vertexHashToBufferMap.remove(entry.getLongKey()).free(common.device, memory);
+            }
+        }
+        vertexHashToInvocationsFrameMap.clear();
+
+        for (Long2ObjectMap.Entry<AtomicInteger> entry : indexHashToInvocationsFrameMap.long2ObjectEntrySet()) {
+            if (entry.getValue().getAcquire() < 1) {
+                indexHashToBufferMap.remove(entry.getLongKey()).free(common.device, memory);
+            }
+        }
+        indexHashToInvocationsFrameMap.clear();
+    }
+
+    /**
+     * Gets or creates an index buffer
+     *
+     * @param indexBytes The bytes representing the indices.
+     *                   This buffer must have the position set to the start of where you
+     *                   want to read and the limit set to the end of where you want to read
+     * @return An index buffer
+     */
+    public BufferInfo getOrCreateIndexBuffer(ManagedBuffer<ByteBuffer> indexBytes) {
+        ByteBuffer bytes = indexBytes.buffer();
+        int previousPosition = bytes.position();
+        long hash = BUFFER_HASH_FUNCTION.hash(bytes, HASH_SEED);
+        bytes.position(previousPosition);
+        indexHashToInvocationsFrameMap.computeIfAbsent(hash, i -> new AtomicInteger()).incrementAndGet();
+        BufferInfo buffer = indexHashToBufferMap.get(hash);
+        if (buffer == null) {
+            buffer = createIndexBuffer(indexBytes);
+            indexHashToBufferMap.put(hash, buffer);
+        } else {
+            indexBytes.free(common.device, memory);
+        }
+        return buffer;
+    }
+
+    /**
+     * Gets or creates a vertex buffer
+     *
+     * @param vertexBytes The bytes representing the vertices.
+     *                    This buffer must have the position set to the start of where you
+     *                    want to read and the limit set to the end of where you want to read
+     * @return A vertex buffer
+     */
+    public BufferInfo getOrCreateVertexBuffer(ManagedBuffer<ByteBuffer> vertexBytes) {
+        ByteBuffer bytes = vertexBytes.buffer();
+        int previousPosition = bytes.position();
+        long hash = BUFFER_HASH_FUNCTION.hash(bytes, HASH_SEED);
+        bytes.position(previousPosition);
+        vertexHashToInvocationsFrameMap.computeIfAbsent(hash, i -> new AtomicInteger()).incrementAndGet();
+        BufferInfo buffer = vertexHashToBufferMap.get(hash);
+        if (buffer == null) {
+            buffer = createVertexBuffer(vertexBytes);
+            vertexHashToBufferMap.put(hash, buffer);
+        } else {
+            vertexBytes.free(common.device, memory);
+        }
+        return buffer;
+    }
+
+    /**
+     * Creates a index buffer
+     *
+     * @param indexBytes The bytes representing the indices.
+     *                   This buffer must have the position set to the start of where you
+     *                   want to read and the limit set to the end of where you want to read
+     * @return An index buffer
+     */
+    public BufferInfo createIndexBuffer(ManagedBuffer<ByteBuffer> indexBytes) {
+        ByteBuffer src = indexBytes.buffer();
+        int size = src.limit() - src.position();
+
+        try (MemoryStack stack = stackPush()) {
+            LongBuffer pBuffer = stack.mallocLong(1);
+
+            BufferInfo stagingBuffer = memory.createStagingBuf(size, pBuffer, data -> {
+                ByteBuffer dst = data.getByteBuffer(0, size);
+                // TODO OPT: do optional batching again
+                dst.put(0, src, src.position(), size);
+            });
+            indexBytes.free(common.device, memory);
+
+            BufferInfo indexBuffer = memory.createBuffer(
+                    size,
+                    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                    VMA_MEMORY_USAGE_GPU_ONLY,
+                    pBuffer
+            );
+
+            long pIndexBuffer = pBuffer.get(0);
+            memory.copyBuffer(stagingBuffer.buffer(),
+                    pIndexBuffer,
+                    size,
+                    renderer,
+                    common.device);
+            stagingBuffer.free(common.device, memory);
+
+            return indexBuffer;
+        }
+    }
+
+    /**
+     * Creates a vertex buffer.
+     *
+     * @param vertexBytes The bytes representing the vertices.
+     *                    This buffer must have the position set to the start of where you
+     *                    want to read and the limit set to the end of where you want to read
+     * @return A vertex buffer
+     */
+    public BufferInfo createVertexBuffer(ManagedBuffer<ByteBuffer> vertexBytes) {
+        ByteBuffer src = vertexBytes.buffer();
+        int size = src.limit() - src.position();
+
+        try (MemoryStack stack = stackPush()) {
+            LongBuffer pBuffer = stack.mallocLong(1);
+
+            BufferInfo stagingBuffer = memory.createStagingBuf(size, pBuffer, data -> {
+                ByteBuffer dst = data.getByteBuffer(0, size);
+                // TODO OPT: do optional batching again
+                dst.put(0, src, src.position(), size);
+            });
+            vertexBytes.free(common.device, memory);
+
+            BufferInfo vertexBuffer = memory.createBuffer(
+                    size,
+                    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                    VMA_MEMORY_USAGE_GPU_ONLY,
+                    pBuffer
+            );
+
+            long pVertexBuffer = pBuffer.get(0);
+            memory.copyBuffer(stagingBuffer.buffer(),
+                    pVertexBuffer,
+                    size,
+                    renderer,
+                    common.device);
+            stagingBuffer.free(common.device, memory);
+
+            return vertexBuffer;
+        }
+    }
+}
