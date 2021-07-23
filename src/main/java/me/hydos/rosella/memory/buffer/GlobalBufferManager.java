@@ -7,7 +7,7 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.ManagedBuffer;
 import me.hydos.rosella.memory.Memory;
-import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.render.Renderer;
 import me.hydos.rosella.vkobjects.VkCommon;
 import net.jpountz.xxhash.XXHash64;
 import net.jpountz.xxhash.XXHashFactory;

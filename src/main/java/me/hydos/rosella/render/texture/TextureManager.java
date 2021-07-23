@@ -3,7 +3,7 @@ package me.hydos.rosella.render.texture;
 import it.unimi.dsi.fastutil.ints.IntArrayPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueues;
-import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.render.Renderer;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.vulkan.VK10;

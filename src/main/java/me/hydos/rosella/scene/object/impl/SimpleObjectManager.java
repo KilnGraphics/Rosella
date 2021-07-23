@@ -1,7 +1,6 @@
 package me.hydos.rosella.scene.object.impl;
 
 import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import me.hydos.rosella.Rosella;
@@ -9,7 +8,7 @@ import me.hydos.rosella.render.info.InstanceInfo;
 import me.hydos.rosella.render.info.RenderInfo;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.material.PipelineManager;
-import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.render.Renderer;
 import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderManager;
 import me.hydos.rosella.render.shader.ShaderProgram;
@@ -21,7 +20,6 @@ import me.hydos.rosella.vkobjects.VkCommon;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
