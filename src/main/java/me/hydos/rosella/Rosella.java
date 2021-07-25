@@ -7,7 +7,7 @@ import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
 import me.hydos.rosella.memory.buffer.GlobalBufferManager;
-import me.hydos.rosella.render.Renderer;
+import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.SemaphorePool;
@@ -39,7 +39,7 @@ public class Rosella {
 
     public static final Logger LOGGER = LogManager.getLogger("Rosella", new StringFormatterMessageFactory());
     public static final int VULKAN_VERSION = VK_API_VERSION_1_2;
-    public static final int POLYGON_MODE = VK_POLYGON_MODE_FILL;
+    public static final int POLYGON_MODE = VK_POLYGON_MODE_FILL; // TODO: wtf
     public final GlobalBufferManager bufferManager;
     public final VkCommon common = new VkCommon();
     public final Renderer renderer;

@@ -1,7 +1,6 @@
 package me.hydos.rosella.display;
 
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.nativeTesting.NativeTests;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -36,7 +35,7 @@ public class GlfwWindow extends Display {
     public GlfwWindow(int width, int height, String title, boolean canResize) {
         super(width, height);
 
-        if (!NativeTests.glfwInit()) {
+        if (!glfwInit()) {
             throw new RuntimeException("Failed to Initialize GLFW");
         }
 

@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import me.hydos.rosella.device.VulkanDevice
 import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.render.descriptorsets.DescriptorSets
-import me.hydos.rosella.render.Renderer
+import me.hydos.rosella.render.renderer.Renderer
 import me.hydos.rosella.render.resource.Resource
 import me.hydos.rosella.render.shader.ubo.Ubo
 import me.hydos.rosella.render.swapchain.Swapchain
@@ -182,7 +182,7 @@ open class RawShaderProgram(
                                 val imageInfo = VkDescriptorImageInfo.callocStack(1, stack)
                                     .imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                     .imageView(texture.textureImage.view)
-                                    .sampler(texture.textureSampler!!)
+                                    .sampler(texture.textureSampler)
 
                                 descriptorWrite.pImageInfo(imageInfo)
                             }

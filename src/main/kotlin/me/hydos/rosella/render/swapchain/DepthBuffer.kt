@@ -3,7 +3,7 @@ package me.hydos.rosella.render.swapchain
 import me.hydos.rosella.device.VulkanDevice
 import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.memory.MemoryCloseable
-import me.hydos.rosella.render.Renderer
+import me.hydos.rosella.render.renderer.Renderer
 import me.hydos.rosella.render.texture.TextureImage
 import me.hydos.rosella.util.VkUtils
 import org.lwjgl.system.MemoryStack

@@ -1,4 +1,4 @@
-package me.hydos.rosella.render;
+package me.hydos.rosella.render.renderer;
 
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -18,7 +18,7 @@ import me.hydos.rosella.render.swapchain.Frame;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
-import me.hydos.rosella.util.Colour;
+import me.hydos.rosella.util.Color;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
@@ -60,7 +60,7 @@ public class Renderer {
     private boolean requireHardRebuild;
 
     // The clear color
-    private Colour clearColour = new Colour(50, 50, 50, 0); // TODO: move this somewhere else, maybe in StateInfo?
+    private Color clearColor = new Color(50, 50, 50, 0); // TODO: move this somewhere else, maybe in StateInfo?
     private float clearDepth = 1.0f;
     private int clearStencil = 0;
 
@@ -356,7 +356,7 @@ public class Renderer {
                 VkCommandBufferBeginInfo beginInfo = VkUtils.createBeginInfo();
                 VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass);
                 VkRect2D renderArea = VkUtils.createRenderArea(0, 0, swapchain); // TODO: when scissoring, make sure this is correct
-                VkClearValue.Buffer clearValues = VkUtils.createClearValues(clearColour.rAsFloat(), clearColour.gAsFloat(), clearColour.bAsFloat(), clearDepth, clearStencil);
+                VkClearValue.Buffer clearValues = VkUtils.createClearValues(clearColor.rAsFloat(), clearColor.gAsFloat(), clearColor.bAsFloat(), clearDepth, clearStencil);
 
                 renderPassInfo.renderArea(renderArea)
                         .pClearValues(clearValues);
@@ -680,9 +680,9 @@ public class Renderer {
                 buffer);
     }
 
-    public void clearColor(Colour colour) {
-        if (clearColour != colour) {
-            lazilyClearColor(colour);
+    public void clearColor(Color color) {
+        if (clearColor != color) {
+            lazilyClearColor(color);
             rebuildCommandBuffers(renderPass, ((SimpleObjectManager) rosella.objectManager));
         }
     }
@@ -690,10 +690,10 @@ public class Renderer {
     /**
      * Same as clearColor but you have to rebuild the command buffers
      *
-     * @param colour the colour you want the clear colour to change to
+     * @param color the colour you want the clear colour to change to
      */
-    public void lazilyClearColor(Colour colour) {
-        clearColour = colour;
+    public void lazilyClearColor(Color color) {
+        clearColor = color;
     }
 
     public void lazilyClearDepth(float depth) {

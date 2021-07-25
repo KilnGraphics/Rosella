@@ -1,7 +1,7 @@
 package me.hydos.rosella.render.swapchain;
 
 import me.hydos.rosella.device.VulkanDevice;
-import me.hydos.rosella.render.Renderer;
+import me.hydos.rosella.render.renderer.Renderer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
