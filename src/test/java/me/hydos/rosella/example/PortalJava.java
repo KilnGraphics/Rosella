@@ -22,7 +22,7 @@ import org.lwjgl.vulkan.VK10;
 public class PortalJava {
 
     public static final GlfwWindow window = new GlfwWindow(1280, 720, "Portal 3: Java Edition", true);
-    public static final Rosella rosella = new Rosella(window, "portal 3", true);
+    public static final Rosella rosella = new Rosella(window, "Portal 3", true);
 
     public static final Matrix4f viewMatrix = new Matrix4f().lookAt(2.0f, -40.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
     public static final Matrix4f projectionMatrix = new Matrix4f().perspective(
@@ -61,6 +61,7 @@ public class PortalJava {
         loadMaterials();
         setupMainMenuScene();
         rosella.renderer.rebuildCommandBuffers(rosella.renderer.renderPass, (SimpleObjectManager) rosella.objectManager);
+//        rosella.renderer.queueRecreateSwapchain(); FIXME: # C  [libVkLayer_khronos_validation.so+0xe16204]  CoreChecks::ValidateMemoryIsBoundToBuffer(BUFFER_STATE const*, char const*, char const*) const+0x14
         window.startAutomaticLoop(rosella);
     }
 
