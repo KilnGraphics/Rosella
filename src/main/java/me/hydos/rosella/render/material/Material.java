@@ -25,7 +25,7 @@ public class Material {
     protected final ShaderProgram shader;
     protected final int imgFormat;
     protected final Topology topology;
-    protected final VertexFormat vertexFormat;
+    public final VertexFormat vertexFormat;
     protected final SamplerCreateInfo samplerCreateInfo;
     protected final StateInfo stateInfo;
 
