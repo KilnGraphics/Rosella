@@ -1,5 +1,7 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.logging.DebugLogger;
+
 import java.util.*;
 
 /**
@@ -8,6 +10,7 @@ import java.util.*;
 public class InitializationRegistry {
 
     private boolean enableValidation = false;
+    private DebugLogger validationDebugLogger = null;
     private VulkanVersion minRequiredVersion = VulkanVersion.VULKAN_1_0;
     private VulkanVersion maxSupportedVersion = VulkanVersion.VULKAN_1_2;
 
@@ -19,12 +22,17 @@ public class InitializationRegistry {
     private final Map<String, MarkedFeature> features = new HashMap<>();
     private final Set<String> requiredFeatures = new HashSet<>();
 
-    public void setEnableValidation(boolean enable) {
-        this.enableValidation = enable;
+    public void enableValidation(DebugLogger logger) {
+        this.enableValidation = true;
+        this.validationDebugLogger = logger;
     }
 
     public boolean getEnableValidation() {
         return this.enableValidation;
+    }
+
+    public DebugLogger getValidationDebugLogger() {
+        return this.validationDebugLogger;
     }
 
     public void addRequiredInstanceLayer(String layer) {

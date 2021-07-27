@@ -1,5 +1,6 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.logging.DebugLogger;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VKCapabilitiesInstance;
 import org.lwjgl.vulkan.VkInstance;

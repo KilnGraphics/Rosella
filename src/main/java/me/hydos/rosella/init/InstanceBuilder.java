@@ -1,5 +1,6 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.util.VkUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -9,7 +10,39 @@ import java.nio.IntBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.lwjgl.vulkan.EXTDebugUtils.*;
+
 public class InstanceBuilder {
+
+    // see debugCallback description. This is a mess and needs fixing
+    private static DebugLogger validationLogger = null;
+
+    /**
+     * Temporary debug callback. TODO: We should allow adding of custom callbacks to the InitializationRegistry
+     */
+    private static int debugCallback(int severity, int messageType, long pCallbackData, long pUserData) {
+        VkDebugUtilsMessengerCallbackDataEXT callbackData = VkDebugUtilsMessengerCallbackDataEXT.create(pCallbackData);
+        String message = callbackData.pMessageString();
+
+        String msgSeverity = switch (severity) {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT -> "VERBOSE";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT -> "INFO";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT -> "WARNING";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT -> "ERROR";
+            default -> throw new IllegalStateException("Unexpected severity: " + severity);
+        };
+
+        if(validationLogger == null) {
+            return VK10.VK_FALSE;
+        }
+
+        return switch (messageType) {
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT -> validationLogger.logGeneral(message, msgSeverity);
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT -> validationLogger.logValidation(message, msgSeverity);
+            case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT -> validationLogger.logPerformance(message, msgSeverity);
+            default -> validationLogger.logUnknown(message, msgSeverity);
+        };
+    }
 
     private final InitializationRegistry registry;
 
@@ -24,6 +57,10 @@ public class InstanceBuilder {
                 throw new RuntimeException("Minimum vulkan version " + this.registry.getMinimumVulkanVersion().toString() + " is not supported!");
             }
 
+            if(this.registry.getEnableValidation()) {
+                validationLogger = this.registry.getValidationDebugLogger();
+            }
+
             VkApplicationInfo appInfo = VkApplicationInfo.callocStack(stack);
             appInfo.sType(VK10.VK_STRUCTURE_TYPE_APPLICATION_INFO);
             appInfo.pApplicationName(stack.UTF8(applicationName));
@@ -34,6 +71,7 @@ public class InstanceBuilder {
 
             VkInstanceCreateInfo createInfo = VkInstanceCreateInfo.callocStack(stack);
             createInfo.sType(VK10.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
+            createInfo.pNext(createDebugUtilsCallback(VK10.VK_NULL_HANDLE, stack));
             createInfo.pApplicationInfo(appInfo);
             createInfo.ppEnabledLayerNames(getLayerBuffer(stack));
             createInfo.ppEnabledExtensionNames(getExtensionBuffer(stack));
@@ -74,6 +112,14 @@ public class InstanceBuilder {
         }
 
         Set<String> enabledLayers = new HashSet<>();
+        if(this.registry.getEnableValidation()) {
+            if(!supportedLayers.contains("VK_LAYER_KHRONOS_validation")) {
+                throw new RuntimeException("Debug was enabled but validation layers could not be found");
+            }
+
+            enabledLayers.add("VK_LAYER_KHRONOS_validation");
+        }
+
         enabledLayers.addAll(this.registry.getRequiredInstanceLayers());
         enabledLayers.addAll(this.registry.getOptionalInstanceLayers().stream().filter(supportedLayers::contains).toList());
 
@@ -101,6 +147,14 @@ public class InstanceBuilder {
         }
 
         Set<String> enabledExtensions = new HashSet<>();
+        if(this.registry.getEnableValidation()) {
+            if(!supportedExtensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+                throw new RuntimeException("Debug was enabled but EXTDebugUtils extension is not supported");
+            }
+
+            enabledExtensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
         enabledExtensions.addAll(this.registry.getRequiredInstanceExtensions());
         enabledExtensions.addAll(this.registry.getOptionalInstanceExtensions().stream().filter(supportedExtensions::contains).toList());
 
@@ -110,5 +164,27 @@ public class InstanceBuilder {
         }
 
         return extensionNames.rewind();
+    }
+
+    private long createDebugUtilsCallback(long pNext, MemoryStack stack) {
+        if(!this.registry.getEnableValidation()) {
+            return pNext;
+        }
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = VkDebugUtilsMessengerCreateInfoEXT.callocStack(stack);
+        debugCreateInfo.sType(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT);
+        debugCreateInfo.pNext(pNext);
+        debugCreateInfo.messageSeverity(
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT);
+        debugCreateInfo.messageType(
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT);
+        debugCreateInfo.pfnUserCallback(InstanceBuilder::debugCallback);
+
+        return debugCreateInfo.address();
     }
 }
