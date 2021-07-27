@@ -1,6 +1,6 @@
 package me.hydos.rosella;
 
-import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.logging.DebugLogger;
@@ -59,7 +59,7 @@ public class Rosella {
         common.display = display;
         common.vkInstance = new VulkanInstance(requestedValidationLayers, requiredExtensions, applicationName, debugLogger);
         common.surface = display.createSurface(common);
-        common.device = new VulkanDevice(common, requestedValidationLayers);
+        common.device = new LegacyVulkanDevice(common, requestedValidationLayers);
         common.queues = new VulkanQueues(common);
         common.memory = new ThreadPoolMemory(common);
         common.semaphorePool = new SemaphorePool(common.device.rawDevice);
