@@ -12,7 +12,7 @@ import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.SemaphorePool;
 import me.hydos.rosella.vkobjects.VkCommon;
-import me.hydos.rosella.vkobjects.VulkanInstance;
+import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,7 +57,7 @@ public class Rosella {
 
         // Setup core vulkan stuff
         common.display = display;
-        common.vkInstance = new VulkanInstance(requestedValidationLayers, requiredExtensions, applicationName, debugLogger);
+        common.vkInstance = new LegacyVulkanInstance(requestedValidationLayers, requiredExtensions, applicationName, debugLogger);
         common.surface = display.createSurface(common);
         common.device = new LegacyVulkanDevice(common, requestedValidationLayers);
         common.queues = new VulkanQueues(common);

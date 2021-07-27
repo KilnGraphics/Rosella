@@ -4,7 +4,7 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
 import me.hydos.rosella.util.VkUtils;
-import me.hydos.rosella.vkobjects.VulkanInstance;
+import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -23,9 +23,9 @@ public class DeviceBuilder {
 
     private final List<ApplicationFeature> applicationFeatures;
     private final Set<String> requiredFeatures;
-    private final VulkanInstance instance;
+    private final LegacyVulkanInstance instance;
 
-    public DeviceBuilder(@NotNull VulkanInstance instance, @NotNull InitializationRegistry registry) {
+    public DeviceBuilder(@NotNull LegacyVulkanInstance instance, @NotNull InitializationRegistry registry) {
         this.instance = instance;
         this.applicationFeatures = registry.getOrderedFeatures();
         this.requiredFeatures = registry.getRequiredApplicationFeatures();

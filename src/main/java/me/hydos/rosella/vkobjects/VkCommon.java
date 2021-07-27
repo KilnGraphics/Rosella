@@ -29,7 +29,7 @@ public class VkCommon {
     /**
      * The instance of vulkan and the debug logger.
      */
-    public VulkanInstance vkInstance;
+    public LegacyVulkanInstance vkInstance;
 
     /**
      * The surface of what we are displaying to. In general it will be a GLFW window surface.

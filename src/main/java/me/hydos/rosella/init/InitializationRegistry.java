@@ -3,11 +3,13 @@ package me.hydos.rosella.init;
 import java.util.*;
 
 /**
- * A class used to collect any callbacks that are used for device and instance initialization.
+ * A class used to collect any callbacks and settings that are used for device and instance initialization.
  */
 public class InitializationRegistry {
 
     private boolean enableValidation = false;
+    private VulkanVersion minRequiredVersion = VulkanVersion.VULKAN_1_0;
+    private VulkanVersion maxSupportedVersion = VulkanVersion.VULKAN_1_2;
 
     private final Set<String> requiredInstanceExtensions = new HashSet<>();
     private final Set<String> optionalInstanceExtensions = new HashSet<>();
@@ -39,6 +41,42 @@ public class InitializationRegistry {
 
     public void addOptionalInstanceExtension(String extension) {
         this.optionalInstanceExtensions.add(extension);
+    }
+
+    public Set<String> getRequiredInstanceLayers() {
+        return Collections.unmodifiableSet(this.requiredInstanceLayers);
+    }
+
+    public Set<String> getOptionalInstanceLayers() {
+        return Collections.unmodifiableSet(this.optionalInstanceLayers);
+    }
+
+    public Set<String> getRequiredInstanceExtensions() {
+        return Collections.unmodifiableSet(this.requiredInstanceExtensions);
+    }
+
+    public Set<String> getOptionalInstanceExtensions() {
+        return Collections.unmodifiableSet(this.optionalInstanceExtensions);
+    }
+
+    public void setMinimumVulkanVersion(VulkanVersion version) {
+        if(version.getVersionNumber() > this.minRequiredVersion.getVersionNumber()) {
+            this.minRequiredVersion = version;
+        }
+    }
+
+    public void setMaximumVulkanVersion(VulkanVersion version) {
+        if(version.getVersionNumber() < this.maxSupportedVersion.getVersionNumber()) {
+            this.maxSupportedVersion = version;
+        }
+    }
+
+    public VulkanVersion getMinimumVulkanVersion() {
+        return this.minRequiredVersion;
+    }
+
+    public VulkanVersion getMaxSupportedVersion() {
+        return this.maxSupportedVersion;
     }
 
     /**

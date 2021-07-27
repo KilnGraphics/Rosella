@@ -19,13 +19,13 @@ import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
 /**
  * {@link me.hydos.rosella.Rosella} representation of a {@link VkInstance}. Contains a couple of useful things here and there and does most of the work for you.
  */
-public class VulkanInstance {
+public class LegacyVulkanInstance {
 
     public final DebugLogger debugLogger;
     public final VkInstance rawInstance;
     public final OptionalLong messenger;
 
-    public VulkanInstance(List<String> requestedValidationLayers, List<String> requestedExtensions, String applicationName, DebugLogger debugLogger) {
+    public LegacyVulkanInstance(List<String> requestedValidationLayers, List<String> requestedExtensions, String applicationName, DebugLogger debugLogger) {
         this.debugLogger = debugLogger;
 
         boolean validationLayers = !requestedValidationLayers.isEmpty();
