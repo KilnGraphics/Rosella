@@ -23,6 +23,7 @@ import static org.lwjgl.vulkan.VK10.*;
 /**
  * The object which represents both a Physical and Logical device used by {@link me.hydos.rosella.Rosella}
  */
+@Deprecated
 public class LegacyVulkanDevice {
 
     private static final Set<String> REQUIRED_EXTENSIONS = Collections.singleton(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -39,7 +40,6 @@ public class LegacyVulkanDevice {
      * @param validationLayers the validation layers to use
      * @deprecated Use the other method to allow for more than just anisotropy
      */
-    @Deprecated
     public LegacyVulkanDevice(VkCommon common, List<String> validationLayers) {
         this(common, validationLayers, deviceFeatures -> deviceFeatures
                 .samplerAnisotropy(true)

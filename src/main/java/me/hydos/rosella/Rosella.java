@@ -3,6 +3,7 @@ package me.hydos.rosella;
 import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
+import me.hydos.rosella.init.InitializationRegistry;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormatterMessageFactory;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkLayerProperties;
 
 import java.nio.IntBuffer;
@@ -51,13 +53,14 @@ public class Rosella {
 
     public Rosella(Display display, List<String> requestedValidationLayers, String applicationName, DebugLogger debugLogger) {
         List<String> requiredExtensions = display.getRequiredExtensions();
-        if (!validationLayersSupported(requestedValidationLayers)) {
-            throw new RuntimeException("The application requested validation layers but they are not supported");
-        }
+
+        InitializationRegistry initializationRegistry = new InitializationRegistry();
+        requestedValidationLayers.forEach(initializationRegistry::addRequiredInstanceLayer);
+        requiredExtensions.forEach(initializationRegistry::addRequiredInstanceExtensions);
 
         // Setup core vulkan stuff
         common.display = display;
-        common.vkInstance = new LegacyVulkanInstance(requestedValidationLayers, requiredExtensions, applicationName, debugLogger);
+        common.vkInstance = new LegacyVulkanInstance(initializationRegistry, applicationName, VK10.VK_MAKE_VERSION(1, 0, 0), debugLogger);
         common.surface = display.createSurface(common);
         common.device = new LegacyVulkanDevice(common, requestedValidationLayers);
         common.queues = new VulkanQueues(common);
@@ -95,7 +98,7 @@ public class Rosella {
             vkDestroyDebugUtilsMessengerEXT(common.vkInstance.rawInstance, messenger, null);
         });
 
-        vkDestroyInstance(common.vkInstance.rawInstance, null);
+        common.vkInstance.newInstance.destroy();
 
         common.display.exit();
     }
