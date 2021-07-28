@@ -29,7 +29,7 @@ public class PortalJava {
     public static final int TOP = 720;
 
     static {
-        System.loadLibrary("renderdoc");
+        //System.loadLibrary("renderdoc");
         window = new GlfwWindow(WIDTH, TOP, "Portal 3: Java Edition", true);
         rosella = new Rosella(new InitializationRegistry(), window, "Portal 3", VK10.VK_MAKE_VERSION(1, 0, 0));
     }
