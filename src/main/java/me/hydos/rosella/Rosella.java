@@ -74,7 +74,7 @@ public class Rosella {
         this.vulkanDevice = new DeviceBuilder(this.vulkanInstance, registry).build();
         common.device = new LegacyVulkanDevice(this.vulkanDevice);
 
-        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetaObject(this.vulkanDevice.getFeatureMeta(RosellaLegacy.NAME));
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(this.vulkanDevice);
         try {
             common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
         } catch (Exception ex) {
@@ -116,7 +116,7 @@ public class Rosella {
 
         common.device = new LegacyVulkanDevice(common.vkInstance.newInstance, initializationRegistry);
 
-        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetaObject(common.device.newDevice.getFeatureMeta(RosellaLegacy.NAME));
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(common.device.newDevice);
         try {
             common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
         } catch (Exception ex) {

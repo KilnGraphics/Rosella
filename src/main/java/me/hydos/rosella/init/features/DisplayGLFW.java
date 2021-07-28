@@ -24,13 +24,6 @@ public class DisplayGLFW extends ApplicationFeature {
         return new DisplayGLFWInstance();
     }
 
-    public static Meta getMetaObject(Object o) {
-        if(!(o instanceof Meta)) {
-            throw new RuntimeException("Meta object could not be cast to QueueRequest");
-        }
-        return (Meta) o;
-    }
-
     public class DisplayGLFWInstance extends ApplicationFeature.Instance {
 
         @Override

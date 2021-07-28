@@ -1,6 +1,7 @@
 package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.device.QueueFamilyIndices;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
 import me.hydos.rosella.init.DeviceBuildConfigurator;
 import me.hydos.rosella.init.DeviceBuildInformation;
@@ -11,6 +12,7 @@ import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.KHRSwapchain;
 
+import javax.print.attribute.standard.MediaSize;
 import java.util.concurrent.Future;
 
 /**
@@ -72,7 +74,13 @@ public class RosellaLegacy extends ApplicationFeature {
         }
     }
 
-    public static RosellaLegacyFeatures getMetaObject(Object o) {
+    public static RosellaLegacyFeatures getMetadata(VulkanDevice device) {
+        Object o = device.getFeatureMeta(NAME);
+
+        if(o == null) {
+            return null;
+        }
+
         if(!(o instanceof RosellaLegacyFeatures)) {
             throw new RuntimeException("Meta object could not be cast to RosellaLegacyFeatures");
         }
