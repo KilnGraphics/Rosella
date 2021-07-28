@@ -1,5 +1,7 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.init.features.SimpleApplicationFeature;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,7 +13,7 @@ public class TestInitializationRegistry {
     void testApplicationFeatureSortingIndividual() {
         List<String> names = List.of("testing:test1", "testing:test2", "testing:test3", "testing:test4");
         List<ApplicationFeature> features = new ArrayList<>();
-        names.forEach(name -> features.add(new ApplicationFeature(name)));
+        names.forEach(name -> features.add(new SimpleApplicationFeature(name, null)));
 
         InitializationRegistry registry = new InitializationRegistry();
         features.forEach(registry::registerApplicationFeature);
@@ -23,10 +25,10 @@ public class TestInitializationRegistry {
     @Test
     void testApplicationFeatureSortingSingeGroup() {
         List<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("testing:test1", List.of("testing:test2")));
-        features.add(new ApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
-        features.add(new ApplicationFeature("testing:test3"));
-        features.add(new ApplicationFeature("testing:test4"));
+        features.add(new SimpleApplicationFeature("testing:test1", List.of("testing:test2")));
+        features.add(new SimpleApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
+        features.add(new SimpleApplicationFeature("testing:test3", null));
+        features.add(new SimpleApplicationFeature("testing:test4", null));
 
         Random rand = new Random(479821392);
         Collections.shuffle(features, rand);
@@ -46,21 +48,21 @@ public class TestInitializationRegistry {
     @Test
     void testApplicationFeatureSortingMultiGroup() {
         List<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("testing:test1", List.of("testing:test2")));
-        features.add(new ApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
-        features.add(new ApplicationFeature("testing:test3"));
-        features.add(new ApplicationFeature("testing:test4"));
+        features.add(new SimpleApplicationFeature("testing:test1", List.of("testing:test2")));
+        features.add(new SimpleApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
+        features.add(new SimpleApplicationFeature("testing:test3", null));
+        features.add(new SimpleApplicationFeature("testing:test4", null));
 
-        features.add(new ApplicationFeature("testing:test6", List.of("testing:test7")));
-        features.add(new ApplicationFeature("testing:test5"));
-        features.add(new ApplicationFeature("testing:test7", List.of("testing:test5")));
+        features.add(new SimpleApplicationFeature("testing:test6", List.of("testing:test7")));
+        features.add(new SimpleApplicationFeature("testing:test5", null));
+        features.add(new SimpleApplicationFeature("testing:test7", List.of("testing:test5")));
 
-        features.add(new ApplicationFeature("testing:test9"));
+        features.add(new SimpleApplicationFeature("testing:test9", null));
 
-        features.add(new ApplicationFeature("testing:test10"));
-        features.add(new ApplicationFeature("testing:test11", List.of("testing:test10")));
-        features.add(new ApplicationFeature("testing:test12", List.of("testing:test10")));
-        features.add(new ApplicationFeature("testing:test13", List.of("testing:test11", "testing:test12")));
+        features.add(new SimpleApplicationFeature("testing:test10", null));
+        features.add(new SimpleApplicationFeature("testing:test11", List.of("testing:test10")));
+        features.add(new SimpleApplicationFeature("testing:test12", List.of("testing:test10")));
+        features.add(new SimpleApplicationFeature("testing:test13", List.of("testing:test11", "testing:test12")));
 
         Random rand = new Random(58234902);
         Collections.shuffle(features, rand);
@@ -80,10 +82,10 @@ public class TestInitializationRegistry {
     @Test
     void testApplicationFeatureSortingCycle() {
         List<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("testing:test1", List.of("testing:test2")));
-        features.add(new ApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
-        features.add(new ApplicationFeature("testing:test3"));
-        features.add(new ApplicationFeature("testing:test4", List.of("testing:test1")));
+        features.add(new SimpleApplicationFeature("testing:test1", List.of("testing:test2")));
+        features.add(new SimpleApplicationFeature("testing:test2", List.of("testing:test3", "testing:test4")));
+        features.add(new SimpleApplicationFeature("testing:test3", null));
+        features.add(new SimpleApplicationFeature("testing:test4", List.of("testing:test1")));
 
         Random rand = new Random(479821392);
         Collections.shuffle(features, rand);

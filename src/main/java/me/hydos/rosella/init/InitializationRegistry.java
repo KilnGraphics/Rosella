@@ -1,7 +1,7 @@
 package me.hydos.rosella.init;
 
 import me.hydos.rosella.debug.VulkanDebugCallback;
-import me.hydos.rosella.logging.DebugLogger;
+import me.hydos.rosella.init.features.ApplicationFeature;
 
 import java.util.*;
 

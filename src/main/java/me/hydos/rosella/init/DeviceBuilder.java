@@ -3,8 +3,8 @@ package me.hydos.rosella.init;
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
+import me.hydos.rosella.init.features.ApplicationFeature;
 import me.hydos.rosella.util.VkUtils;
-import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -13,6 +13,8 @@ import org.lwjgl.vulkan.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 /**
  * Used to build devices.
@@ -90,6 +92,7 @@ public class DeviceBuilder {
         public final VkPhysicalDevice physicalDevice;
         public final VkPhysicalDeviceProperties properties;
         public final VkPhysicalDeviceMemoryProperties memoryProperties;
+        public final VkPhysicalDeviceFeatures availableFeatures;
         public final Map<String, VkExtensionProperties> extensionProperties;
         public final List<VkQueueFamilyProperties> queueFamilyProperties;
 
@@ -112,6 +115,9 @@ public class DeviceBuilder {
 
             this.memoryProperties = VkPhysicalDeviceMemoryProperties.mallocStack(stack);
             VK10.vkGetPhysicalDeviceMemoryProperties(physicalDevice, memoryProperties);
+
+            this.availableFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
+            VK10.vkGetPhysicalDeviceFeatures(physicalDevice, availableFeatures);
 
             VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, null);
             VkQueueFamilyProperties.Buffer queueFamilyPropertiesBuffer = VkQueueFamilyProperties.mallocStack(count.get(0), stack);
@@ -212,8 +218,8 @@ public class DeviceBuilder {
             int[] nextQueueIndices = new int[this.queueFamilyProperties.size()];
 
             for(QueueRequest request : this.queueRequests) {
-                int index = nextQueueIndices[request.family]++;
-                request.index = index % this.queueFamilyProperties.get(request.family).queueCount();
+                int index = nextQueueIndices[request.requestedFamily]++;
+                request.assignedIndex = index % this.queueFamilyProperties.get(request.requestedFamily).queueCount();
             }
 
             int familyCount = 0;
@@ -255,13 +261,13 @@ public class DeviceBuilder {
             PointerBuffer pQueue = this.stack.mallocPointer(1);
 
             for(QueueRequest request : this.queueRequests) {
-                int f = request.family, i = request.index;
+                int f = request.requestedFamily, i = request.assignedIndex;
                 if(requests[f][i] == null) {
                     VK10.vkGetDeviceQueue(device, f, i, pQueue);
                     requests[f][i] = new VulkanQueue(new VkQueue(pQueue.get(0), device), f);
                 }
 
-                request.queue = requests[f][i];
+                request.future.complete(requests[f][i]);
             }
         }
 
@@ -317,12 +323,12 @@ public class DeviceBuilder {
          * @param family The family that is requested.
          * @return A QueueRequest instance that can be used to later retrieve the requested queue.
          */
-        public QueueRequest addQueueRequest(int family) {
+        public Future<VulkanQueue> addQueueRequest(int family) {
             assert(this.isBuilding);
 
             QueueRequest request = new QueueRequest(family);
             this.queueRequests.add(request);
-            return request;
+            return request.future;
         }
 
         /**
@@ -338,17 +344,23 @@ public class DeviceBuilder {
             this.enabledExtensions.add(extension);
         }
 
-        public static class QueueRequest {
-            private final int family;
-            private int index;
-            private VulkanQueue queue = null;
+        /**
+         * Returns an instance that can be used to configure device features.
+         */
+        public VkPhysicalDeviceFeatures configureDeviceFeatures() {
+            assert(this.isBuilding);
+
+            return this.enabledFeatures;
+        }
+
+        private static class QueueRequest {
+            private final int requestedFamily;
+            private int assignedIndex;
+            private CompletableFuture<VulkanQueue> future;
 
             private QueueRequest(int family) {
-                this.family = family;
-            }
-
-            public VulkanQueue resolve() {
-                return this.queue;
+                this.requestedFamily = family;
+                this.future = new CompletableFuture<>();
             }
         }
     }

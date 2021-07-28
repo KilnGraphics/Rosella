@@ -2,6 +2,8 @@ package me.hydos.rosella.init;
 
 import me.hydos.rosella.annotations.RequiresVulkan;
 import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.init.features.SimpleApplicationFeature;
 import me.hydos.rosella.test_utils.VulkanTestInstance;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +34,11 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testBasicFeatures() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("t:test1"));
-        features.add(new ApplicationFeature("t:test2"));
+        features.add(new SimpleApplicationFeature("t:test1", null));
+        features.add(new SimpleApplicationFeature("t:test2", null));
 
         ArrayList<ApplicationFeature> failFeatures = new ArrayList<>();
-        failFeatures.add(new ApplicationFeature("t:test3", Set.of("t:fail")));
+        failFeatures.add(new SimpleApplicationFeature("t:test3", Set.of("t:fail")));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
@@ -63,8 +65,8 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testRequiredFeatures() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("t:test1"));
-        features.add(new ApplicationFeature("t:test2"));
+        features.add(new SimpleApplicationFeature("t:test1", null));
+        features.add(new SimpleApplicationFeature("t:test2", null));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
@@ -87,8 +89,8 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testRequiredFeaturesFail() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("t:test1"));
-        features.add(new ApplicationFeature("t:test2", Set.of("t:fail")));
+        features.add(new SimpleApplicationFeature("t:test1", null));
+        features.add(new SimpleApplicationFeature("t:test2", Set.of("t:fail")));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
@@ -106,19 +108,19 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testDependencyOrdering() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new ApplicationFeature("t:test9"));
-        features.add(new ApplicationFeature("t:test2", Set.of("t:test9")));
-        features.add(new ApplicationFeature("t:test3", Set.of("t:test2")));
-        features.add(new ApplicationFeature("t:test4", Set.of("t:test9", "t:test2")));
-        features.add(new ApplicationFeature("t:test5", Set.of("t:test2")));
-        features.add(new ApplicationFeature("t:test6", Set.of("t:test4")));
-        features.add(new ApplicationFeature("t:test7", Set.of("t:test4")));
+        features.add(new SimpleApplicationFeature("t:test9", null));
+        features.add(new SimpleApplicationFeature("t:test2", Set.of("t:test9")));
+        features.add(new SimpleApplicationFeature("t:test3", Set.of("t:test2")));
+        features.add(new SimpleApplicationFeature("t:test4", Set.of("t:test9", "t:test2")));
+        features.add(new SimpleApplicationFeature("t:test5", Set.of("t:test2")));
+        features.add(new SimpleApplicationFeature("t:test6", Set.of("t:test4")));
+        features.add(new SimpleApplicationFeature("t:test7", Set.of("t:test4")));
 
         ArrayList<ApplicationFeature> failFeatures = new ArrayList<>();
-        failFeatures.add(new ApplicationFeature("t:test11", Set.of("t:fail")));
-        failFeatures.add(new ApplicationFeature("t:test12", Set.of("t:test11")));
-        failFeatures.add(new ApplicationFeature("t:test13", Set.of("t:test12", "t:test2")));
-        failFeatures.add(new ApplicationFeature("t:test14", Set.of("t:test13")));
+        failFeatures.add(new SimpleApplicationFeature("t:test11", Set.of("t:fail")));
+        failFeatures.add(new SimpleApplicationFeature("t:test12", Set.of("t:test11")));
+        failFeatures.add(new SimpleApplicationFeature("t:test13", Set.of("t:test12", "t:test2")));
+        failFeatures.add(new SimpleApplicationFeature("t:test14", Set.of("t:test13")));
 
         Random rand = new Random(293840972);
         Collections.shuffle(features, rand);

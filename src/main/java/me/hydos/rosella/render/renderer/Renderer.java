@@ -72,7 +72,7 @@ public class Renderer {
         this.rosella = rosella;
         this.common = rosella.common;
 
-        this.queues = new VulkanQueues(common);
+        this.queues = common.queues;
         this.depthBuffer = new DepthBuffer();
 
         VkUtils.createCommandPool(common.device, this, common.surface);

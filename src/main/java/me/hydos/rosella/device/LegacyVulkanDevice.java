@@ -1,5 +1,9 @@
 package me.hydos.rosella.device;
 
+import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.init.InitializationRegistry;
+import me.hydos.rosella.init.VulkanInstance;
+import me.hydos.rosella.init.features.RosellaLegacy;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.swapchain.SwapchainSupportDetails;
 import me.hydos.rosella.util.VkUtils;
@@ -28,12 +32,20 @@ public class LegacyVulkanDevice {
 
     private static final Set<String> REQUIRED_EXTENSIONS = Collections.singleton(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
+    public final VulkanDevice newDevice;
+
     public final QueueFamilyIndices indices;
     public VkDevice rawDevice;
     public VkPhysicalDevice physicalDevice;
-    public DeviceFeatures deviceFeatures;
-    public Properties properties;
-    public String combinedExtensionsString;
+
+    public LegacyVulkanDevice(VulkanInstance instance, InitializationRegistry registry) {
+        DeviceBuilder builder = new DeviceBuilder(instance, registry);
+        this.newDevice = builder.build();
+
+        this.indices = RosellaLegacy.getMetaObject(this.newDevice.getFeatureMeta(RosellaLegacy.NAME)).indices();
+        this.rawDevice = this.newDevice.getDevice();
+        this.physicalDevice = this.rawDevice.getPhysicalDevice();
+    }
 
     /**
      * @param common           the vulkan common variables
@@ -48,6 +60,8 @@ public class LegacyVulkanDevice {
     }
 
     public LegacyVulkanDevice(VkCommon common, List<String> validationLayers, Consumer<VkPhysicalDeviceFeatures> deviceFeatureCallback) {
+        this.newDevice = null;
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer pPhysicalDeviceCount = stack.ints(0);
             ok(vkEnumeratePhysicalDevices(common.vkInstance.rawInstance, pPhysicalDeviceCount, null));
@@ -72,7 +86,6 @@ public class LegacyVulkanDevice {
                         stringBuilder.append(extension).append(" ");
                     }
                     stringBuilder.deleteCharAt(stringBuilder.length() - 1); // remove extra space
-                    this.combinedExtensionsString = stringBuilder.toString();
                     setDeviceInfo();
                     break;
                 }
@@ -113,8 +126,6 @@ public class LegacyVulkanDevice {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkPhysicalDeviceProperties properties = VkPhysicalDeviceProperties.callocStack(stack);
             vkGetPhysicalDeviceProperties(physicalDevice, properties);
-
-            this.properties = new Properties(properties);
         }
     }
 
@@ -144,78 +155,13 @@ public class LegacyVulkanDevice {
                 swapChainAdequate = swapchainSupport.formats.hasRemaining() && swapchainSupport.presentModes.hasRemaining(); // Check if the swapchain has valid formats and present modes available
                 VkPhysicalDeviceFeatures supportedFeatures = VkPhysicalDeviceFeatures.callocStack(stack);
                 vkGetPhysicalDeviceFeatures(device, supportedFeatures);
-                this.deviceFeatures = getFeatures(supportedFeatures);
+                //this.deviceFeatures = getFeatures(supportedFeatures);
                 anisotropySupported = supportedFeatures.samplerAnisotropy();
 
                 return indices.isComplete() && swapChainAdequate && anisotropySupported;
             }
         }
         return false;
-    }
-
-    /**
-     * Copies all of the features out of {@link VkPhysicalDeviceFeatures} so it can be read later on when the stack is freed.
-     *
-     * @param supportedFeatures the Vulkan struct
-     * @return a usable class
-     */
-    private DeviceFeatures getFeatures(VkPhysicalDeviceFeatures supportedFeatures) {
-        return new DeviceFeatures(
-                supportedFeatures.robustBufferAccess(),
-                supportedFeatures.fullDrawIndexUint32(),
-                supportedFeatures.imageCubeArray(),
-                supportedFeatures.independentBlend(),
-                supportedFeatures.geometryShader(),
-                supportedFeatures.tessellationShader(),
-                supportedFeatures.sampleRateShading(),
-                supportedFeatures.dualSrcBlend(),
-                supportedFeatures.logicOp(),
-                supportedFeatures.multiDrawIndirect(),
-                supportedFeatures.drawIndirectFirstInstance(),
-                supportedFeatures.depthClamp(),
-                supportedFeatures.depthBiasClamp(),
-                supportedFeatures.fillModeNonSolid(),
-                supportedFeatures.depthBounds(),
-                supportedFeatures.wideLines(),
-                supportedFeatures.largePoints(),
-                supportedFeatures.alphaToOne(),
-                supportedFeatures.multiViewport(),
-                supportedFeatures.samplerAnisotropy(),
-                supportedFeatures.textureCompressionETC2(),
-                supportedFeatures.textureCompressionASTC_LDR(),
-                supportedFeatures.textureCompressionBC(),
-                supportedFeatures.occlusionQueryPrecise(),
-                supportedFeatures.pipelineStatisticsQuery(),
-                supportedFeatures.vertexPipelineStoresAndAtomics(),
-                supportedFeatures.fragmentStoresAndAtomics(),
-                supportedFeatures.shaderTessellationAndGeometryPointSize(),
-                supportedFeatures.shaderImageGatherExtended(),
-                supportedFeatures.shaderStorageImageExtendedFormats(),
-                supportedFeatures.shaderStorageImageMultisample(),
-                supportedFeatures.shaderStorageImageReadWithoutFormat(),
-                supportedFeatures.shaderStorageImageWriteWithoutFormat(),
-                supportedFeatures.shaderUniformBufferArrayDynamicIndexing(),
-                supportedFeatures.shaderSampledImageArrayDynamicIndexing(),
-                supportedFeatures.shaderStorageBufferArrayDynamicIndexing(),
-                supportedFeatures.shaderStorageImageArrayDynamicIndexing(),
-                supportedFeatures.shaderClipDistance(),
-                supportedFeatures.shaderCullDistance(),
-                supportedFeatures.shaderFloat64(),
-                supportedFeatures.shaderInt64(),
-                supportedFeatures.shaderInt16(),
-                supportedFeatures.shaderResourceResidency(),
-                supportedFeatures.shaderResourceMinLod(),
-                supportedFeatures.sparseBinding(),
-                supportedFeatures.sparseResidencyBuffer(),
-                supportedFeatures.sparseResidencyImage2D(),
-                supportedFeatures.sparseResidencyImage3D(),
-                supportedFeatures.sparseResidency2Samples(),
-                supportedFeatures.sparseResidency4Samples(),
-                supportedFeatures.sparseResidency8Samples(),
-                supportedFeatures.sparseResidency16Samples(),
-                supportedFeatures.sparseResidencyAliased(),
-                supportedFeatures.variableMultisampleRate(),
-                supportedFeatures.inheritedQueries());
     }
 
     /**
@@ -231,64 +177,6 @@ public class LegacyVulkanDevice {
             return availableExtensions.stream()
                     .map(VkExtensionProperties::extensionNameString)
                     .collect(Collectors.toSet());
-        }
-    }
-
-    public record DeviceFeatures(boolean robustBufferAccess, boolean fullDrawIndexUint32, boolean imageCubeArray,
-                                 boolean independentBlend, boolean geometryShader, boolean tessellationShader,
-                                 boolean sampleRateShading, boolean dualSrcBlend, boolean logicOp,
-                                 boolean multiDrawIndirect, boolean drawIndirectFirstInstance, boolean depthClamp,
-                                 boolean depthBiasClamp, boolean fillModeNonSolid, boolean depthBounds,
-                                 boolean wideLines,
-                                 boolean largePoints, boolean alphaToOne, boolean multiViewport,
-                                 boolean samplerAnisotropy,
-                                 boolean textureCompressionETC2, boolean textureCompressionASTC_LDR,
-                                 boolean textureCompressionBC, boolean occlusionQueryPrecise,
-                                 boolean pipelineStatisticsQuery, boolean vertexPipelineStoresAndAtomics,
-                                 boolean fragmentStoresAndAtomics, boolean shaderTessellationAndGeometryPointSize,
-                                 boolean shaderImageGatherExtended, boolean shaderStorageImageExtendedFormats,
-                                 boolean shaderStorageImageMultisample, boolean shaderStorageImageReadWithoutFormat,
-                                 boolean shaderStorageImageWriteWithoutFormat,
-                                 boolean shaderUniformBufferArrayDynamicIndexing,
-                                 boolean shaderSampledImageArrayDynamicIndexing,
-                                 boolean shaderStorageBufferArrayDynamicIndexing,
-                                 boolean shaderStorageImageArrayDynamicIndexing, boolean shaderClipDistance,
-                                 boolean shaderCullDistance, boolean shaderFloat64, boolean shaderInt64,
-                                 boolean shaderInt16, boolean shaderResourceResidency, boolean shaderResourceMinLod,
-                                 boolean sparseBinding, boolean sparseResidencyBuffer, boolean sparseResidencyImage2D,
-                                 boolean sparseResidencyImage3D, boolean sparseResidency2Samples,
-                                 boolean sparseResidency4Samples, boolean sparseResidency8Samples,
-                                 boolean sparseResidency16Samples, boolean sparseResidencyAliased,
-                                 boolean variableMultisampleRate, boolean inheritedQueries) {
-    }
-
-    public static class Properties {
-
-        public final int deviceId;
-        public final String deviceName;
-        public final String apiVersion;
-        public final int driverVersion;
-        public final int vendorId;
-
-        public Properties(VkPhysicalDeviceProperties properties) {
-            this.deviceId = properties.deviceID();
-            this.deviceName = properties.deviceNameString();
-            this.apiVersion = fromVkVersion(properties.apiVersion());
-            this.driverVersion = properties.driverVersion();
-            this.vendorId = properties.vendorID();
-        }
-
-        /**
-         * Turns integer VkVersion into a string version
-         *
-         * @param apiVersion the integer passed from vulkan
-         * @return a readable string
-         */
-        private String fromVkVersion(int apiVersion) {
-            int major = VK_VERSION_MAJOR(apiVersion);
-            int minor = VK_VERSION_MINOR(apiVersion);
-            int patch = VK_VERSION_PATCH(apiVersion);
-            return major + "." + minor + "." + patch;
         }
     }
 }

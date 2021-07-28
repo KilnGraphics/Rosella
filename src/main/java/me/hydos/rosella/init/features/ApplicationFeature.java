@@ -1,5 +1,6 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.init.features;
 
+import me.hydos.rosella.init.DeviceBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +33,7 @@ import java.util.*;
  *
  * <p>The default implementation of this class only validates that all dependencies are met and does not create any metadata.</p>
  */
-public class ApplicationFeature {
+public abstract class ApplicationFeature {
 
     public final String name;
     public final Set<String> dependencies;
@@ -67,9 +68,7 @@ public class ApplicationFeature {
     /**
      * @return A new instance to process a device
      */
-    public Instance createInstance() {
-        return new Instance();
-    }
+    public abstract Instance createInstance();
 
     @Override
     public final boolean equals(Object o) {
@@ -87,7 +86,7 @@ public class ApplicationFeature {
     /**
      * A class to process one device. A instance will never be reused.
      */
-    public class Instance {
+    public abstract class Instance {
 
         protected boolean canEnable;
 
@@ -115,9 +114,7 @@ public class ApplicationFeature {
          *
          * @param meta A DeviceMeta instance used to track information about the build process.
          */
-        public void testFeatureSupport(DeviceBuilder.DeviceMeta meta) {
-            this.canEnable = allDependenciesMet(meta);
-        }
+        public abstract void testFeatureSupport(DeviceBuilder.DeviceMeta meta);
 
         /**
          * Should configure the device to enable this feature.
@@ -125,8 +122,6 @@ public class ApplicationFeature {
          * @param meta A DeviceMeta instance used to track information about the build process.
          * @return A object that can be used to return information to the application. Can be null.
          */
-        public Object enableFeature(DeviceBuilder.DeviceMeta meta) {
-            return null;
-        }
+        public abstract Object enableFeature(DeviceBuilder.DeviceMeta meta);
     }
 }

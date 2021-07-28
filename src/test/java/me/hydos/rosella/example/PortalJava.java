@@ -56,7 +56,7 @@ public class PortalJava {
     );
 
     public static void main(String[] args) {
-        System.loadLibrary("renderdoc");
+        //System.loadLibrary("renderdoc");
         loadShaders();
         loadMaterials();
         setupMainMenuScene();

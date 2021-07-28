@@ -4,6 +4,7 @@ import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.init.InitializationRegistry;
+import me.hydos.rosella.init.features.RosellaLegacy;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
@@ -61,9 +62,19 @@ public class Rosella {
         // Setup core vulkan stuff
         common.display = display;
         common.vkInstance = new LegacyVulkanInstance(initializationRegistry, applicationName, VK10.VK_MAKE_VERSION(1, 0, 0), debugLogger);
+
         common.surface = display.createSurface(common);
-        common.device = new LegacyVulkanDevice(common, requestedValidationLayers);
-        common.queues = new VulkanQueues(common);
+        initializationRegistry.registerApplicationFeature(new RosellaLegacy(common));
+
+        common.device = new LegacyVulkanDevice(common.vkInstance.newInstance, initializationRegistry);
+
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetaObject(common.device.newDevice.getFeatureMeta(RosellaLegacy.NAME));
+        try {
+            common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
+        } catch (Exception ex) {
+            throw new RuntimeException("Not good stuff.");
+        }
+
         common.memory = new ThreadPoolMemory(common);
         common.semaphorePool = new SemaphorePool(common.device.rawDevice);
 
