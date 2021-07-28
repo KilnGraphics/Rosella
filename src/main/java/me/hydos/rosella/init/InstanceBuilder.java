@@ -14,37 +14,9 @@ import static org.lwjgl.vulkan.EXTDebugUtils.*;
 
 public class InstanceBuilder {
 
-    // see debugCallback description. This is a mess and needs fixing
-    private static DebugLogger validationLogger = null;
-
-    /**
-     * Temporary debug callback. TODO: We should allow adding of custom callbacks to the InitializationRegistry
-     */
-    private static int debugCallback(int severity, int messageType, long pCallbackData, long pUserData) {
-        VkDebugUtilsMessengerCallbackDataEXT callbackData = VkDebugUtilsMessengerCallbackDataEXT.create(pCallbackData);
-        String message = callbackData.pMessageString();
-
-        String msgSeverity = switch (severity) {
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT -> "VERBOSE";
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT -> "INFO";
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT -> "WARNING";
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT -> "ERROR";
-            default -> throw new IllegalStateException("Unexpected severity: " + severity);
-        };
-
-        if(validationLogger == null) {
-            return VK10.VK_FALSE;
-        }
-
-        return switch (messageType) {
-            case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT -> validationLogger.logGeneral(message, msgSeverity);
-            case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT -> validationLogger.logValidation(message, msgSeverity);
-            case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT -> validationLogger.logPerformance(message, msgSeverity);
-            default -> validationLogger.logUnknown(message, msgSeverity);
-        };
-    }
-
     private final InitializationRegistry registry;
+
+    private VulkanInstance.DebugUtilsCallback debugUtilsCallback = null;
 
     public InstanceBuilder(InitializationRegistry registry) {
         this.registry = registry;
@@ -58,7 +30,7 @@ public class InstanceBuilder {
             }
 
             if(this.registry.getEnableValidation()) {
-                validationLogger = this.registry.getValidationDebugLogger();
+                this.debugUtilsCallback = new VulkanInstance.DebugUtilsCallback(this.registry.getValidationDebugLogger());
             }
 
             VkApplicationInfo appInfo = VkApplicationInfo.callocStack(stack);
@@ -80,7 +52,7 @@ public class InstanceBuilder {
             VkUtils.ok(VK10.vkCreateInstance(createInfo, null, pInstance));
 
             VkInstance instance = new VkInstance(pInstance.get(0), createInfo);
-            return new VulkanInstance(instance);
+            return new VulkanInstance(instance, debugUtilsCallback);
         }
     }
 
@@ -183,7 +155,7 @@ public class InstanceBuilder {
                 EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
                 EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                 EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT);
-        debugCreateInfo.pfnUserCallback(InstanceBuilder::debugCallback);
+        debugCreateInfo.pfnUserCallback(this.debugUtilsCallback::debugCallback);
 
         return debugCreateInfo.address();
     }
