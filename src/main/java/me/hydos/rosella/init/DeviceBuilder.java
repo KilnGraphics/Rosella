@@ -249,7 +249,7 @@ public class DeviceBuilder {
                 info.pQueuePriorities(priorities);
             }
 
-            return queueCreateInfos;
+            return queueCreateInfos.rewind();
         }
 
         private void fulfillQueueRequests(VkDevice device) {
