@@ -1,5 +1,8 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.debug.MessageSeverity;
+import me.hydos.rosella.debug.MessageType;
+import me.hydos.rosella.debug.VulkanDebugCallback;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.util.VkUtils;
 import org.lwjgl.PointerBuffer;
@@ -16,10 +19,22 @@ public class InstanceBuilder {
 
     private final InitializationRegistry registry;
 
-    private VulkanInstance.DebugUtilsCallback debugUtilsCallback = null;
+    private final boolean enableDebugUtils;
+    private final boolean enableValidation;
+
+    private final VulkanDebugCallback debugUtilsCallback;
 
     public InstanceBuilder(InitializationRegistry registry) {
         this.registry = registry;
+
+        this.enableValidation = registry.getEnableValidation();
+        if(!registry.getDebugCallbacks().isEmpty() || registry.getEnableValidation()) {
+            this.enableDebugUtils = true;
+            this.debugUtilsCallback = new VulkanDebugCallback();
+        } else {
+            this.enableDebugUtils = false;
+            this.debugUtilsCallback = null;
+        }
     }
 
     public VulkanInstance build(String applicationName, int applicationVersion) {
@@ -27,10 +42,6 @@ public class InstanceBuilder {
             int supportedVersionNumber = getSupportedVersion(stack);
             if(supportedVersionNumber < this.registry.getMinimumVulkanVersion().getVersionNumber()) {
                 throw new RuntimeException("Minimum vulkan version " + this.registry.getMinimumVulkanVersion().toString() + " is not supported!");
-            }
-
-            if(this.registry.getEnableValidation()) {
-                this.debugUtilsCallback = new VulkanInstance.DebugUtilsCallback(this.registry.getValidationDebugLogger());
             }
 
             VkApplicationInfo appInfo = VkApplicationInfo.callocStack(stack);
@@ -52,7 +63,7 @@ public class InstanceBuilder {
             VkUtils.ok(VK10.vkCreateInstance(createInfo, null, pInstance));
 
             VkInstance instance = new VkInstance(pInstance.get(0), createInfo);
-            return new VulkanInstance(instance, debugUtilsCallback);
+            return new VulkanInstance(instance, this.debugUtilsCallback);
         }
     }
 
@@ -84,7 +95,7 @@ public class InstanceBuilder {
         }
 
         Set<String> enabledLayers = new HashSet<>();
-        if(this.registry.getEnableValidation()) {
+        if(this.enableValidation) {
             if(!supportedLayers.contains("VK_LAYER_KHRONOS_validation")) {
                 throw new RuntimeException("Debug was enabled but validation layers could not be found");
             }
@@ -119,7 +130,7 @@ public class InstanceBuilder {
         }
 
         Set<String> enabledExtensions = new HashSet<>();
-        if(this.registry.getEnableValidation()) {
+        if(this.enableDebugUtils) {
             if(!supportedExtensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
                 throw new RuntimeException("Debug was enabled but EXTDebugUtils extension is not supported");
             }
@@ -139,23 +150,16 @@ public class InstanceBuilder {
     }
 
     private long createDebugUtilsCallback(long pNext, MemoryStack stack) {
-        if(!this.registry.getEnableValidation()) {
+        if(!this.enableDebugUtils) {
             return pNext;
         }
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = VkDebugUtilsMessengerCreateInfoEXT.callocStack(stack);
         debugCreateInfo.sType(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT);
         debugCreateInfo.pNext(pNext);
-        debugCreateInfo.messageSeverity(
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT);
-        debugCreateInfo.messageType(
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                EXTDebugUtils.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT);
-        debugCreateInfo.pfnUserCallback(this.debugUtilsCallback::debugCallback);
+        debugCreateInfo.messageSeverity(MessageSeverity.allBits());
+        debugCreateInfo.messageType(MessageType.allBits());
+        debugCreateInfo.pfnUserCallback(this.debugUtilsCallback::vulkanCallbackFunction);
 
         return debugCreateInfo.address();
     }

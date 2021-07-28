@@ -1,5 +1,6 @@
 package me.hydos.rosella.init;
 
+import me.hydos.rosella.debug.VulkanDebugCallback;
 import me.hydos.rosella.logging.DebugLogger;
 
 import java.util.*;
@@ -9,10 +10,11 @@ import java.util.*;
  */
 public class InitializationRegistry {
 
-    private boolean enableValidation = false;
-    private DebugLogger validationDebugLogger = null;
+    private boolean validationEnabled = false;
     private VulkanVersion minRequiredVersion = VulkanVersion.VULKAN_1_0;
     private VulkanVersion maxSupportedVersion = VulkanVersion.VULKAN_1_2;
+
+    private final Set<VulkanDebugCallback.Callback> debugCallbacks = new HashSet<>();
 
     private final Set<String> requiredInstanceExtensions = new HashSet<>();
     private final Set<String> optionalInstanceExtensions = new HashSet<>();
@@ -22,17 +24,20 @@ public class InitializationRegistry {
     private final Map<String, MarkedFeature> features = new HashMap<>();
     private final Set<String> requiredFeatures = new HashSet<>();
 
-    public void enableValidation(DebugLogger logger) {
-        this.enableValidation = true;
-        this.validationDebugLogger = logger;
+    public void enableValidation(boolean enable) {
+        this.validationEnabled = enable;
     }
 
     public boolean getEnableValidation() {
-        return this.enableValidation;
+        return this.validationEnabled;
     }
 
-    public DebugLogger getValidationDebugLogger() {
-        return this.validationDebugLogger;
+    public void addDebugCallback(VulkanDebugCallback.Callback callback) {
+        this.debugCallbacks.add(callback);
+    }
+
+    public Set<VulkanDebugCallback.Callback> getDebugCallbacks() {
+        return Collections.unmodifiableSet(debugCallbacks);
     }
 
     public void addRequiredInstanceLayer(String layer) {
