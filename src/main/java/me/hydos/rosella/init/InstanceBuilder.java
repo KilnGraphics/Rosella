@@ -3,7 +3,6 @@ package me.hydos.rosella.init;
 import me.hydos.rosella.debug.MessageSeverity;
 import me.hydos.rosella.debug.MessageType;
 import me.hydos.rosella.debug.VulkanDebugCallback;
-import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.util.VkUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;

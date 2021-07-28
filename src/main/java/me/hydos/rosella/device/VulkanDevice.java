@@ -1,5 +1,6 @@
 package me.hydos.rosella.device;
 
+import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkDevice;
 
 import java.util.Collections;
@@ -17,6 +18,10 @@ public class VulkanDevice {
 
     public VkDevice getDevice() {
         return this.device;
+    }
+
+    public void destroy() {
+        VK10.vkDestroyDevice(this.device, null);
     }
 
     /**

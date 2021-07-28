@@ -23,9 +23,9 @@ public class DeviceBuilder {
 
     private final List<ApplicationFeature> applicationFeatures;
     private final Set<String> requiredFeatures;
-    private final LegacyVulkanInstance instance;
+    private final VulkanInstance instance;
 
-    public DeviceBuilder(@NotNull LegacyVulkanInstance instance, @NotNull InitializationRegistry registry) {
+    public DeviceBuilder(@NotNull VulkanInstance instance, @NotNull InitializationRegistry registry) {
         this.instance = instance;
         this.applicationFeatures = registry.getOrderedFeatures();
         this.requiredFeatures = registry.getRequiredApplicationFeatures();
@@ -42,13 +42,13 @@ public class DeviceBuilder {
         List<DeviceMeta> devices = new ArrayList<>();
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer deviceCount = stack.mallocInt(1);
-            VkUtils.ok(VK10.vkEnumeratePhysicalDevices(this.instance.rawInstance, deviceCount, null));
+            VkUtils.ok(VK10.vkEnumeratePhysicalDevices(this.instance.getInstance(), deviceCount, null));
 
             PointerBuffer pPhysicalDevices = stack.mallocPointer(deviceCount.get(0));
-            VkUtils.ok(VK10.vkEnumeratePhysicalDevices(this.instance.rawInstance, deviceCount, pPhysicalDevices));
+            VkUtils.ok(VK10.vkEnumeratePhysicalDevices(this.instance.getInstance(), deviceCount, pPhysicalDevices));
 
             for(int i = 0; i < deviceCount.get(0); i++) {
-                devices.add(new DeviceMeta(new VkPhysicalDevice(pPhysicalDevices.get(i), this.instance.rawInstance), stack));
+                devices.add(new DeviceMeta(new VkPhysicalDevice(pPhysicalDevices.get(i), this.instance.getInstance()), stack));
             }
 
             devices.forEach(DeviceMeta::processSupport);
