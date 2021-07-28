@@ -31,6 +31,9 @@ public class InstanceBuilder {
         if(!registry.getDebugCallbacks().isEmpty() || registry.getEnableValidation()) {
             this.enableDebugUtils = true;
             this.debugUtilsCallback = new VulkanDebugCallback();
+
+            registry.getDebugCallbacks().forEach(this.debugUtilsCallback::registerCallback);
+
         } else {
             this.enableDebugUtils = false;
             this.debugUtilsCallback = null;
