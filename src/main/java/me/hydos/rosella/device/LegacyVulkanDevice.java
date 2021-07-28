@@ -38,6 +38,13 @@ public class LegacyVulkanDevice {
     public VkDevice rawDevice;
     public VkPhysicalDevice physicalDevice;
 
+    public LegacyVulkanDevice(VulkanDevice device) {
+        this.newDevice = device;
+        this.indices = RosellaLegacy.getMetaObject(device.getFeatureMeta(RosellaLegacy.NAME)).indices();
+        this.rawDevice = device.getDevice();
+        this.physicalDevice = device.getDevice().getPhysicalDevice();
+    }
+
     public LegacyVulkanDevice(VulkanInstance instance, InitializationRegistry registry) {
         DeviceBuilder builder = new DeviceBuilder(instance, registry);
         this.newDevice = builder.build();

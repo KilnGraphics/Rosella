@@ -2,6 +2,7 @@ package me.hydos.rosella.example;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.init.InitializationRegistry;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.material.state.StateInfo;
@@ -22,7 +23,7 @@ import org.lwjgl.vulkan.VK10;
 public class PortalJava {
 
     public static final GlfwWindow window = new GlfwWindow(1280, 720, "Portal 3: Java Edition", true);
-    public static final Rosella rosella = new Rosella(window, "Portal 3", true);
+    public static final Rosella rosella = new Rosella(new InitializationRegistry(), window,"Portal 3", VK10.VK_MAKE_VERSION(1, 0, 0));
 
     public static final Matrix4f viewMatrix = new Matrix4f().lookAt(2.0f, -40.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
     public static final Matrix4f projectionMatrix = new Matrix4f().perspective(

@@ -1,9 +1,14 @@
 package me.hydos.rosella;
 
+import me.hydos.rosella.debug.LegacyDebugCallback;
 import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
+import me.hydos.rosella.init.DeviceBuilder;
 import me.hydos.rosella.init.InitializationRegistry;
+import me.hydos.rosella.init.InstanceBuilder;
+import me.hydos.rosella.init.VulkanInstance;
 import me.hydos.rosella.init.features.RosellaLegacy;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
@@ -48,10 +53,53 @@ public class Rosella {
     public final Renderer renderer;
     public final ObjectManager objectManager;
 
+    public final VulkanInstance vulkanInstance;
+    public final VulkanDevice vulkanDevice;
+
+    public Rosella(InitializationRegistry registry, Display display, String applicationName, int applicationVersion) {
+        // TODO remove
+        registry.enableValidation(true);
+
+        common.display = display;
+        display.getRequiredExtensions().forEach(registry::addRequiredInstanceExtensions);
+
+        // Needed because debug callbacks are handled by LegacyVulkanInstance. TODO remove this
+        common.vkInstance = new LegacyVulkanInstance(registry, applicationName, applicationVersion, new DefaultDebugLogger());
+        this.vulkanInstance = common.vkInstance.newInstance;
+
+        common.surface = display.createSurface(common);
+        registry.registerApplicationFeature(new RosellaLegacy(common));
+        registry.addRequiredApplicationFeature(RosellaLegacy.NAME);
+
+        this.vulkanDevice = new DeviceBuilder(this.vulkanInstance, registry).build();
+        common.device = new LegacyVulkanDevice(this.vulkanDevice);
+
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetaObject(this.vulkanDevice.getFeatureMeta(RosellaLegacy.NAME));
+        try {
+            common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
+        } catch (Exception ex) {
+            throw new RuntimeException("Not good stuff.");
+        }
+
+        // TODO: Tons and tons of old code. Need to remove
+        common.memory = new ThreadPoolMemory(common);
+        common.semaphorePool = new SemaphorePool(common.device.rawDevice);
+
+        this.objectManager = new SimpleObjectManager(this, common);
+        this.renderer = new Renderer(this);
+        ((SimpleObjectManager) objectManager).textureManager.initializeBlankTexture(renderer);
+        this.objectManager.postInit(renderer);
+        this.bufferManager = new GlobalBufferManager(this);
+
+        display.onReady();
+    }
+
+    @Deprecated
     public Rosella(Display display, String applicationName, boolean enableBasicValidation) {
         this(display, enableBasicValidation ? Collections.singletonList("VK_LAYER_KHRONOS_validation") : Collections.emptyList(), applicationName, new DefaultDebugLogger());
     }
 
+    @Deprecated
     public Rosella(Display display, List<String> requestedValidationLayers, String applicationName, DebugLogger debugLogger) {
         List<String> requiredExtensions = display.getRequiredExtensions();
 
@@ -87,6 +135,9 @@ public class Rosella {
 
         // Tell the display we are initialized
         display.onReady();
+
+        this.vulkanInstance = common.vkInstance.newInstance;
+        this.vulkanDevice = common.device.newDevice;
     }
 
     /**
@@ -102,14 +153,16 @@ public class Rosella {
         common.semaphorePool.free();
 
         vkDestroyCommandPool(common.device.rawDevice, renderer.commandPool, null);
-        vkDestroyDevice(common.device.rawDevice, null);
+
+        vulkanDevice.destroy();
+
         vkDestroySurfaceKHR(common.vkInstance.rawInstance, common.surface, null);
 
         common.vkInstance.messenger.ifPresent(messenger -> { // FIXME
             vkDestroyDebugUtilsMessengerEXT(common.vkInstance.rawInstance, messenger, null);
         });
 
-        common.vkInstance.newInstance.destroy();
+        vulkanInstance.destroy();
 
         common.display.exit();
     }
