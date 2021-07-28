@@ -21,17 +21,21 @@ import org.joml.Vector3f;
 import org.lwjgl.vulkan.VK10;
 
 public class PortalJava {
+    public static final GlfwWindow window;
+    public static final Rosella rosella;
 
-    public static final GlfwWindow window = new GlfwWindow(1280, 720, "Portal 3: Java Edition", true);
-    public static final Rosella rosella = new Rosella(new InitializationRegistry(), window,"Portal 3", VK10.VK_MAKE_VERSION(1, 0, 0));
+    public static final int WIDTH = 1280;
 
-    public static final Matrix4f viewMatrix = new Matrix4f().lookAt(2.0f, -40.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-    public static final Matrix4f projectionMatrix = new Matrix4f().perspective(
-            (float) Math.toRadians(45.0),
-            1280 / 720f,
-            0.1f,
-            1000.0f
-    );
+    public static final int TOP = 720;
+
+    static {
+        System.loadLibrary("renderdoc");
+        window = new GlfwWindow(WIDTH, TOP, "Portal 3: Java Edition", true);
+        rosella = new Rosella(new InitializationRegistry(), window, "Portal 3", VK10.VK_MAKE_VERSION(1, 0, 0));
+    }
+
+    public static final Matrix4f viewMatrix = new Matrix4f();
+    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -100, 1000);
 
     public static Material menuBackground;
     public static Material portalLogo;
@@ -48,7 +52,7 @@ public class PortalJava {
             true,
             VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO, VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO,
             VK10.VK_BLEND_OP_ADD,
-            true,
+            false,
             false,
             VK10.VK_COMPARE_OP_LESS,
             false,
@@ -57,7 +61,6 @@ public class PortalJava {
     );
 
     public static void main(String[] args) {
-        //System.loadLibrary("renderdoc");
         loadShaders();
         loadMaterials();
         setupMainMenuScene();
@@ -68,7 +71,7 @@ public class PortalJava {
 
     private static void setupMainMenuScene() {
         rosella.objectManager.addObject(
-                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), 1.5f, 1f, viewMatrix, projectionMatrix)
+                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), 15f, 15f, viewMatrix, projectionMatrix)
         );
 
         rosella.objectManager.addObject(
