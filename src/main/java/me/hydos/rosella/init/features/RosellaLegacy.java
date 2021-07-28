@@ -2,7 +2,8 @@ package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.device.QueueFamilyIndices;
 import me.hydos.rosella.device.VulkanQueue;
-import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.init.DeviceBuildConfigurator;
+import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.swapchain.SwapchainSupportDetails;
 import me.hydos.rosella.util.VkUtils;
@@ -36,28 +37,28 @@ public class RosellaLegacy extends ApplicationFeature {
         private QueueFamilyIndices indices = null;
 
         @Override
-        public void testFeatureSupport(DeviceBuilder.DeviceMeta meta) {
+        public void testFeatureSupport(DeviceBuildInformation meta) {
             canEnable = false;
 
-            indices = VkUtils.findQueueFamilies(meta.physicalDevice, common.surface);
+            indices = VkUtils.findQueueFamilies(meta.getPhysicalDevice(), common.surface);
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 boolean swapChainAdequate;
                 boolean featureSupported;
 
-                SwapchainSupportDetails swapchainSupport = Swapchain.Companion.querySwapchainSupport(meta.physicalDevice, stack, common.surface);
+                SwapchainSupportDetails swapchainSupport = Swapchain.Companion.querySwapchainSupport(meta.getPhysicalDevice(), stack, common.surface);
                 swapChainAdequate = swapchainSupport.formats.hasRemaining() && swapchainSupport.presentModes.hasRemaining();
                 featureSupported =
-                        meta.availableFeatures.samplerAnisotropy() &&
-                        meta.availableFeatures.depthClamp() &&
-                        meta.availableFeatures.depthBounds();
+                        meta.getPhysicalDeviceFeatures().samplerAnisotropy() &&
+                        meta.getPhysicalDeviceFeatures().depthClamp() &&
+                        meta.getPhysicalDeviceFeatures().depthBounds();
 
-                canEnable = indices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionSupported(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+                canEnable = indices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionAvailable(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             }
         }
 
         @Override
-        public Object enableFeature(DeviceBuilder.DeviceMeta meta) {
+        public Object enableFeature(DeviceBuildConfigurator meta) {
             meta.configureDeviceFeatures()
                     .samplerAnisotropy(true)
                     .depthClamp(true)

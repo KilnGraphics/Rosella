@@ -82,19 +82,18 @@ public class DeviceBuilder {
         }
     }
 
-    public class DeviceMeta {
+    public class DeviceMeta implements DeviceBuildInformation, DeviceBuildConfigurator {
         private final MemoryStack stack;
 
         private final Set<String> unsatisfiedRequirements = new HashSet<>();
         private final Map<String, ApplicationFeature.Instance> features = new HashMap<>();
         private final ArrayList<ApplicationFeature.Instance> sortedFeatures = new ArrayList<>();
 
-        public final VkPhysicalDevice physicalDevice;
-        public final VkPhysicalDeviceProperties properties;
-        public final VkPhysicalDeviceMemoryProperties memoryProperties;
-        public final VkPhysicalDeviceFeatures availableFeatures;
-        public final Map<String, VkExtensionProperties> extensionProperties;
-        public final List<VkQueueFamilyProperties> queueFamilyProperties;
+        private final VkPhysicalDevice physicalDevice;
+        private final VkPhysicalDeviceProperties properties;
+        private final VkPhysicalDeviceFeatures availableFeatures;
+        private final Map<String, VkExtensionProperties> extensionProperties;
+        private final List<VkQueueFamilyProperties> queueFamilyProperties;
 
         private boolean isBuilding = false;
         private final List<QueueRequest> queueRequests = new ArrayList<>();
@@ -112,9 +111,6 @@ public class DeviceBuilder {
 
             this.properties = VkPhysicalDeviceProperties.mallocStack(stack);
             VK10.vkGetPhysicalDeviceProperties(physicalDevice, this.properties);
-
-            this.memoryProperties = VkPhysicalDeviceMemoryProperties.mallocStack(stack);
-            VK10.vkGetPhysicalDeviceMemoryProperties(physicalDevice, memoryProperties);
 
             this.availableFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
             VK10.vkGetPhysicalDeviceFeatures(physicalDevice, availableFeatures);
@@ -284,6 +280,7 @@ public class DeviceBuilder {
             return names.rewind();
         }
 
+        @Override
         public boolean isApplicationFeatureSupported(String name) {
             ApplicationFeature.Instance feature = this.features.getOrDefault(name, null);
             if(feature == null) {
@@ -293,36 +290,71 @@ public class DeviceBuilder {
             return feature.isSupported();
         }
 
+        @Override
         public ApplicationFeature.Instance getApplicationFeature(String name) {
             return this.features.getOrDefault(name, null);
         }
 
-        /**
-         * Checks if there exists a queue family that supports all specified flags.
-         *
-         * @param flags The flags the queue must support
-         * @return true if a queue family exists supporting all specified flags
-         */
-        public boolean hasQueueWithFlags(int flags) {
-            return this.queueFamilyProperties.stream().anyMatch(props -> (props.queueFlags() & flags) == flags);
+        @Override
+        public VulkanInstance getInstance() {
+            return instance;
         }
 
-        /**
-         * Checks if this device supports a extension.
-         *
-         * @param name The name of the extension.
-         * @return True if the extension is supported, false otherwise.
-         */
-        public boolean isExtensionSupported(String name) {
+        @Override
+        public VkPhysicalDevice getPhysicalDevice() {
+            return this.physicalDevice;
+        }
+
+        @Override
+        public VkPhysicalDeviceProperties getPhysicalDeviceProperties() {
+            return this.properties;
+        }
+
+        @Override
+        public VkPhysicalDeviceFeatures getPhysicalDeviceFeatures() {
+            return this.availableFeatures;
+        }
+
+        @Override
+        public boolean isExtensionAvailable(String name) {
             return this.extensionProperties.containsKey(name);
         }
 
-        /**
-         * Adds a new queue request. Must only be called during the device configuration process.
-         *
-         * @param family The family that is requested.
-         * @return A QueueRequest instance that can be used to later retrieve the requested queue.
-         */
+        @Override
+        public Map<String, VkExtensionProperties> getAllExtensionProperties() {
+            return this.extensionProperties;
+        }
+
+        @Override
+        public VkExtensionProperties getExtensionProperties(String extension) {
+            return this.extensionProperties.getOrDefault(extension, null);
+        }
+
+        @Override
+        public List<VkQueueFamilyProperties> getQueueFamilyProperties() {
+            return queueFamilyProperties;
+        }
+
+        @Override
+        public List<Integer> findQueueFamilies(int flags, boolean noTransferLimit) {
+            List<Integer> ret = new ArrayList<>();
+            for(int i = 0; i < this.queueFamilyProperties.size(); i++) {
+                VkQueueFamilyProperties properties = this.queueFamilyProperties.get(i);
+                if((properties.queueFlags() & flags) == flags) {
+                    if(noTransferLimit) {
+                        ret.add(i);
+                    } else {
+                        VkExtent3D granularity = properties.minImageTransferGranularity();
+                        if(granularity.width() == 1 && granularity.height() == 1 && granularity.depth() == 1) {
+                            ret.add(i);
+                        }
+                    }
+                }
+            }
+            return ret;
+        }
+
+        @Override
         public Future<VulkanQueue> addQueueRequest(int family) {
             assert(this.isBuilding);
 
@@ -331,22 +363,14 @@ public class DeviceBuilder {
             return request.future;
         }
 
-        /**
-         * Adds a extension to the set of enabled extensions. This function does not validate if the extension
-         * is actually supported.
-         * Must only be called during the device configuration process.
-         *
-         * @param extension The name of the extension.
-         */
+        @Override
         public void enableExtension(String extension) {
             assert(this.isBuilding);
 
             this.enabledExtensions.add(extension);
         }
 
-        /**
-         * Returns an instance that can be used to configure device features.
-         */
+        @Override
         public VkPhysicalDeviceFeatures configureDeviceFeatures() {
             assert(this.isBuilding);
 
@@ -356,7 +380,7 @@ public class DeviceBuilder {
         private static class QueueRequest {
             private final int requestedFamily;
             private int assignedIndex;
-            private CompletableFuture<VulkanQueue> future;
+            private final CompletableFuture<VulkanQueue> future;
 
             private QueueRequest(int family) {
                 this.requestedFamily = family;

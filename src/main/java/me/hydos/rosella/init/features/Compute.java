@@ -1,5 +1,6 @@
 package me.hydos.rosella.init.features;
 
+import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.init.DeviceBuilder;
 import org.lwjgl.vulkan.VK10;
 
@@ -16,7 +17,7 @@ public class Compute extends SimpleApplicationFeature {
         super(NAME, Compute::canEnable, null);
     }
 
-    private static boolean canEnable(DeviceBuilder.DeviceMeta meta) {
-        return meta.hasQueueWithFlags(VK10.VK_QUEUE_COMPUTE_BIT);
+    private static boolean canEnable(DeviceBuildInformation meta) {
+        return !meta.findQueueFamilies(VK10.VK_QUEUE_COMPUTE_BIT, true).isEmpty();
     }
 }

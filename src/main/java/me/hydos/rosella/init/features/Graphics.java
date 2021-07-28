@@ -1,6 +1,6 @@
 package me.hydos.rosella.init.features;
 
-import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.init.DeviceBuildInformation;
 import org.lwjgl.vulkan.VK10;
 
 /**
@@ -16,7 +16,7 @@ public class Graphics extends SimpleApplicationFeature {
         super(NAME, Graphics::canEnable, null);
     }
 
-    private static boolean canEnable(DeviceBuilder.DeviceMeta meta) {
-        return meta.hasQueueWithFlags(VK10.VK_QUEUE_GRAPHICS_BIT);
+    private static boolean canEnable(DeviceBuildInformation meta) {
+        return !meta.findQueueFamilies(VK10.VK_QUEUE_GRAPHICS_BIT, true).isEmpty();
     }
 }

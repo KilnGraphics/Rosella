@@ -1,6 +1,7 @@
 package me.hydos.rosella.init.features;
 
-import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.init.DeviceBuildConfigurator;
+import me.hydos.rosella.init.DeviceBuildInformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,18 +17,18 @@ import java.util.function.Function;
  */
 public class SimpleApplicationFeature extends ApplicationFeature {
 
-    protected final Function<DeviceBuilder.DeviceMeta, Boolean> testFunc;
-    protected final Function<DeviceBuilder.DeviceMeta, Void> enableFunc;
+    protected final Function<DeviceBuildInformation, Boolean> testFunc;
+    protected final Function<DeviceBuildConfigurator, Void> enableFunc;
 
     public SimpleApplicationFeature(@NotNull String name, @NotNull Collection<String> dependencies) {
         this(name, dependencies, null, null);
     }
 
-    public SimpleApplicationFeature(@NotNull String name, @Nullable Function<DeviceBuilder.DeviceMeta, Boolean> testFunc, @Nullable Function<DeviceBuilder.DeviceMeta, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull String name, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
         this(name, null, testFunc, enableFunc);
     }
 
-    public SimpleApplicationFeature(@NotNull String name, @Nullable Collection<String> dependencies, @Nullable Function<DeviceBuilder.DeviceMeta, Boolean> testFunc, @Nullable Function<DeviceBuilder.DeviceMeta, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull String name, @Nullable Collection<String> dependencies, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
         super(name, dependencies);
         this.testFunc = testFunc;
         this.enableFunc = enableFunc;
@@ -40,7 +41,7 @@ public class SimpleApplicationFeature extends ApplicationFeature {
 
     protected class SimpleInstance extends ApplicationFeature.Instance {
         @Override
-        public void testFeatureSupport(DeviceBuilder.DeviceMeta meta) {
+        public void testFeatureSupport(DeviceBuildInformation meta) {
             this.canEnable = false;
             if(allDependenciesMet(meta)) {
                 if(testFunc != null) {
@@ -52,7 +53,7 @@ public class SimpleApplicationFeature extends ApplicationFeature {
         }
 
         @Override
-        public Object enableFeature(DeviceBuilder.DeviceMeta meta) {
+        public Object enableFeature(DeviceBuildConfigurator meta) {
             if(enableFunc != null) {
                 enableFunc.apply(meta);
             }

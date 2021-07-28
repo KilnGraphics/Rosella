@@ -1,7 +1,8 @@
 package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.device.VulkanQueue;
-import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.init.DeviceBuildConfigurator;
+import me.hydos.rosella.init.DeviceBuildInformation;
 
 import java.util.concurrent.Future;
 
@@ -33,12 +34,12 @@ public class DisplayGLFW extends ApplicationFeature {
     public class DisplayGLFWInstance extends ApplicationFeature.Instance {
 
         @Override
-        public void testFeatureSupport(DeviceBuilder.DeviceMeta meta) {
+        public void testFeatureSupport(DeviceBuildInformation meta) {
 
         }
 
         @Override
-        public Object enableFeature(DeviceBuilder.DeviceMeta meta) {
+        public Object enableFeature(DeviceBuildConfigurator meta) {
             return null;
         }
     }

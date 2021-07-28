@@ -1,5 +1,7 @@
 package me.hydos.rosella.init.features;
 
+import me.hydos.rosella.init.DeviceBuildConfigurator;
+import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.init.DeviceBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -104,7 +106,7 @@ public abstract class ApplicationFeature {
          * @param meta The DeviceMeta instance.
          * @return True if all dependant features are supported. False otherwise.
          */
-        protected boolean allDependenciesMet(DeviceBuilder.DeviceMeta meta) {
+        protected boolean allDependenciesMet(DeviceBuildInformation meta) {
             return dependencies.stream().allMatch(meta::isApplicationFeatureSupported);
         }
 
@@ -114,7 +116,7 @@ public abstract class ApplicationFeature {
          *
          * @param meta A DeviceMeta instance used to track information about the build process.
          */
-        public abstract void testFeatureSupport(DeviceBuilder.DeviceMeta meta);
+        public abstract void testFeatureSupport(DeviceBuildInformation meta);
 
         /**
          * Should configure the device to enable this feature.
@@ -122,6 +124,6 @@ public abstract class ApplicationFeature {
          * @param meta A DeviceMeta instance used to track information about the build process.
          * @return A object that can be used to return information to the application. Can be null.
          */
-        public abstract Object enableFeature(DeviceBuilder.DeviceMeta meta);
+        public abstract Object enableFeature(DeviceBuildConfigurator meta);
     }
 }
