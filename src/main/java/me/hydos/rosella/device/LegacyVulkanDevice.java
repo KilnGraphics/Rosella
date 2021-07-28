@@ -40,7 +40,7 @@ public class LegacyVulkanDevice {
 
     public LegacyVulkanDevice(VulkanDevice device) {
         this.newDevice = device;
-        this.indices = RosellaLegacy.getMetaObject(device.getFeatureMeta(RosellaLegacy.NAME)).indices();
+        this.indices = RosellaLegacy.getMetadata(device).indices();
         this.rawDevice = device.getDevice();
         this.physicalDevice = device.getDevice().getPhysicalDevice();
     }
@@ -49,7 +49,7 @@ public class LegacyVulkanDevice {
         DeviceBuilder builder = new DeviceBuilder(instance, registry);
         this.newDevice = builder.build();
 
-        this.indices = RosellaLegacy.getMetaObject(this.newDevice.getFeatureMeta(RosellaLegacy.NAME)).indices();
+        this.indices = RosellaLegacy.getMetadata(this.newDevice).indices();
         this.rawDevice = this.newDevice.getDevice();
         this.physicalDevice = this.rawDevice.getPhysicalDevice();
     }
