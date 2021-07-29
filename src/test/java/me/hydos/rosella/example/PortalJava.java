@@ -18,6 +18,7 @@ import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
 
 public class PortalJava {
@@ -26,16 +27,22 @@ public class PortalJava {
 
     public static final int WIDTH = 1280;
 
-    public static final int TOP = 720;
+    public static final int HEIGHT = 720;
 
     static {
+        Configuration.STACK_SIZE.set(2048);
         System.loadLibrary("renderdoc");
-        window = new GlfwWindow(WIDTH, TOP, "Portal 3: Java Edition", true);
+        window = new GlfwWindow(WIDTH, HEIGHT, "Portal 3: Java Edition", true);
         rosella = new Rosella(window, "Portal 3", true);
     }
 
-    public static final Matrix4f viewMatrix = new Matrix4f();
-    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -100, 1000);
+    public static final Matrix4f viewMatrix = new Matrix4f().lookAt(2.0f, -40.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    public static final Matrix4f projectionMatrix = new Matrix4f().perspective(
+            (float) Math.toRadians(45.0),
+            1280 / 720f,
+            0.1f,
+            1000.0f
+    ).scale(1.0f, -1.0f, 1.0f);
 
     public static Material menuBackground;
     public static Material portalLogo;
@@ -60,6 +67,7 @@ public class PortalJava {
             1.0f
     );
 
+
     public static void main(String[] args) {
         loadShaders();
         loadMaterials();
@@ -71,7 +79,7 @@ public class PortalJava {
 
     private static void setupMainMenuScene() {
         rosella.objectManager.addObject(
-                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), 15f, 15f, viewMatrix, projectionMatrix)
+                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), 1.5f, 1f, viewMatrix, projectionMatrix)
         );
 
         rosella.objectManager.addObject(
