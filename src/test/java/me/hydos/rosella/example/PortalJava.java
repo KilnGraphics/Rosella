@@ -175,8 +175,5 @@ public class PortalJava {
                         new RawShaderProgram.PoolSamplerInfo(RawShaderProgram.Companion.getBINDING_LOCATION_AUTO(), "texSampler")
                 )
         );
-
-        basicShader.getRaw().createDescriptorSetLayout();
-        guiShader.getRaw().createDescriptorSetLayout();
     }
 }
