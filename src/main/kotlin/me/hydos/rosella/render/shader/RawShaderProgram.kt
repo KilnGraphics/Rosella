@@ -180,11 +180,7 @@ open class RawShaderProgram(
 
                         VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER -> {
                             if (poolObj is PoolSamplerInfo) {
-                                val texture = if (poolObj.samplerIndex == -1) {
-                                    TextureManager.BLANK_TEXTURE
-                                } else {
-                                    currentTextures[poolObj.samplerIndex] ?: TextureManager.BLANK_TEXTURE
-                                }
+                                val texture = currentTextures[poolObj.samplerName] ?: TextureManager.BLANK_TEXTURE
 
                                 val imageInfo = VkDescriptorImageInfo.callocStack(1, stack)
                                     .imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
@@ -219,8 +215,7 @@ open class RawShaderProgram(
 
     interface PoolObjectInfo {
         /**
-         * If -1, the object will use the current index in the list when iterating
-         * TODO: when converting this to java, make a static variable for -1 and use that
+         * If BINDING_LOCATION_AUTO, the object will use the current index in the list when iterating
          */
         fun getBindingLocation(): Int
         fun getVkType(): Int
@@ -231,7 +226,7 @@ open class RawShaderProgram(
         INSTANCE;
 
         override fun getBindingLocation(): Int {
-            return -1
+            return BINDING_LOCATION_AUTO
         }
 
         override fun getVkType(): Int {
@@ -243,7 +238,7 @@ open class RawShaderProgram(
         }
     }
 
-    data class PoolSamplerInfo(private val bindingLocation: Int, val samplerIndex: Int) : PoolObjectInfo {
+    data class PoolSamplerInfo(private val bindingLocation: Int, val samplerName: String?) : PoolObjectInfo {
 
         override fun getBindingLocation(): Int {
             return bindingLocation
@@ -256,5 +251,9 @@ open class RawShaderProgram(
         override fun getShaderStage(): Int {
             return VK_SHADER_STAGE_ALL
         }
+    }
+
+    companion object {
+        var BINDING_LOCATION_AUTO = -1;
     }
 }

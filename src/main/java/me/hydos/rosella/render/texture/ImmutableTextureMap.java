@@ -26,7 +26,7 @@ public class ImmutableTextureMap implements TextureMap {
         return new Builder();
     }
 
-    private static class Builder {
+    public static class Builder {
         private final Map<String, Texture> map;
 
         private Builder() {

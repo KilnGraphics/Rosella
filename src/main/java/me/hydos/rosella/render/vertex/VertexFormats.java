@@ -41,7 +41,7 @@ public class VertexFormats {
     public static final VertexFormat POSITION_UV0_UV2_COLOR4 = getFormat(VertexFormatElements.POSITION, VertexFormatElements.UVf, VertexFormatElements.UVs, VertexFormatElements.COLOR4ub);
     public static final VertexFormat POSITION_UV0_COLOR4_NORMAL = getFormat(VertexFormatElements.POSITION, VertexFormatElements.UVf, VertexFormatElements.COLOR4ub, VertexFormatElements.NORMAL, VertexFormatElements.PADDINGb);
     // ROSELLA & EXTRA FORMATS
-    public static final VertexFormat POSITION_COLOR3_UV0 = getFormat(VertexFormatElements.POSITION, VertexFormatElements.COLOR3ub, VertexFormatElements.PADDINGb, VertexFormatElements.UVf); // may need to be COLOR3f and no padding
+    public static final VertexFormat POSITION_COLOR3f_UV0 = getFormat(VertexFormatElements.POSITION, VertexFormatElements.COLOR3f, VertexFormatElements.UVf);
 
     // makes sure we don't waste a ton of memory with duplicates that get caught in the materials cache
     public static VertexFormat getFormat(VertexFormatElement... elements) {
