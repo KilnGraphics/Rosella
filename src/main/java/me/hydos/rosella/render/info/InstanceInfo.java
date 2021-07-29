@@ -12,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Info such as the {@link Material} and {@link Ubo} for rendering objects
  */
-public record InstanceInfo(Ubo ubo,
-                           Texture[] textures,
-                           Material material) implements MemoryCloseable {
+public record InstanceInfo(Ubo ubo, Material material) implements MemoryCloseable {
 
     @Override
     public void free(VulkanDevice device, Memory memory) {

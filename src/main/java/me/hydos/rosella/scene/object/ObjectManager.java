@@ -28,11 +28,9 @@ public interface ObjectManager {
     Renderable addObject(Renderable renderable);
 
     /**
-     * registers a {@link Material} into the engine.
-     *
-     * @param material the material to register
+     * Creates a material using the specified contents
      */
-    Material registerMaterial(Material material);
+    Material createMaterial(Material material);
 
     /**
      * registers a {@link RawShaderProgram} into the engine.
@@ -40,11 +38,6 @@ public interface ObjectManager {
      * @param program the program to register
      */
     ShaderProgram addShader(RawShaderProgram program);
-
-    /**
-     * Called when new materials are ready to be processed.
-     */
-    void submitMaterials();
 
     /**
      * Called when the engine is exiting.

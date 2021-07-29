@@ -12,6 +12,7 @@ import me.hydos.rosella.render.shader.ubo.Ubo
 import me.hydos.rosella.render.swapchain.Swapchain
 import me.hydos.rosella.render.texture.Texture
 import me.hydos.rosella.render.texture.TextureManager
+import me.hydos.rosella.render.texture.TextureMap
 import me.hydos.rosella.scene.`object`.impl.SimpleObjectManager
 import me.hydos.rosella.util.VkUtils.ok
 import org.lwjgl.system.MemoryStack
@@ -122,10 +123,10 @@ open class RawShaderProgram(
     fun createDescriptorSets(
         swapchain: Swapchain,
         logger: org.apache.logging.log4j.Logger,
-        currentTextures: Array<Texture?>,
+        currentTextures: TextureMap,
         ubo: Ubo
     ) {
-        this.preparableTextures.addAll(currentTextures)
+        this.preparableTextures.addAll(currentTextures.textures)
 
         if (descriptorPool == 0L) {
             createPool(swapchain)

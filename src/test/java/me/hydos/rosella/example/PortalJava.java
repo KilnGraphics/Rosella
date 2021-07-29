@@ -4,7 +4,7 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
-import me.hydos.rosella.render.material.state.StateInfo;
+import me.hydos.rosella.render.pipeline.StateInfo;
 import me.hydos.rosella.render.model.GuiRenderObject;
 import me.hydos.rosella.render.resource.Global;
 import me.hydos.rosella.render.resource.Identifier;

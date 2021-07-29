@@ -3,7 +3,7 @@ package me.hydos.rosella.scene.object.impl;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.render.material.Material;
-import me.hydos.rosella.render.material.PipelineManager;
+import me.hydos.rosella.render.pipeline.PipelineManager;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderManager;
@@ -27,10 +27,7 @@ public class SimpleObjectManager implements ObjectManager {
     public final ShaderManager shaderManager;
     public final TextureManager textureManager;
     public PipelineManager pipelineManager;
-    public final List<Renderable> renderObjects = new ObjectArrayList<>(1024);
-
-    public final List<Material> materials = new ArrayList<>();
-    public final List<Material> unprocessedMaterials = new ArrayList<>();
+    public final List<Renderable> renderObjects = new ObjectArrayList<>();
 
     public SimpleObjectManager(Rosella rosella, VkCommon common) {
         this.shaderManager = new ShaderManager(rosella);
@@ -76,9 +73,6 @@ public class SimpleObjectManager implements ObjectManager {
 
     @Override
     public void free() {
-        // TODO: why? this should just get picked up by the gc i think
-        materials.clear();
-
         shaderManager.free();
     }
 
