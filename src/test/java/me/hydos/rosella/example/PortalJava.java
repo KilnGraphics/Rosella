@@ -28,7 +28,7 @@ public class PortalJava {
     public static final int TOP = 720;
 
     static {
-        System.loadLibrary("renderdoc");
+//        System.loadLibrary("renderdoc");
         window = new GlfwWindow(WIDTH, TOP, "Portal 3: Java Edition", true);
         rosella = new Rosella(window, "Portal 3", true);
     }
@@ -70,11 +70,11 @@ public class PortalJava {
 
     private static void setupMainMenuScene() {
         rosella.objectManager.addObject(
-                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), 15f, 15f, viewMatrix, projectionMatrix)
+                new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), WIDTH, -TOP, viewMatrix, projectionMatrix)
         );
 
         rosella.objectManager.addObject(
-                new GuiRenderObject(portalLogo, -0.9f, new Vector3f(0, 0, 0), 0.4f, 0.1f, -1f, -2.6f, viewMatrix, projectionMatrix)
+                new GuiRenderObject(portalLogo, -0.9f, new Vector3f(0, 0, 0), WIDTH / 4f, -TOP / 8f, -1f, -2.6f, viewMatrix, projectionMatrix)
         );
     }
 
