@@ -43,6 +43,7 @@ public class RenderObject implements Renderable {
         loadModelInfo();
     }
 
+    @Deprecated
     public void loadModelInfo() {
         ModelLoader.SimpleModel model = ModelLoader.loadModel(modelId, Assimp.aiProcess_FlipUVs | Assimp.aiProcess_DropNormals);
         int vertexCount = model.getPositions().size();
