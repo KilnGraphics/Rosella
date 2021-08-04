@@ -2,6 +2,7 @@ package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.util.NamedID;
 import org.lwjgl.vulkan.VK10;
 
 /**
@@ -11,7 +12,7 @@ import org.lwjgl.vulkan.VK10;
  */
 public class Compute extends SimpleApplicationFeature {
 
-    public static final String NAME = "rosella:compute";
+    public static final NamedID NAME = new NamedID("rosella:compute");
 
     public Compute() {
         super(NAME, Compute::canEnable, null);

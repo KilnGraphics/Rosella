@@ -1,6 +1,7 @@
 package me.hydos.rosella.init;
 
 import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.util.NamedID;
 import org.lwjgl.vulkan.*;
 
 import java.util.List;
@@ -8,9 +9,9 @@ import java.util.Map;
 
 public interface DeviceBuildInformation {
 
-    boolean isApplicationFeatureSupported(String name);
+    boolean isApplicationFeatureSupported(NamedID name);
 
-    ApplicationFeature.Instance getApplicationFeature(String name);
+    ApplicationFeature.Instance getApplicationFeature(NamedID name);
 
     VulkanInstance getInstance();
 

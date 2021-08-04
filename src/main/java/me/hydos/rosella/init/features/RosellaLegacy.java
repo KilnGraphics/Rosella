@@ -7,6 +7,7 @@ import me.hydos.rosella.init.DeviceBuildConfigurator;
 import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.swapchain.SwapchainSupportDetails;
+import me.hydos.rosella.util.NamedID;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
@@ -20,7 +21,7 @@ import java.util.concurrent.Future;
  */
 public class RosellaLegacy extends ApplicationFeature {
 
-    public static final String NAME = "rosella:legacy";
+    public static final NamedID NAME = new NamedID("rosella:legacy");
 
     private final VkCommon common;
 

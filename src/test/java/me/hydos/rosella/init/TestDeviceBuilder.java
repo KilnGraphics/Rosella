@@ -5,6 +5,7 @@ import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.init.features.ApplicationFeature;
 import me.hydos.rosella.init.features.SimpleApplicationFeature;
 import me.hydos.rosella.test_utils.VulkanTestInstance;
+import me.hydos.rosella.util.NamedID;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -34,11 +35,11 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testBasicFeatures() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new SimpleApplicationFeature("t:test1", null));
-        features.add(new SimpleApplicationFeature("t:test2", null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test1"), null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test2"), null));
 
         ArrayList<ApplicationFeature> failFeatures = new ArrayList<>();
-        failFeatures.add(new SimpleApplicationFeature("t:test3", Set.of("t:fail")));
+        failFeatures.add(new SimpleApplicationFeature(new NamedID("t:test3"), Set.of(new NamedID("t:fail"))));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
@@ -65,12 +66,12 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testRequiredFeatures() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new SimpleApplicationFeature("t:test1", null));
-        features.add(new SimpleApplicationFeature("t:test2", null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test1"), null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test2"), null));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
-        registry1.addRequiredApplicationFeature("t:test2");
+        registry1.addRequiredApplicationFeature(new NamedID("t:test2"));
         try(VulkanTestInstance instance = new VulkanTestInstance(registry1)) {
             assertDoesNotThrow(() -> {
                 DeviceBuilder builder = new DeviceBuilder(instance.instance, registry1);
@@ -89,12 +90,12 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testRequiredFeaturesFail() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new SimpleApplicationFeature("t:test1", null));
-        features.add(new SimpleApplicationFeature("t:test2", Set.of("t:fail")));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test1"), null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test2"), Set.of(new NamedID("t:fail"))));
 
         InitializationRegistry registry1 = new InitializationRegistry();
         features.forEach(registry1::registerApplicationFeature);
-        registry1.addRequiredApplicationFeature("t:test2");
+        registry1.addRequiredApplicationFeature(new NamedID("t:test2"));
         try(VulkanTestInstance instance = new VulkanTestInstance(registry1)) {
             assertThrows(RuntimeException.class, () -> {
                 DeviceBuilder builder = new DeviceBuilder(instance.instance, registry1);
@@ -108,19 +109,19 @@ public class TestDeviceBuilder {
     @RequiresVulkan
     void testDependencyOrdering() {
         ArrayList<ApplicationFeature> features = new ArrayList<>();
-        features.add(new SimpleApplicationFeature("t:test9", null));
-        features.add(new SimpleApplicationFeature("t:test2", Set.of("t:test9")));
-        features.add(new SimpleApplicationFeature("t:test3", Set.of("t:test2")));
-        features.add(new SimpleApplicationFeature("t:test4", Set.of("t:test9", "t:test2")));
-        features.add(new SimpleApplicationFeature("t:test5", Set.of("t:test2")));
-        features.add(new SimpleApplicationFeature("t:test6", Set.of("t:test4")));
-        features.add(new SimpleApplicationFeature("t:test7", Set.of("t:test4")));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test9"), null));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test2"), Set.of(new NamedID("t:test9"))));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test3"), Set.of(new NamedID("t:test2"))));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test4"), Set.of(new NamedID("t:test9"), new NamedID("t:test2"))));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test5"), Set.of(new NamedID("t:test2"))));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test6"), Set.of(new NamedID("t:test4"))));
+        features.add(new SimpleApplicationFeature(new NamedID("t:test7"), Set.of(new NamedID("t:test4"))));
 
         ArrayList<ApplicationFeature> failFeatures = new ArrayList<>();
-        failFeatures.add(new SimpleApplicationFeature("t:test11", Set.of("t:fail")));
-        failFeatures.add(new SimpleApplicationFeature("t:test12", Set.of("t:test11")));
-        failFeatures.add(new SimpleApplicationFeature("t:test13", Set.of("t:test12", "t:test2")));
-        failFeatures.add(new SimpleApplicationFeature("t:test14", Set.of("t:test13")));
+        failFeatures.add(new SimpleApplicationFeature(new NamedID("t:test11"), Set.of(new NamedID("t:fail"))));
+        failFeatures.add(new SimpleApplicationFeature(new NamedID("t:test12"), Set.of(new NamedID("t:test11"))));
+        failFeatures.add(new SimpleApplicationFeature(new NamedID("t:test13"), Set.of(new NamedID("t:test12"), new NamedID("t:test2"))));
+        failFeatures.add(new SimpleApplicationFeature(new NamedID("t:test14"), Set.of(new NamedID("t:test13"))));
 
         Random rand = new Random(293840972);
         Collections.shuffle(features, rand);

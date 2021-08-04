@@ -2,6 +2,7 @@ package me.hydos.rosella.init;
 
 import me.hydos.rosella.debug.VulkanDebugCallback;
 import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.util.NamedID;
 
 import java.util.*;
 
@@ -21,8 +22,8 @@ public class InitializationRegistry {
     private final Set<String> requiredInstanceLayers = new HashSet<>();
     private final Set<String> optionalInstanceLayers = new HashSet<>();
 
-    private final Map<String, MarkedFeature> features = new HashMap<>();
-    private final Set<String> requiredFeatures = new HashSet<>();
+    private final Map<NamedID, MarkedFeature> features = new HashMap<>();
+    private final Set<NamedID> requiredFeatures = new HashSet<>();
 
     public void enableValidation(boolean enable) {
         this.validationEnabled = enable;
@@ -98,7 +99,7 @@ public class InitializationRegistry {
      *
      * @param name The name of the feature that is required. The feature does not have to be registered yet.
      */
-    public void addRequiredApplicationFeature(String name) {
+    public void addRequiredApplicationFeature(NamedID name) {
         this.requiredFeatures.add(name);
     }
 
@@ -107,7 +108,7 @@ public class InitializationRegistry {
      *
      * @return A unmodifiable set of all required features.
      */
-    public Set<String> getRequiredApplicationFeatures() {
+    public Set<NamedID> getRequiredApplicationFeatures() {
         return Collections.unmodifiableSet(this.requiredFeatures);
     }
 
@@ -155,7 +156,7 @@ public class InitializationRegistry {
 
         feature.mark = MarkedFeature.Mark.PROCESSING;
 
-        for(String dependency : feature.feature.dependencies) {
+        for(NamedID dependency : feature.feature.dependencies) {
             MarkedFeature next = this.features.get(dependency);
             if(next != null) {
                 sortVisit(next, sorted);

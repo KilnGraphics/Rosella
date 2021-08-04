@@ -2,6 +2,7 @@ package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.init.DeviceBuildConfigurator;
 import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.util.NamedID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,15 +21,15 @@ public class SimpleApplicationFeature extends ApplicationFeature {
     protected final Function<DeviceBuildInformation, Boolean> testFunc;
     protected final Function<DeviceBuildConfigurator, Void> enableFunc;
 
-    public SimpleApplicationFeature(@NotNull String name, @NotNull Collection<String> dependencies) {
+    public SimpleApplicationFeature(@NotNull NamedID name, @NotNull Collection<NamedID> dependencies) {
         this(name, dependencies, null, null);
     }
 
-    public SimpleApplicationFeature(@NotNull String name, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
         this(name, null, testFunc, enableFunc);
     }
 
-    public SimpleApplicationFeature(@NotNull String name, @Nullable Collection<String> dependencies, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Collection<NamedID> dependencies, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
         super(name, dependencies);
         this.testFunc = testFunc;
         this.enableFunc = enableFunc;

@@ -4,6 +4,7 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
 import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.util.NamedID;
 import me.hydos.rosella.util.VkUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
@@ -24,7 +25,7 @@ import java.util.concurrent.Future;
 public class DeviceBuilder {
 
     private final List<ApplicationFeature> applicationFeatures;
-    private final Set<String> requiredFeatures;
+    private final Set<NamedID> requiredFeatures;
     private final VulkanInstance instance;
 
     public DeviceBuilder(@NotNull VulkanInstance instance, @NotNull InitializationRegistry registry) {
@@ -85,8 +86,8 @@ public class DeviceBuilder {
     public class DeviceMeta implements DeviceBuildInformation, DeviceBuildConfigurator {
         private final MemoryStack stack;
 
-        private final Set<String> unsatisfiedRequirements = new HashSet<>();
-        private final Map<String, ApplicationFeature.Instance> features = new HashMap<>();
+        private final Set<NamedID> unsatisfiedRequirements = new HashSet<>();
+        private final Map<NamedID, ApplicationFeature.Instance> features = new HashMap<>();
         private final ArrayList<ApplicationFeature.Instance> sortedFeatures = new ArrayList<>();
 
         private final VkPhysicalDevice physicalDevice;
@@ -181,7 +182,7 @@ public class DeviceBuilder {
             assert(!this.isBuilding);
             this.isBuilding = true;
 
-            Map<String, Object> enabledFeatures = new HashMap<>();
+            Map<NamedID, Object> enabledFeatures = new HashMap<>();
 
             for(ApplicationFeature.Instance feature : this.sortedFeatures) {
                 try {
@@ -281,7 +282,7 @@ public class DeviceBuilder {
         }
 
         @Override
-        public boolean isApplicationFeatureSupported(String name) {
+        public boolean isApplicationFeatureSupported(NamedID name) {
             ApplicationFeature.Instance feature = this.features.getOrDefault(name, null);
             if(feature == null) {
                 return false;
@@ -291,7 +292,7 @@ public class DeviceBuilder {
         }
 
         @Override
-        public ApplicationFeature.Instance getApplicationFeature(String name) {
+        public ApplicationFeature.Instance getApplicationFeature(NamedID name) {
             return this.features.getOrDefault(name, null);
         }
 

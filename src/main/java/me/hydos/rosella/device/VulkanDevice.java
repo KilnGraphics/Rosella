@@ -1,5 +1,6 @@
 package me.hydos.rosella.device;
 
+import me.hydos.rosella.util.NamedID;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkDevice;
 
@@ -9,9 +10,9 @@ import java.util.Map;
 public class VulkanDevice {
 
     private final VkDevice device;
-    private final Map<String, Object> enableFeatures;
+    private final Map<NamedID, Object> enableFeatures;
 
-    public VulkanDevice(VkDevice device, Map<String, Object> enabledFeatures) {
+    public VulkanDevice(VkDevice device, Map<NamedID, Object> enabledFeatures) {
         this.device = device;
         this.enableFeatures = Collections.unmodifiableMap(enabledFeatures);
     }
@@ -30,7 +31,7 @@ public class VulkanDevice {
      * @param name The name of the feature.
      * @return True if the feature is enabled. False otherwise.
      */
-    public boolean isFeatureEnabled(String name) {
+    public boolean isFeatureEnabled(NamedID name) {
         return enableFeatures.containsKey(name);
     }
 
@@ -40,7 +41,7 @@ public class VulkanDevice {
      * @param name The name of the feature.
      * @return The metadata for the feature or null if the feature didnt generate any metadata.
      */
-    public Object getFeatureMeta(String name) {
+    public Object getFeatureMeta(NamedID name) {
         return enableFeatures.get(name);
     }
 }

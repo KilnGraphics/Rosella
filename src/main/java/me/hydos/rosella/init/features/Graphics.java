@@ -1,6 +1,7 @@
 package me.hydos.rosella.init.features;
 
 import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.util.NamedID;
 import org.lwjgl.vulkan.VK10;
 
 /**
@@ -10,7 +11,7 @@ import org.lwjgl.vulkan.VK10;
  */
 public class Graphics extends SimpleApplicationFeature {
 
-    public static final String NAME = "rosella:graphics";
+    public static final NamedID NAME = new NamedID("rosella:graphics");
 
     public Graphics() {
         super(NAME, Graphics::canEnable, null);

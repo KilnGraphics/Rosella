@@ -3,6 +3,7 @@ package me.hydos.rosella.init.features;
 import me.hydos.rosella.device.VulkanQueue;
 import me.hydos.rosella.init.DeviceBuildConfigurator;
 import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.util.NamedID;
 
 import java.util.concurrent.Future;
 
@@ -13,7 +14,7 @@ import java.util.concurrent.Future;
  */
 public class DisplayGLFW extends ApplicationFeature {
 
-    public static final String NAME = "rosella:display_glfw";
+    public static final NamedID NAME = new NamedID("rosella:display_glfw");
 
     public DisplayGLFW() {
         super(NAME);

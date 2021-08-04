@@ -3,6 +3,7 @@ package me.hydos.rosella.init.features;
 import me.hydos.rosella.init.DeviceBuildConfigurator;
 import me.hydos.rosella.init.DeviceBuildInformation;
 import me.hydos.rosella.init.DeviceBuilder;
+import me.hydos.rosella.util.NamedID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,16 +38,15 @@ import java.util.*;
  */
 public abstract class ApplicationFeature {
 
-    public final String name;
-    public final Set<String> dependencies;
+    public final NamedID name;
+    public final Set<NamedID> dependencies;
 
     /**
      * It is recommended to use the standard minecraft syntax for names. (i.e. "mod:name")
      *
      * @param name The name of this feature
      */
-    public ApplicationFeature(@NotNull String name) {
-        assert(!name.isEmpty());
+    public ApplicationFeature(@NotNull NamedID name) {
         this.name = name;
         this.dependencies = Collections.emptySet();
     }
@@ -57,8 +57,7 @@ public abstract class ApplicationFeature {
      * @param name The name of this feature
      * @param dependencies A list of dependencies
      */
-    public ApplicationFeature(@NotNull String name, @Nullable Collection<String> dependencies) {
-        assert(!name.isEmpty());
+    public ApplicationFeature(@NotNull NamedID name, @Nullable Collection<NamedID> dependencies) {
         this.name = name;
         if(dependencies != null) {
             this.dependencies = Set.copyOf(dependencies);
@@ -82,7 +81,7 @@ public abstract class ApplicationFeature {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(name);
+        return name.hashCode();
     }
 
     /**
@@ -92,7 +91,7 @@ public abstract class ApplicationFeature {
 
         protected boolean canEnable;
 
-        public final String getFeatureName() {
+        public final NamedID getFeatureName() {
             return name;
         }
 
