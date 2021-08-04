@@ -2,6 +2,7 @@ package me.hydos.rosella.example;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.init.InitializationRegistry;
 import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
 import me.hydos.rosella.render.Topology;
@@ -33,7 +34,7 @@ public class PortalJava {
     static {
 //        System.loadLibrary("renderdoc");
         window = new GlfwWindow(WIDTH, TOP, "Portal 3: Java Edition", true);
-        rosella = new Rosella(window, "Portal 3", true);
+        rosella = new Rosella(new InitializationRegistry(), window, "Portal 3", VK10.VK_MAKE_VERSION(1, 0, 0));
     }
 
     public static final Matrix4f viewMatrix = new Matrix4f();

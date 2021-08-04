@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.render.material.PipelineInfo;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.texture.TextureImage;
@@ -26,7 +26,6 @@ import java.nio.LongBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -211,7 +210,7 @@ public abstract class Memory {
     /**
      * Copies a buffer from one place to another. usually used to copy a staging buffer into GPU mem
      */
-    public void copyBuffer(long srcBuffer, long dstBuffer, int size, Renderer renderer, VulkanDevice device) {
+    public void copyBuffer(long srcBuffer, long dstBuffer, int size, Renderer renderer, LegacyVulkanDevice device) {
         try (MemoryStack stack = stackPush()) {
             PointerBuffer pCommandBuffer = stack.mallocPointer(1);
             VkCommandBuffer commandBuffer = renderer.beginCmdBuffer(pCommandBuffer, device);

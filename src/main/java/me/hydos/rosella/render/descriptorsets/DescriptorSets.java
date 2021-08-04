@@ -1,7 +1,7 @@
 package me.hydos.rosella.render.descriptorsets;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.memory.ManagedBuffer;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.memory.MemoryCloseable;
@@ -24,7 +24,7 @@ public class DescriptorSets implements MemoryCloseable {
     }
 
     @Override
-    public void free(VulkanDevice device, Memory memory) {
+    public void free(LegacyVulkanDevice device, Memory memory) {
         LongBuffer buffer = MemoryUtil.memAllocLong(descriptorSets.size());
         for (long descriptorSet : descriptorSets) {
             if (descriptorSet != 0L) {

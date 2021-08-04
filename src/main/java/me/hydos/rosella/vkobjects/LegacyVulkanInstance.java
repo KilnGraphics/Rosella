@@ -1,5 +1,9 @@
 package me.hydos.rosella.vkobjects;
 
+import me.hydos.rosella.debug.LegacyDebugCallback;
+import me.hydos.rosella.init.InitializationRegistry;
+import me.hydos.rosella.init.InstanceBuilder;
+import me.hydos.rosella.init.VulkanInstance;
 import me.hydos.rosella.logging.DebugLogger;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -19,13 +23,30 @@ import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
 /**
  * {@link me.hydos.rosella.Rosella} representation of a {@link VkInstance}. Contains a couple of useful things here and there and does most of the work for you.
  */
-public class VulkanInstance {
+@Deprecated
+public class LegacyVulkanInstance {
+
+    public final VulkanInstance newInstance;
 
     public final DebugLogger debugLogger;
     public final VkInstance rawInstance;
     public final OptionalLong messenger;
 
-    public VulkanInstance(List<String> requestedValidationLayers, List<String> requestedExtensions, String applicationName, DebugLogger debugLogger) {
+    public LegacyVulkanInstance(InitializationRegistry registry, String applicationName, int applicationVersion, DebugLogger logger) {
+        this.debugLogger = logger;
+
+        registry.addDebugCallback(new LegacyDebugCallback(this.debugLogger));
+
+        InstanceBuilder builder = new InstanceBuilder(registry);
+        this.newInstance = builder.build(applicationName, applicationVersion);
+
+        this.rawInstance = newInstance.getInstance();
+        this.messenger = OptionalLong.empty();
+    }
+
+    public LegacyVulkanInstance(List<String> requestedValidationLayers, List<String> requestedExtensions, String applicationName, DebugLogger debugLogger) {
+        this.newInstance = null;
+
         this.debugLogger = debugLogger;
 
         boolean validationLayers = !requestedValidationLayers.isEmpty();
