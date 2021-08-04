@@ -2,6 +2,8 @@ package me.hydos.rosella.example;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.file.model.GlbModelLoader;
+import me.hydos.rosella.file.model.GlbRenderObject;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.material.state.StateInfo;
@@ -17,6 +19,7 @@ import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
 
 public class PortalJava {
@@ -42,24 +45,8 @@ public class PortalJava {
     public static ShaderProgram basicShader;
     public static ShaderProgram guiShader;
 
-    public static StateInfo defaultStateInfo = new StateInfo(
-            VK10.VK_COLOR_COMPONENT_R_BIT | VK10.VK_COLOR_COMPONENT_G_BIT | VK10.VK_COLOR_COMPONENT_B_BIT | VK10.VK_COLOR_COMPONENT_A_BIT,
-            true,
-            false,
-            0, 0, 0, 0,
-            false,
-            true,
-            VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO, VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO,
-            VK10.VK_BLEND_OP_ADD,
-            false,
-            false,
-            VK10.VK_COMPARE_OP_LESS,
-            false,
-            VK10.VK_LOGIC_OP_COPY,
-            1.0f
-    );
-
     public static void main(String[] args) {
+        Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
         loadShaders();
         loadMaterials();
         setupMainMenuScene();
@@ -76,6 +63,14 @@ public class PortalJava {
         rosella.objectManager.addObject(
                 new GuiRenderObject(portalLogo, -0.9f, new Vector3f(0, 0, 0), WIDTH / 4f, -TOP / 8f, -1f, -2.6f, viewMatrix, projectionMatrix)
         );
+
+        GlbModelLoader.NodeSelector basicTf3Nodes = (name) -> name.startsWith("lod_0_") && !name.contains("glove");
+        for (GlbRenderObject subModel : GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix)) {
+            subModel.modelMatrix.scale(10, 10, 10);
+            subModel.modelMatrix.translate(0, 36, 0);
+            subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
+            rosella.objectManager.addObject(subModel);
+        }
     }
 
     private static void loadMaterials() {
@@ -87,7 +82,7 @@ public class PortalJava {
                         Topology.TRIANGLES,
                         VertexFormats.POSITION_COLOUR3_UV0,
                         new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
-                        defaultStateInfo
+                        StateInfo.DEFAULT_GUI
                 )
         );
 
@@ -99,7 +94,7 @@ public class PortalJava {
                         Topology.TRIANGLES,
                         VertexFormats.POSITION_COLOUR3_UV0,
                         new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
-                        defaultStateInfo
+                        StateInfo.DEFAULT_GUI
                 )
         );
 
@@ -113,7 +108,7 @@ public class PortalJava {
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
-                        10,
+                        1024,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
                         new RawShaderProgram.PoolSamplerInfo(-1, 0)
                 )
@@ -125,7 +120,7 @@ public class PortalJava {
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
-                        10,
+                        1024,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
                         new RawShaderProgram.PoolSamplerInfo(-1, 0)
                 )
