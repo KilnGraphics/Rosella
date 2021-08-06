@@ -1,6 +1,11 @@
 package me.hydos.rosella.render.texture;
 
 import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueues;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
@@ -19,7 +24,7 @@ public class TextureManager {
     private final VkCommon common;
 
     private final Int2ObjectMap<Texture> textureMap = new Int2ObjectOpenHashMap<>();
-    private final Map<SamplerCreateInfo, Map<Integer, TextureSampler>> samplerCache = new HashMap<>();
+    private final Map<SamplerCreateInfo, Map<String, TextureSampler>> samplerCache = new HashMap<>();
     private final Set<Texture> preparedTextures = new HashSet<>();
     private final IntPriorityQueue reusableTexIds = IntPriorityQueues.synchronize(new IntArrayPriorityQueue());
 
@@ -75,12 +80,12 @@ public class TextureManager {
         }
         TextureImage textureImage = VkUtils.createTextureImage(renderer, common.memory, common.device, width, height, imgFormat);
         textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
-        textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, 0));
+        textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, VK10.VK_NULL_HANDLE));
     }
 
-    public void setTextureSampler(int textureId, int textureNo, SamplerCreateInfo samplerCreateInfo) {
-        Map<Integer, TextureSampler> textureNoMap = samplerCache.computeIfAbsent(samplerCreateInfo, s -> new HashMap<>());
-        TextureSampler textureSampler = textureNoMap.computeIfAbsent(textureNo, t -> new TextureSampler(samplerCreateInfo, common.device));
+    public void setTextureSampler(int textureId, String samplerName, SamplerCreateInfo samplerCreateInfo) {
+        Map<String, TextureSampler> textureNoMap = samplerCache.computeIfAbsent(samplerCreateInfo, s -> new HashMap<>());
+        TextureSampler textureSampler = textureNoMap.computeIfAbsent(samplerName, t -> new TextureSampler(samplerCreateInfo, common.device));
         textureMap.get(textureId).setTextureSampler(textureSampler.getPointer());
     }
 

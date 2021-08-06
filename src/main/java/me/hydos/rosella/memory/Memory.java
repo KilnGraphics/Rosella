@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import me.hydos.rosella.Rosella;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.render.material.PipelineInfo;
 import me.hydos.rosella.render.renderer.Renderer;
@@ -13,7 +14,6 @@ import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.system.Pointer;
 import org.lwjgl.util.vma.Vma;
 import org.lwjgl.util.vma.VmaAllocationCreateInfo;
 import org.lwjgl.util.vma.VmaAllocatorCreateInfo;
@@ -305,16 +305,6 @@ public abstract class Memory {
         src.limit((int) size);
         dst.put(src);
         src.limit(src.capacity()).rewind();
-    }
-
-    public static PointerBuffer asPointerBuffer(List<? extends Pointer> pointers) {
-        PointerBuffer buffer = MemoryStack.stackGet().mallocPointer(pointers.size());
-
-        for (Pointer pointer : pointers) {
-            buffer.put(pointer);
-        }
-
-        return buffer.rewind();
     }
 }
 

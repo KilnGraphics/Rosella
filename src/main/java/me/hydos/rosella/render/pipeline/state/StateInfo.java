@@ -1,4 +1,4 @@
-package me.hydos.rosella.render.material.state;
+package me.hydos.rosella.render.pipeline.state;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryStack;
@@ -16,6 +16,7 @@ import java.util.Objects;
 import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_CLOCKWISE;
 import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
+// TODO OPT: split this up into multiple things and allow for optional dynamic pipelines
 public class StateInfo {
     public static final StateInfo DEFAULT_GUI = new StateInfo(
             VK10.VK_COLOR_COMPONENT_R_BIT | VK10.VK_COLOR_COMPONENT_G_BIT | VK10.VK_COLOR_COMPONENT_B_BIT | VK10.VK_COLOR_COMPONENT_A_BIT,
