@@ -1,9 +1,9 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
-import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.device.init.features.ApplicationFeature;
 import me.hydos.rosella.util.NamedID;
 import me.hydos.rosella.util.VkUtils;
 import org.jetbrains.annotations.NotNull;

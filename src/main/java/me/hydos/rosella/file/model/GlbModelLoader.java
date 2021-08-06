@@ -1,14 +1,17 @@
 package me.hydos.rosella.file.model;
 
 import me.hydos.rosella.Rosella;
+import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
-import me.hydos.rosella.render.material.state.StateInfo;
 import me.hydos.rosella.render.model.AssimpHelperKt;
+import me.hydos.rosella.render.pipeline.PipelineCreateInfo;
+import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
+import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.*;
@@ -69,7 +72,6 @@ public class GlbModelLoader {
                 textures.add(new StbiImage(rawTexture.pcDataCompressed(), ImageFormat.RGBA));
             }
         }
-
         // Now lets create some materials from those textures
         List<Material> materials = new ArrayList<>();
         for (AssimpMaterial rawMaterial : rawMaterials) {
@@ -89,24 +91,36 @@ public class GlbModelLoader {
                     }
                 }
 
+                TextureMap textureMap = new ImmutableTextureMap(images, new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE), rosella, ((SimpleObjectManager) rosella.objectManager).textureManager);
+
                 // FIXME: generate shaders for models based on their properties
-                materials.add(new Material(
+                PipelineCreateInfo pipelineCreateInfo = new PipelineCreateInfo(
+                        rosella.renderer.renderPass,
+                        program,
+                        Topology.TRIANGLES,
+                        PolygonMode.FILL,
+                        VertexFormats.POSITION_COLOR3f_UV0,
+                        StateInfo.DEFAULT_3D
+                );
+                materials.add(
+                        rosella.objectManager.createMaterial(pipelineCreateInfo, textureMap)
+                        /*new Material(
                         images,
                         program,
                         ImageFormat.RGBA,
                         Topology.TRIANGLES,
-                        VertexFormats.POSITION_COLOUR3_UV0,
+                        VertexFormats.POSITION_COLOR3f_UV0,
                         new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE),
                         StateInfo.DEFAULT_3D //FIXME: make the user be able to specify this
-                ));
+                )*/);
             }
         }
 
-        // Give Rosella our material's for prep so it doesnt yell at us later on
-        for (Material material : materials) {
-            rosella.objectManager.registerMaterial(material);
-        }
-        rosella.objectManager.submitMaterials();
+//        // Give Rosella our material's for prep so it doesnt yell at us later on
+//        for (Material material : materials) {
+//            rosella.objectManager.createMaterial(material);
+//        }
+//        rosella.objectManager.submitMaterials();
 
         // Create a list of GlbRenderObjects from the data we have
         List<MeshData> meshes = loadMeshes(scene, selector);

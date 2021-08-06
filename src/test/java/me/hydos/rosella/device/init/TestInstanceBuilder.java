@@ -1,4 +1,4 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.annotations.RequiresVulkan;
 import org.junit.jupiter.api.Test;

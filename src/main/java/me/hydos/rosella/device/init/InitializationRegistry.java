@@ -1,7 +1,7 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.debug.VulkanDebugCallback;
-import me.hydos.rosella.init.features.ApplicationFeature;
+import me.hydos.rosella.device.init.features.ApplicationFeature;
 import me.hydos.rosella.util.NamedID;
 
 import java.util.*;

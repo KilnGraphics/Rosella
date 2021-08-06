@@ -1,15 +1,14 @@
 package me.hydos.rosella;
 
-import me.hydos.rosella.debug.LegacyDebugCallback;
 import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
-import me.hydos.rosella.init.DeviceBuilder;
-import me.hydos.rosella.init.InitializationRegistry;
-import me.hydos.rosella.init.InstanceBuilder;
-import me.hydos.rosella.init.VulkanInstance;
-import me.hydos.rosella.init.features.RosellaLegacy;
+import me.hydos.rosella.device.init.DeviceBuilder;
+import me.hydos.rosella.device.init.InitializationRegistry;
+import me.hydos.rosella.device.init.InstanceBuilder;
+import me.hydos.rosella.device.init.VulkanInstance;
+import me.hydos.rosella.device.init.features.RosellaLegacy;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;

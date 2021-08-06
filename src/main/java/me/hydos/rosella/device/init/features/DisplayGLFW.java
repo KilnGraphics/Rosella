@@ -1,8 +1,8 @@
-package me.hydos.rosella.init.features;
+package me.hydos.rosella.device.init.features;
 
 import me.hydos.rosella.device.VulkanQueue;
-import me.hydos.rosella.init.DeviceBuildConfigurator;
-import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.device.init.DeviceBuildConfigurator;
+import me.hydos.rosella.device.init.DeviceBuildInformation;
 import me.hydos.rosella.util.NamedID;
 
 import java.util.concurrent.Future;

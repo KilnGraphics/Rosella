@@ -1,6 +1,6 @@
-package me.hydos.rosella.init.features;
+package me.hydos.rosella.device.init.features;
 
-import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.device.init.DeviceBuildInformation;
 import me.hydos.rosella.util.NamedID;
 import org.lwjgl.vulkan.VK10;
 

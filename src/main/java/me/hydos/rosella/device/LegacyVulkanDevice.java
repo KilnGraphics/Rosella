@@ -1,9 +1,9 @@
 package me.hydos.rosella.device;
 
-import me.hydos.rosella.init.DeviceBuilder;
-import me.hydos.rosella.init.InitializationRegistry;
-import me.hydos.rosella.init.VulkanInstance;
-import me.hydos.rosella.init.features.RosellaLegacy;
+import me.hydos.rosella.device.init.DeviceBuilder;
+import me.hydos.rosella.device.init.InitializationRegistry;
+import me.hydos.rosella.device.init.VulkanInstance;
+import me.hydos.rosella.device.init.features.RosellaLegacy;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.swapchain.SwapchainSupportDetails;
 import me.hydos.rosella.util.VkUtils;

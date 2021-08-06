@@ -1,10 +1,10 @@
 package me.hydos.rosella.test_utils;
 
 import me.hydos.rosella.device.VulkanDevice;
-import me.hydos.rosella.init.DeviceBuilder;
-import me.hydos.rosella.init.InitializationRegistry;
-import me.hydos.rosella.init.InstanceBuilder;
-import me.hydos.rosella.init.VulkanInstance;
+import me.hydos.rosella.device.init.DeviceBuilder;
+import me.hydos.rosella.device.init.InitializationRegistry;
+import me.hydos.rosella.device.init.InstanceBuilder;
+import me.hydos.rosella.device.init.VulkanInstance;
 import org.lwjgl.vulkan.VK10;
 
 public class VulkanTestInstanceDevice implements AutoCloseable {

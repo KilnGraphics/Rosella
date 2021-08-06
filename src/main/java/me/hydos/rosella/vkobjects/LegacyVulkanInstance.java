@@ -1,9 +1,9 @@
 package me.hydos.rosella.vkobjects;
 
 import me.hydos.rosella.debug.LegacyDebugCallback;
-import me.hydos.rosella.init.InitializationRegistry;
-import me.hydos.rosella.init.InstanceBuilder;
-import me.hydos.rosella.init.VulkanInstance;
+import me.hydos.rosella.device.init.InitializationRegistry;
+import me.hydos.rosella.device.init.InstanceBuilder;
+import me.hydos.rosella.device.init.VulkanInstance;
 import me.hydos.rosella.logging.DebugLogger;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;

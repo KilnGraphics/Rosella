@@ -1,4 +1,4 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.device.VulkanQueue;
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures;

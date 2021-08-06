@@ -1,14 +1,10 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.debug.VulkanDebugCallback;
-import me.hydos.rosella.logging.DebugLogger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VKCapabilitiesInstance;
-import org.lwjgl.vulkan.VkDebugUtilsMessengerCallbackDataEXT;
 import org.lwjgl.vulkan.VkInstance;
-
-import static org.lwjgl.vulkan.EXTDebugUtils.*;
 
 public class VulkanInstance {
 

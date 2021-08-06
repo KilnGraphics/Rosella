@@ -17,7 +17,7 @@ public class GlbRenderObject extends RenderObject {
         super(Resource.Empty.INSTANCE, material, projectionMatrix, modelViewMatrix);
         this.meshData = meshData;
         int vertexCount = meshData.positions.size();
-        int size = material.vertexFormat.getSize();
+        int size = material.pipelineCreateInfo().vertexFormat().getSize();
         this.vertexBuffer = MemoryUtil.memAlloc(size * vertexCount);
         Vector3f color = new Vector3f(1.0f, 1.0f, 1.0f);
 

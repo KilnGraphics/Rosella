@@ -1,7 +1,7 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
-import me.hydos.rosella.init.features.ApplicationFeature;
-import me.hydos.rosella.init.features.SimpleApplicationFeature;
+import me.hydos.rosella.device.init.features.ApplicationFeature;
+import me.hydos.rosella.device.init.features.SimpleApplicationFeature;
 import me.hydos.rosella.util.NamedID;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

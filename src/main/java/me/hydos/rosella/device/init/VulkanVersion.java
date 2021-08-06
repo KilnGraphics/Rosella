@@ -1,4 +1,4 @@
-package me.hydos.rosella.init;
+package me.hydos.rosella.device.init;
 
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VK11;

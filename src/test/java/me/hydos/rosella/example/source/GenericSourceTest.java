@@ -4,17 +4,18 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
 import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
+import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
-import me.hydos.rosella.render.material.state.StateInfo;
 import me.hydos.rosella.render.model.GuiRenderObject;
+import me.hydos.rosella.render.pipeline.PipelineCreateInfo;
+import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.resource.Global;
 import me.hydos.rosella.render.resource.Identifier;
+import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderProgram;
-import me.hydos.rosella.render.texture.SamplerCreateInfo;
-import me.hydos.rosella.render.texture.TextureFilter;
-import me.hydos.rosella.render.texture.WrapMode;
+import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.joml.Matrix4f;
@@ -137,31 +138,67 @@ public class GenericSourceTest {
     }
 
     private static void loadMaterials() {
-        menuBackground = rosella.objectManager.registerMaterial(
-                new Material(
-                        Global.INSTANCE.ensureResource(new Identifier("example", "textures/background/background01.png")),
+        menuBackground = rosella.objectManager.createMaterial(
+                new PipelineCreateInfo(
+                        rosella.renderer.renderPass, // TODO: fix renderpasses being gross af
                         guiShader,
-                        VK10.VK_FORMAT_R8G8B8A8_UNORM,
                         Topology.TRIANGLES,
-                        VertexFormats.POSITION_COLOUR3_UV0,
-                        new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+                        PolygonMode.FILL,
+                        VertexFormats.POSITION_COLOR3f_UV0,
                         StateInfo.DEFAULT_GUI
-                )
+                ),
+                ImmutableTextureMap.builder()
+                        .entry("texSampler", loadTexture(
+                                VK10.VK_FORMAT_R8G8B8A8_UNORM, // TODO: maybe make this srgb
+                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/background/background01.png"))
+                        ))
+                        .build()
         );
 
-        portalLogo = rosella.objectManager.registerMaterial(
-                new Material(
-                        Global.INSTANCE.ensureResource(new Identifier("example", "textures/gui/portal2logo.png")),
+        portalLogo = rosella.objectManager.createMaterial(
+                new PipelineCreateInfo(
+                        rosella.renderer.renderPass, // TODO: fix renderpasses being gross af
                         guiShader,
-                        VK10.VK_FORMAT_R8G8B8A8_SRGB,
                         Topology.TRIANGLES,
-                        VertexFormats.POSITION_COLOUR3_UV0,
-                        new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+                        PolygonMode.FILL,
+                        VertexFormats.POSITION_COLOR3f_UV0,
                         StateInfo.DEFAULT_GUI
-                )
+                ),
+                ImmutableTextureMap.builder()
+                        .entry("texSampler", loadTexture(
+                                VK10.VK_FORMAT_R8G8B8A8_SRGB,
+                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/gui/portal2logo.png"))
+                        ))
+                        .build()
         );
+    }
 
-        rosella.objectManager.submitMaterials();
+    private static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
+        TextureManager textureManager = ((SimpleObjectManager) rosella.objectManager).textureManager;
+
+        if (imageResource.equals(Resource.Empty.INSTANCE)) {
+            Rosella.LOGGER.error("Resource passed to loadTexture was empty, defaulting blank texture");
+            return textureManager.getTexture(TextureManager.BLANK_TEXTURE_ID);
+        }
+
+        int textureId = textureManager.generateTextureId();
+        UploadableImage image = new StbiImage(imageResource, ImageFormat.fromVkFormat(vkImgFormat));
+        textureManager.createTexture(
+                rosella.renderer,
+                textureId,
+                image.getWidth(),
+                image.getHeight(),
+                vkImgFormat
+        );
+        textureManager.setTextureSampler(
+                textureId,
+                "texSampler",
+                samplerCreateInfo
+        );
+        textureManager.drawToExistingTexture(rosella.renderer, textureId, image);
+        return textureManager.getTexture(textureId);
     }
 
     private static void loadShaders() {
@@ -173,7 +210,7 @@ public class GenericSourceTest {
                         rosella.common.memory,
                         1024,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
-                        new RawShaderProgram.PoolSamplerInfo(-1, 0)
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
                 )
         );
 
@@ -185,7 +222,7 @@ public class GenericSourceTest {
                         rosella.common.memory,
                         1024,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
-                        new RawShaderProgram.PoolSamplerInfo(-1, 0)
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
                 )
         );
     }

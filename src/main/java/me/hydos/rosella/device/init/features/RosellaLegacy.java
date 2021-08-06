@@ -1,10 +1,10 @@
-package me.hydos.rosella.init.features;
+package me.hydos.rosella.device.init.features;
 
 import me.hydos.rosella.device.QueueFamilyIndices;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueue;
-import me.hydos.rosella.init.DeviceBuildConfigurator;
-import me.hydos.rosella.init.DeviceBuildInformation;
+import me.hydos.rosella.device.init.DeviceBuildConfigurator;
+import me.hydos.rosella.device.init.DeviceBuildInformation;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.swapchain.SwapchainSupportDetails;
 import me.hydos.rosella.util.NamedID;
@@ -13,7 +13,6 @@ import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.KHRSwapchain;
 
-import javax.print.attribute.standard.MediaSize;
 import java.util.concurrent.Future;
 
 /**
