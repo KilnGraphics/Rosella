@@ -9,7 +9,6 @@ import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormat;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 
-import static org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_SRGB;
 import static org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_UNORM;
 
 /**
@@ -21,7 +20,7 @@ public class Material {
 
     @Deprecated
     protected final Resource resource;
-    protected UploadableImage image;
+    protected UploadableImage[] images;
     protected final ShaderProgram shader;
     protected final ImageFormat imgFormat;
     protected final Topology topology;
@@ -31,7 +30,13 @@ public class Material {
 
     public Material(UploadableImage image, ShaderProgram shader, ImageFormat imgFormat, Topology topology, VertexFormat vertexFormat, SamplerCreateInfo samplerCreateInfo, StateInfo stateInfo) {
         this((Resource) null, shader, imgFormat, topology, vertexFormat, samplerCreateInfo, stateInfo);
-        this.image = image;
+        this.images = new UploadableImage[1];
+        this.images[0] = image;
+    }
+
+    public Material(UploadableImage[] images, ShaderProgram shader, ImageFormat imgFormat, Topology topology, VertexFormat vertexFormat, SamplerCreateInfo samplerCreateInfo, StateInfo stateInfo) {
+        this((Resource) null, shader, imgFormat, topology, vertexFormat, samplerCreateInfo, stateInfo);
+        this.images = images;
     }
 
     @Deprecated
@@ -58,28 +63,50 @@ public class Material {
             TextureManager textureManager = objectManager.textureManager;
             int textureId = textureManager.generateTextureId(); // FIXME this texture can't be removed
 
-            UploadableImage image = this.image;
+            if (this.images != null) {
+                this.textures = new Texture[images.length];
+                for (int i = 0; i < images.length; i++) {
+                    UploadableImage image = images[i];
+                    if (image == null) {
+                        textures[i] = TextureManager.BLANK_TEXTURE;
+                        continue;
+                    }
 
-            // Hack to fix the fact I need to keep in old code for Blaze4D Compatability -hydos
-            if (this.image == null) {
-                image = new StbiImage(resource, imgFormat);
+                    textureManager.createTexture(
+                            rosella.renderer,
+                            textureId,
+                            image.getWidth(),
+                            image.getHeight(),
+                            VK_FORMAT_R8G8B8A8_UNORM
+                    );
+                    textureManager.setTextureSampler(
+                            textureId,
+                            i,
+                            samplerCreateInfo
+                    );
+                    textureManager.drawToExistingTexture(rosella.renderer, textureId, image);
+                    textures[i] = textureManager.getTexture(textureId);
+                }
+            } else {
+                // Hack to fix the fact I need to keep in old code for Blaze4D Compatability -hydos
+                UploadableImage image = new StbiImage(resource, imgFormat);
+
+                textureManager.createTexture(
+                        rosella.renderer,
+                        textureId,
+                        image.getWidth(),
+                        image.getHeight(),
+                        VK_FORMAT_R8G8B8A8_UNORM
+                );
+                textureManager.setTextureSampler(
+                        textureId,
+                        0,
+                        samplerCreateInfo
+                );
+                textureManager.drawToExistingTexture(rosella.renderer, textureId, image);
+                Texture texture = textureManager.getTexture(textureId);
+                textures = new Texture[]{texture};
             }
-
-            textureManager.createTexture(
-                    rosella.renderer,
-                    textureId,
-                    image.getWidth(),
-                    image.getHeight(),
-                    VK_FORMAT_R8G8B8A8_UNORM
-            );
-            textureManager.setTextureSampler(
-                    textureId,
-                    0,
-                    samplerCreateInfo
-            ); // 0 is the default texture no., but it's still gross
-            textureManager.drawToExistingTexture(rosella.renderer, textureId, image);
-            Texture texture = textureManager.getTexture(textureId);
-            textures = new Texture[]{texture}; //FIXME THIS SUCKS. Yes, indeed it does
         }
     }
 
@@ -96,7 +123,7 @@ public class Material {
     }
 
     public Texture[] getTextures() {
-        if(textures == null) {
+        if (textures == null) {
             throw new RuntimeException("ENGINE STATE IS BROKEN! (Material Submitted yet textures dont exist?)");
         }
         return textures;

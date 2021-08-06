@@ -1,7 +1,6 @@
 package me.hydos.rosella.render.texture;
 
 import it.unimi.dsi.fastutil.ints.*;
-import me.hydos.rosella.Rosella;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;

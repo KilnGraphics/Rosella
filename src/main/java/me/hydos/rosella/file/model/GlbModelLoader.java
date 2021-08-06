@@ -53,7 +53,7 @@ public class GlbModelLoader {
         // Retrieve Textures
         PointerBuffer pTextures = scene.mTextures();
         if (pTextures != null) {
-            for (int i = 0; i < pTextures.capacity(); i++) {
+            for (int i = 0; i < scene.mNumTextures(); i++) {
                 rawTextures.add(AITexture.create(pTextures.get(i)));
             }
         } else {
@@ -74,27 +74,31 @@ public class GlbModelLoader {
         List<Material> materials = new ArrayList<>();
         for (AssimpMaterial rawMaterial : rawMaterials) {
             int textureCount = Assimp.aiGetMaterialTextureCount(rawMaterial.material, aiTextureType_DIFFUSE);
-            if (textureCount == 0) {
-                LOGGER.warn("Skipped material with no textures");
-            } else {
-                try (MemoryStack stack = MemoryStack.stackPush()) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                UploadableImage[] images;
+                if (textureCount == 0) {
+                    LOGGER.warn("Skipped material with no textures");
+                    images = new UploadableImage[1];
+                } else {
+                    images = new UploadableImage[textureCount];
                     for (int i = 0; i < textureCount; i++) {
                         AIString path = AIString.callocStack(stack);
                         Assimp.aiGetMaterialTexture(rawMaterial.material, Assimp.aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
                         String texturePath = path.dataString();
-                        // Assume the image format is normal, not hdr, and has alpha
-                        // FIXME: generate shaders for models based on their properties
-                        materials.add(new Material(
-                                textures.get(Integer.parseInt(texturePath.substring(1))),
-                                program,
-                                ImageFormat.RGBA,
-                                Topology.TRIANGLES,
-                                VertexFormats.POSITION_COLOUR3_UV0,
-                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE),
-                                StateInfo.DEFAULT_3D //FIXME: make the user be able to specify this
-                        ));
+                        images[i] = textures.get(Integer.parseInt(texturePath.substring(1)));
                     }
                 }
+
+                // FIXME: generate shaders for models based on their properties
+                materials.add(new Material(
+                        images,
+                        program,
+                        ImageFormat.RGBA,
+                        Topology.TRIANGLES,
+                        VertexFormats.POSITION_COLOUR3_UV0,
+                        new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE),
+                        StateInfo.DEFAULT_3D //FIXME: make the user be able to specify this
+                ));
             }
         }
 
