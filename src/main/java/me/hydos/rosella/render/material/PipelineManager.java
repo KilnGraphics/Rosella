@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.state.StateInfo;
 import me.hydos.rosella.render.renderer.Renderer;
@@ -83,7 +83,7 @@ public class PipelineManager {
     /**
      * Creates a new pipeline
      */
-    private PipelineInfo createPipeline(VulkanDevice device, Swapchain swapchain, RenderPass renderPass, Long descriptorSetLayout, int polygonMode, ShaderProgram shader, Topology topology, VertexFormat vertexFormat, StateInfo stateInfo) {
+    private PipelineInfo createPipeline(LegacyVulkanDevice device, Swapchain swapchain, RenderPass renderPass, Long descriptorSetLayout, int polygonMode, ShaderProgram shader, Topology topology, VertexFormat vertexFormat, StateInfo stateInfo) {
         long pipelineLayout;
         long graphicsPipeline;
 
