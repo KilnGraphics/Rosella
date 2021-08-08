@@ -23,6 +23,8 @@ import org.joml.Vector3f;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -53,7 +55,16 @@ public class GenericSourceTest {
     public static List<GlbRenderObject> engineer3;
 
     public static void main(String[] args) {
-        Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
+        // TODO: Update Assimp when non-broken version is released
+        //  https://github.com/LWJGL/lwjgl3/issues/642
+        for (Path path : Path.of(".").toAbsolutePath()) {
+            Path assimp = path.resolve("libassimp.so");
+
+            if (Files.isRegularFile(assimp)) {
+                Configuration.ASSIMP_LIBRARY_NAME.set(assimp.toString());
+            }
+        }
+
         loadShaders();
         loadMaterials();
         setupMainMenuScene();

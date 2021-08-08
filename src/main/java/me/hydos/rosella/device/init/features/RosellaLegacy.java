@@ -52,8 +52,7 @@ public class RosellaLegacy extends ApplicationFeature {
                 swapChainAdequate = swapchainSupport.formats.hasRemaining() && swapchainSupport.presentModes.hasRemaining();
                 featureSupported =
                         meta.getPhysicalDeviceFeatures().samplerAnisotropy() &&
-                        meta.getPhysicalDeviceFeatures().depthClamp() &&
-                        meta.getPhysicalDeviceFeatures().depthBounds();
+                        meta.getPhysicalDeviceFeatures().depthClamp();
 
                 canEnable = indices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionAvailable(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             }
@@ -63,8 +62,7 @@ public class RosellaLegacy extends ApplicationFeature {
         public Object enableFeature(DeviceBuildConfigurator meta) {
             meta.configureDeviceFeatures()
                     .samplerAnisotropy(true)
-                    .depthClamp(true)
-                    .depthBounds(true);
+                    .depthClamp(true);
 
             meta.enableExtension(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
@@ -84,6 +82,7 @@ public class RosellaLegacy extends ApplicationFeature {
         if(!(o instanceof RosellaLegacyFeatures)) {
             throw new RuntimeException("Meta object could not be cast to RosellaLegacyFeatures");
         }
+
         return (RosellaLegacyFeatures) o;
     }
 
