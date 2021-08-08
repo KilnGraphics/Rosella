@@ -10,6 +10,7 @@ on:
 
 jobs:
   build-test-fast:
+    if: "! contains(toJSON(github.event.commits.*.message), '[ci skip]')"
     strategy:
       matrix:
         java:
@@ -36,5 +37,5 @@ jobs:
         if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v2
         with:
-          name: Reports-${{ matrix.os }}
+          name: Reports-${{ matrix.java }}-${{ matrix.os }}
           path: build/reports/tests/fastCITest
