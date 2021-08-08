@@ -144,6 +144,7 @@ public class Rosella {
     public void free() {
         common.device.waitForIdle();
         objectManager.free();
+        bufferManager.free();
         renderer.free();
 
         // Free the rest of it

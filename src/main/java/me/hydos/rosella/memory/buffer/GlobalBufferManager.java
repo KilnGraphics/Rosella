@@ -207,4 +207,14 @@ public class GlobalBufferManager {
             return vertexBuffer;
         }
     }
+
+    public void free() {
+        for (BufferInfo buffer : vertexHashToBufferMap.values()) {
+            buffer.free(common.device, common.memory);
+        }
+
+        for (BufferInfo buffer : indexHashToBufferMap.values()) {
+            buffer.free(common.device, common.memory);
+        }
+    }
 }
