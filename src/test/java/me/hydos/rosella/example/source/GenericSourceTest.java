@@ -93,6 +93,8 @@ public class GenericSourceTest {
             }
             return true;
         });
+
+        rosella.free();
     }
 
     private static void setupMainMenuScene() {
