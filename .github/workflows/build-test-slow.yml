@@ -35,5 +35,5 @@ jobs:
         if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v2
         with:
-          name: Fast-Test-Reports-${{ matrix.os }}
+          name: Reports-${{ matrix.os }}
           path: build/reports/tests/slowCITest
