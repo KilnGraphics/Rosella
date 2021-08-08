@@ -8,6 +8,7 @@ import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.render.pipeline.Pipeline;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.texture.TextureImage;
+import me.hydos.rosella.render.texture.TextureSampler;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
@@ -246,6 +247,12 @@ public abstract class Memory {
             if (image.getView() != VK10.VK_NULL_HANDLE) {
                 VK10.vkDestroyImageView(common.device.rawDevice, image.getView(), null);
             }
+        });
+    }
+
+    public void freeSampler(TextureSampler sampler) {
+        deallocatorThreadPool.execute(() -> {
+            VK10.vkDestroySampler(common.device.rawDevice, sampler.getPointer(), null);
         });
     }
 

@@ -8,9 +8,9 @@ public final class Texture {
     private final int width;
     private final int height;
     private final TextureImage textureImage;
-    private long textureSampler;
+    private TextureSampler textureSampler;
 
-    public Texture(int imageFormat, int width, int height, TextureImage textureImage, long textureSampler) {
+    public Texture(int imageFormat, int width, int height, TextureImage textureImage, TextureSampler textureSampler) {
         this.imageFormat = imageFormat;
         this.width = width;
         this.height = height;
@@ -34,11 +34,11 @@ public final class Texture {
         return textureImage;
     }
 
-    public long getTextureSampler() {
+    public TextureSampler getTextureSampler() {
         return textureSampler;
     }
 
-    public void setTextureSampler(long textureSampler) {
+    public void setTextureSampler(TextureSampler textureSampler) {
         this.textureSampler = textureSampler;
     }
 
@@ -66,4 +66,5 @@ public final class Texture {
                 "height=" + height + ", " +
                 "textureImage=" + textureImage + ']';
     }
+
 }

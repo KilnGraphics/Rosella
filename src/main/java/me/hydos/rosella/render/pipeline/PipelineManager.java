@@ -35,7 +35,7 @@ import static me.hydos.rosella.util.VkUtils.ok;
 // TODO: figure out how to deal with renderpasses and abstraction so they can still be referenced after recreation
 // EX: a pipeline wants to use the main renderpass, but the main renderpass has been replaced due to a
 // swapchain recreation.
-public class PipelineManager implements MemoryCloseable {
+public class PipelineManager {
     private final VkCommon common;
     private final Renderer renderer;
 
@@ -58,10 +58,9 @@ public class PipelineManager implements MemoryCloseable {
         }
     }
 
-    @Override
-    public void free(LegacyVulkanDevice device, Memory memory) {
+    public void free() {
         for (Pipeline pipeline : pipelines.keySet()) {
-            pipeline.free(device, memory);
+            pipeline.free(common.device, common.memory);
         }
         pipelines.clear();
     }
