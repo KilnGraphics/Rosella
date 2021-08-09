@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -19,17 +20,17 @@ import java.util.function.Function;
 public class SimpleApplicationFeature extends ApplicationFeature {
 
     protected final Function<DeviceBuildInformation, Boolean> testFunc;
-    protected final Function<DeviceBuildConfigurator, Void> enableFunc;
+    protected final Consumer<DeviceBuildConfigurator> enableFunc;
 
     public SimpleApplicationFeature(@NotNull NamedID name, @NotNull Collection<NamedID> dependencies) {
         this(name, dependencies, null, null);
     }
 
-    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Consumer<DeviceBuildConfigurator> enableFunc) {
         this(name, null, testFunc, enableFunc);
     }
 
-    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Collection<NamedID> dependencies, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Function<DeviceBuildConfigurator, Void> enableFunc) {
+    public SimpleApplicationFeature(@NotNull NamedID name, @Nullable Collection<NamedID> dependencies, @Nullable Function<DeviceBuildInformation, Boolean> testFunc, @Nullable Consumer<DeviceBuildConfigurator> enableFunc) {
         super(name, dependencies);
         this.testFunc = testFunc;
         this.enableFunc = enableFunc;
@@ -56,7 +57,7 @@ public class SimpleApplicationFeature extends ApplicationFeature {
         @Override
         public Object enableFeature(DeviceBuildConfigurator meta) {
             if(enableFunc != null) {
-                enableFunc.apply(meta);
+                enableFunc.accept(meta);
             }
             return null;
         }

@@ -50,9 +50,7 @@ public class RosellaLegacy extends ApplicationFeature {
 
                 SwapchainSupportDetails swapchainSupport = Swapchain.Companion.querySwapchainSupport(meta.getPhysicalDevice(), stack, common.surface);
                 swapChainAdequate = swapchainSupport.formats.hasRemaining() && swapchainSupport.presentModes.hasRemaining();
-                featureSupported =
-                        meta.getPhysicalDeviceFeatures().samplerAnisotropy() &&
-                        meta.getPhysicalDeviceFeatures().depthClamp();
+                featureSupported = meta.getPhysicalDeviceFeatures().samplerAnisotropy();
 
                 canEnable = indices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionAvailable(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             }
