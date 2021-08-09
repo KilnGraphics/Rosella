@@ -3,12 +3,14 @@ package me.hydos.rosella;
 import me.hydos.rosella.device.LegacyVulkanDevice;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
-import me.hydos.rosella.display.Display;
 import me.hydos.rosella.device.init.DeviceBuilder;
 import me.hydos.rosella.device.init.InitializationRegistry;
-import me.hydos.rosella.device.init.InstanceBuilder;
 import me.hydos.rosella.device.init.VulkanInstance;
+import me.hydos.rosella.device.init.features.PhysicalDeviceProperties2;
+import me.hydos.rosella.device.init.features.PortabilitySubset;
 import me.hydos.rosella.device.init.features.RosellaLegacy;
+import me.hydos.rosella.device.init.features.TriangleFan;
+import me.hydos.rosella.display.Display;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
@@ -17,8 +19,8 @@ import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.SemaphorePool;
-import me.hydos.rosella.vkobjects.VkCommon;
 import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
+import me.hydos.rosella.vkobjects.VkCommon;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +38,8 @@ import java.util.stream.Collectors;
 import static me.hydos.rosella.util.VkUtils.ok;
 import static org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT;
 import static org.lwjgl.vulkan.KHRSurface.vkDestroySurfaceKHR;
-import static org.lwjgl.vulkan.VK10.*;
+import static org.lwjgl.vulkan.VK10.vkDestroyCommandPool;
+import static org.lwjgl.vulkan.VK10.vkEnumerateInstanceLayerProperties;
 import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
 
 /**
@@ -60,6 +63,7 @@ public class Rosella {
 
         common.display = display;
         display.getRequiredExtensions().forEach(registry::addRequiredInstanceExtensions);
+        PhysicalDeviceProperties2.addInstanceExtension(registry); // Required to detect triangle fan support
 
         // Needed because debug callbacks are handled by LegacyVulkanInstance. TODO remove this
         common.vkInstance = new LegacyVulkanInstance(registry, applicationName, applicationVersion, new DefaultDebugLogger());
@@ -68,6 +72,9 @@ public class Rosella {
         common.surface = display.createSurface(common);
         registry.registerApplicationFeature(new RosellaLegacy(common));
         registry.addRequiredApplicationFeature(RosellaLegacy.NAME);
+
+        registry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
+        registry.registerApplicationFeature(new TriangleFan());
 
         this.vulkanDevice = new DeviceBuilder(this.vulkanInstance, registry).build();
         common.device = new LegacyVulkanDevice(this.vulkanDevice);
@@ -104,6 +111,7 @@ public class Rosella {
         InitializationRegistry initializationRegistry = new InitializationRegistry();
         requestedValidationLayers.forEach(initializationRegistry::addRequiredInstanceLayer);
         requiredExtensions.forEach(initializationRegistry::addRequiredInstanceExtensions);
+        PhysicalDeviceProperties2.addInstanceExtension(initializationRegistry); // Required to detect triangle fan support
 
         // Setup core vulkan stuff
         common.display = display;
@@ -111,6 +119,9 @@ public class Rosella {
 
         common.surface = display.createSurface(common);
         initializationRegistry.registerApplicationFeature(new RosellaLegacy(common));
+
+        initializationRegistry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
+        initializationRegistry.registerApplicationFeature(new TriangleFan());
 
         common.device = new LegacyVulkanDevice(common.vkInstance.newInstance, initializationRegistry);
 

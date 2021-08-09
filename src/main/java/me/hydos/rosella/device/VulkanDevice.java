@@ -10,11 +10,11 @@ import java.util.Map;
 public class VulkanDevice {
 
     private final VkDevice device;
-    private final Map<NamedID, Object> enableFeatures;
+    private final Map<NamedID, Object> enabledFeatures;
 
     public VulkanDevice(VkDevice device, Map<NamedID, Object> enabledFeatures) {
         this.device = device;
-        this.enableFeatures = Collections.unmodifiableMap(enabledFeatures);
+        this.enabledFeatures = Collections.unmodifiableMap(enabledFeatures);
     }
 
     public VkDevice getDevice() {
@@ -32,7 +32,7 @@ public class VulkanDevice {
      * @return True if the feature is enabled. False otherwise.
      */
     public boolean isFeatureEnabled(NamedID name) {
-        return enableFeatures.containsKey(name);
+        return enabledFeatures.containsKey(name);
     }
 
     /**
@@ -42,6 +42,6 @@ public class VulkanDevice {
      * @return The metadata for the feature or null if the feature didnt generate any metadata.
      */
     public Object getFeatureMeta(NamedID name) {
-        return enableFeatures.get(name);
+        return enabledFeatures.get(name);
     }
 }
