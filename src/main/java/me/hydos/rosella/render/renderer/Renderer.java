@@ -297,7 +297,7 @@ public class Renderer {
         swapchain.setFrameBuffers(new LongArrayList(swapchain.getSwapChainImageViews().size()));
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            LongBuffer attachments = stack.longs(VK_NULL_HANDLE, depthBuffer.depthImage.getView());
+            LongBuffer attachments = stack.longs(VK_NULL_HANDLE, depthBuffer.getDepthImage().getView());
             LongBuffer pFramebuffer = stack.mallocLong(1);
             VkFramebufferCreateInfo framebufferInfo = VkFramebufferCreateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
