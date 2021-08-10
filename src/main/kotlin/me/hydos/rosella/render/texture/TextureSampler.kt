@@ -1,8 +1,6 @@
 package me.hydos.rosella.render.texture
 
 import me.hydos.rosella.device.LegacyVulkanDevice
-import me.hydos.rosella.memory.Memory
-import me.hydos.rosella.memory.MemoryCloseable
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VkSamplerCreateInfo
@@ -10,7 +8,7 @@ import org.lwjgl.vulkan.VkSamplerCreateInfo
 /**
  * The creation info for creating a Texture Sampler
  */
-class TextureSampler(private val createInfo: SamplerCreateInfo, device: LegacyVulkanDevice): MemoryCloseable {
+class TextureSampler(private val createInfo: SamplerCreateInfo, device: LegacyVulkanDevice) {
     var pointer = 0L
 
     init {
@@ -40,27 +38,4 @@ class TextureSampler(private val createInfo: SamplerCreateInfo, device: LegacyVu
             pointer = pTextureSampler[0]
         }
     }
-
-    override fun free(device: LegacyVulkanDevice?, memory: Memory?) {
-        memory!!.freeSampler(this)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TextureSampler
-
-        if (createInfo != other.createInfo) return false
-        if (pointer != other.pointer) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = createInfo.hashCode()
-        result = 31 * result + pointer.hashCode()
-        return result
-    }
-
 }

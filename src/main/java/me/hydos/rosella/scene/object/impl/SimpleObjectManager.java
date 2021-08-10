@@ -2,8 +2,6 @@ package me.hydos.rosella.scene.object.impl;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.LegacyVulkanDevice;
-import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.pipeline.PipelineManager;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.shader.RawShaderProgram;
@@ -57,11 +55,6 @@ public class SimpleObjectManager implements ObjectManager {
     @Override
     public void free() {
         shaderManager.free();
-        textureManager.free();
-        pipelineManager.free();
-        for (Renderable renderObject : renderObjects) {
-            renderObject.free(common.device, common.memory);
-        }
     }
 
     @Override
@@ -69,5 +62,4 @@ public class SimpleObjectManager implements ObjectManager {
         this.renderer = renderer;
         this.pipelineManager = new PipelineManager(common, renderer);
     }
-
 }

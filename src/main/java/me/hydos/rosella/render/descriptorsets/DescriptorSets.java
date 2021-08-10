@@ -6,7 +6,6 @@ import me.hydos.rosella.memory.ManagedBuffer;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.memory.MemoryCloseable;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.VK10;
 
 import java.nio.LongBuffer;
 
@@ -26,7 +25,7 @@ public class DescriptorSets implements MemoryCloseable {
 
     @Override
     public void free(LegacyVulkanDevice device, Memory memory) {
-        if (descriptorPool != VK10.VK_NULL_HANDLE && descriptorSets.size() > 0) {
+        if (descriptorPool != 0L) {
             LongBuffer buffer = MemoryUtil.memAllocLong(descriptorSets.size());
             for (long descriptorSet : descriptorSets) {
                 buffer.put(descriptorSet);
@@ -43,7 +42,7 @@ public class DescriptorSets implements MemoryCloseable {
      */
     public void clear() {
         descriptorSets.clear();
-        descriptorPool = VK10.VK_NULL_HANDLE;
+        descriptorPool = 0L;
     }
 
     public void add(long descriptorSet) {

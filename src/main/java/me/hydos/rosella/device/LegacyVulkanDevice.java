@@ -61,7 +61,9 @@ public class LegacyVulkanDevice {
      */
     public LegacyVulkanDevice(VkCommon common, List<String> validationLayers) {
         this(common, validationLayers, deviceFeatures -> deviceFeatures
-                .samplerAnisotropy(true));
+                .samplerAnisotropy(true)
+                .depthClamp(true)
+                .depthBounds(true));
     }
 
     public LegacyVulkanDevice(VkCommon common, List<String> validationLayers, Consumer<VkPhysicalDeviceFeatures> deviceFeatureCallback) {

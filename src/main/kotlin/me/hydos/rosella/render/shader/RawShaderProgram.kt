@@ -185,7 +185,7 @@ open class RawShaderProgram(
                                 val imageInfo = VkDescriptorImageInfo.callocStack(1, stack)
                                     .imageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                     .imageView(texture.textureImage.view)
-                                    .sampler(texture.textureSampler.pointer)
+                                    .sampler(texture.textureSampler)
 
                                 descriptorWrite.pImageInfo(imageInfo)
                             }
@@ -203,13 +203,13 @@ open class RawShaderProgram(
     }
 
     fun free() {
-        if (descriptorSetLayout != VK_NULL_HANDLE) {
+        if (descriptorSetLayout != 0L) {
             vkDestroyDescriptorSetLayout(device.rawDevice, descriptorSetLayout, null)
-            descriptorSetLayout = VK_NULL_HANDLE
+            descriptorSetLayout = 0
         }
-        if (descriptorPool != VK_NULL_HANDLE) {
+        if (descriptorPool != 0L) {
             vkDestroyDescriptorPool(device.rawDevice, descriptorPool, null)
-            descriptorPool = VK_NULL_HANDLE
+            descriptorPool = 0
         }
     }
 
