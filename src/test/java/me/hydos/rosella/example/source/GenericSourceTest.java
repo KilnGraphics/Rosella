@@ -58,13 +58,7 @@ public class GenericSourceTest {
     public static void main(String[] args) {
         // TODO: Update Assimp when non-broken version is released
         //  https://github.com/LWJGL/lwjgl3/issues/642
-        for (Path path : Path.of(".").toAbsolutePath() && System.getProperty("os.name").contains("Linux")) {
-            Path assimp = path.resolve("libassimp.so");
-
-            if (Files.isRegularFile(assimp)) {
-                Configuration.ASSIMP_LIBRARY_NAME.set(assimp.toString());
-            }
-        }
+        Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
 
         loadShaders();
         loadMaterials();
