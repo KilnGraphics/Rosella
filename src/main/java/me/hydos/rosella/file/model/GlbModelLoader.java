@@ -69,7 +69,11 @@ public class GlbModelLoader {
             if (rawTexture.mHeight() > 0) {
                 throw new RuntimeException("We can't pass that data :(");
             } else {
-                textures.add(new StbiImage(rawTexture.pcDataCompressed(), ImageFormat.RGBA));
+                try {
+                    textures.add(new StbiImage(rawTexture.pcDataCompressed(), ImageFormat.RGBA)); //FIXME: hacks
+                } catch (RuntimeException e) {
+                    textures.add(new StbiImage(rawTexture.pcDataCompressed(), ImageFormat.RGB));
+                }
             }
         }
         // Now lets create some materials from those textures

@@ -1,7 +1,11 @@
 package me.hydos.rosella.render.texture;
 
 import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueues;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
@@ -76,18 +80,18 @@ public class TextureManager {
         }
         TextureImage textureImage = VkUtils.createTextureImage(renderer, common.memory, common.device, width, height, imgFormat);
         textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
-        textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, null));
+        textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, VK10.VK_NULL_HANDLE));
     }
 
     public void setTextureSampler(int textureId, String samplerName, SamplerCreateInfo samplerCreateInfo) {
         Map<String, TextureSampler> textureNoMap = samplerCache.computeIfAbsent(samplerCreateInfo, s -> new HashMap<>());
         TextureSampler textureSampler = textureNoMap.computeIfAbsent(samplerName, t -> new TextureSampler(samplerCreateInfo, common.device));
-        textureMap.get(textureId).setTextureSampler(textureSampler);
+        textureMap.get(textureId).setTextureSampler(textureSampler.getPointer());
     }
 
     public void setTextureSamplerNoCache(int textureId, SamplerCreateInfo samplerCreateInfo) {
         TextureSampler textureSampler = new TextureSampler(samplerCreateInfo, common.device);
-        textureMap.get(textureId).setTextureSampler(textureSampler);
+        textureMap.get(textureId).setTextureSampler(textureSampler.getPointer());
     }
 
     public void drawToExistingTexture(Renderer renderer, int textureId, UploadableImage image, ImageRegion srcRegion, ImageRegion dstRegion) {
@@ -134,22 +138,6 @@ public class TextureManager {
             );
             preparedTextures.add(texture);
         }
-    }
 
-    public void free() {
-        Set<TextureSampler> freedSamplers = new ObjectOpenHashSet<>();
-        for (Map<String, TextureSampler> nameSamplerMap : samplerCache.values()) {
-            for (TextureSampler sampler : nameSamplerMap.values()) {
-                sampler.free(common.device, common.memory);
-                freedSamplers.add(sampler);
-            }
-        }
-
-        for (Texture texture : textureMap.values()) {
-            texture.getTextureImage().free(common.device, common.memory);
-            if (!freedSamplers.contains(texture.getTextureSampler())) {
-                texture.getTextureSampler().free(common.device, common.memory);
-            }
-        }
     }
 }

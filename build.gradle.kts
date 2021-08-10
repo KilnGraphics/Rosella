@@ -2,10 +2,11 @@ plugins {
     java
     kotlin("jvm") version "1.5.10"
     id("com.github.johnrengelman.shadow") version "7.0.0"
+    `maven-publish`
 }
 
 group = "me.hydos"
-version = "1.1-SNAPSHOT"
+version = "1.1-beta"
 
 val lwjglVersion = "3.3.0-SNAPSHOT"
 val lwjglNatives = when (org.gradle.internal.os.OperatingSystem.current()) {
@@ -84,4 +85,79 @@ tasks.register<Test>("fastCITest") {
 tasks.register<Test>("slowCITest") {
     useJUnitPlatform {
     } // In the future we can add tags to exclude tests that require certain vulkan features which arent available on github
+}
+
+var sourcesJar = tasks.create("sourcesJar", Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+var javadocJar = tasks.create("javadocJar", Jar::class) {
+    archiveClassifier.set("javadoc")
+    from(tasks["javadoc"].outputs)
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication::class) {
+            artifacts {
+                artifact(tasks["jar"])
+                artifact(sourcesJar)
+                artifact(javadocJar)
+            }
+
+            pom {
+                name.set("Rosella")
+                packaging = "jar"
+
+                description.set("A Java Vulkan Rendering Engine")
+                url.set("http://github.com/Blaze4D-MC/Rosella")
+
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://mit-license.org/")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("OroArmor")
+                        name.set("Eli Orona")
+                        email.set("eliorona@live.com")
+                        url.set("oroarmor.com")
+                    }
+
+                    developer {
+                        id.set("hYdos")
+                    }
+
+                    developer {
+                        id.set("ramidzkh")
+                    }
+
+                    developer {
+                        id.set("burgerguy")
+                    }
+
+                    developer {
+                        id.set("CodingRays")
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            setUrl(System.getenv("MAVEN_URL"))
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+            name = "oroarmorMaven"
+            isAllowInsecureProtocol = true
+        }
+    }
 }
