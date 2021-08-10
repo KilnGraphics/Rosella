@@ -20,6 +20,7 @@ import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
 
@@ -57,7 +58,7 @@ public class GenericSourceTest {
     public static void main(String[] args) {
         // TODO: Update Assimp when non-broken version is released
         //  https://github.com/LWJGL/lwjgl3/issues/642
-        for (Path path : Path.of(".").toAbsolutePath()) {
+        for (Path path : Path.of(".").toAbsolutePath() && System.getProperty("os.name").contains("Linux")) {
             Path assimp = path.resolve("libassimp.so");
 
             if (Files.isRegularFile(assimp)) {
@@ -72,24 +73,24 @@ public class GenericSourceTest {
 //        rosella.renderer.queueRecreateSwapchain(); FIXME: # C  [libVkLayer_khronos_validation.so+0xe16204]  CoreChecks::ValidateMemoryIsBoundToBuffer(BUFFER_STATE const*, char const*, char const*) const+0x14
 
         window.startAutomaticLoop(rosella, () -> {
-            for (GlbRenderObject glbRenderObject : engineer) {
-                glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0.003f, 0);
-            }
+//            for (GlbRenderObject glbRenderObject : engineer) {
+//                glbRenderObject.modelMatrix.rotateAffineYXZ(0, (float) (GLFW.glfwGetTime() * 0.003f), 0);
+//            }
 
             for (GlbRenderObject glbRenderObject : engineer2) {
-                glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0, 0.001f);
+                glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0, (float) (GLFW.glfwGetTime() * 0.001f));
             }
 
             for (GlbRenderObject glbRenderObject : engineer3) {
-                glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0, -0.001f);
+                glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0, (float) (GLFW.glfwGetTime() * -0.001f));
             }
 
             for (GlbRenderObject glbRenderObject : spy) {
-                glbRenderObject.modelMatrix.rotateAffineYXZ(0, -0.0005f, -0.001f);
+                glbRenderObject.modelMatrix.rotateAffineYXZ(0, (float) (GLFW.glfwGetTime() * -0.0005f), (float) (GLFW.glfwGetTime() * -0.001f));
             }
 
             for (GlbRenderObject glbRenderObject : spy2) {
-                glbRenderObject.modelMatrix.rotateAffineYXZ(0, -0.0005f, 0.001f);
+                glbRenderObject.modelMatrix.rotateAffineYXZ(0, (float) (GLFW.glfwGetTime() * -0.0005f), (float) (GLFW.glfwGetTime() * 0.001f));
             }
             return true;
         });
@@ -107,12 +108,12 @@ public class GenericSourceTest {
         );
 
         GlbModelLoader.NodeSelector basicTf3Nodes = (name) -> name.startsWith("lod_0_") && !name.contains("glove");
-        GlbModelLoader.NodeSelector spyNodes = (name) -> true;
-        engineer = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
+        GlbModelLoader.NodeSelector everything = (name) -> true;
+        engineer = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/2fort.glb")), basicShader, everything, viewMatrix, projectionMatrix);
         engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
         engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, spyNodes, viewMatrix, projectionMatrix);
-        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, spyNodes, viewMatrix, projectionMatrix);
+        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
+        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
 
         for (GlbRenderObject subModel : engineer) {
             subModel.modelMatrix.scale(10, 10, 10);
@@ -225,7 +226,7 @@ public class GenericSourceTest {
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
-                        1024,
+                        10240,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
                         new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
                 )
