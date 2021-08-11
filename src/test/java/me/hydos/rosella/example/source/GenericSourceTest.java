@@ -24,8 +24,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -40,7 +38,7 @@ public class GenericSourceTest {
     public static final int TOP = 720;
 
     public static final Matrix4f viewMatrix = new Matrix4f();
-    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -100, 1000);
+    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -2000f, 2000f, true);;
 
     public static Material menuBackground;
     public static Material portalLogo;
@@ -51,14 +49,16 @@ public class GenericSourceTest {
     public static List<GlbRenderObject> spy;
     public static List<GlbRenderObject> spy2;
 
-    public static List<GlbRenderObject> engineer;
+    public static List<GlbRenderObject> twofort;
     public static List<GlbRenderObject> engineer2;
     public static List<GlbRenderObject> engineer3;
 
     public static void main(String[] args) {
         // TODO: Update Assimp when non-broken version is released
         //  https://github.com/LWJGL/lwjgl3/issues/642
-        Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
+        if (System.getProperty("os.name").contains("Linux")) {
+            Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
+        }
 
         loadShaders();
         loadMaterials();
@@ -67,9 +67,6 @@ public class GenericSourceTest {
 //        rosella.renderer.queueRecreateSwapchain(); FIXME: # C  [libVkLayer_khronos_validation.so+0xe16204]  CoreChecks::ValidateMemoryIsBoundToBuffer(BUFFER_STATE const*, char const*, char const*) const+0x14
 
         window.startAutomaticLoop(rosella, () -> {
-//            for (GlbRenderObject glbRenderObject : engineer) {
-//                glbRenderObject.modelMatrix.rotateAffineYXZ(0, (float) (GLFW.glfwGetTime() * 0.003f), 0);
-//            }
 
             for (GlbRenderObject glbRenderObject : engineer2) {
                 glbRenderObject.modelMatrix.rotateAffineYXZ(0, 0, (float) (GLFW.glfwGetTime() * 0.001f));
@@ -103,28 +100,28 @@ public class GenericSourceTest {
 
         GlbModelLoader.NodeSelector basicTf3Nodes = (name) -> name.startsWith("lod_0_") && !name.contains("glove");
         GlbModelLoader.NodeSelector everything = (name) -> true;
-        engineer = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/2fort.glb")), basicShader, everything, viewMatrix, projectionMatrix);
+        twofort = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/2fort.glb")), basicShader, everything, viewMatrix, projectionMatrix);
         engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
         engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
         spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
         spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
 
-        for (GlbRenderObject subModel : engineer) {
-            subModel.modelMatrix.scale(10, 10, 10);
+        for (GlbRenderObject subModel : twofort) {
+            subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(0, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
             rosella.objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : engineer2) {
-            subModel.modelMatrix.scale(10, 10, 10);
+            subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(40, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
             rosella.objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : engineer3) {
-            subModel.modelMatrix.scale(10, 10, 10);
+            subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(-40, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
             rosella.objectManager.addObject(subModel);
@@ -138,7 +135,7 @@ public class GenericSourceTest {
         }
 
         for (GlbRenderObject subModel : spy2) {
-            subModel.modelMatrix.scale(10, 10, 10);
+            subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(-20, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
             rosella.objectManager.addObject(subModel);

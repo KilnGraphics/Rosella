@@ -342,7 +342,6 @@ public class StateInfo {
     public VkPipelineRasterizationStateCreateInfo getRasterizationStateCreateInfo(int polygonMode) {
         return VkPipelineRasterizationStateCreateInfo.callocStack()
                 .sType(VK10.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO)
-                .depthClampEnable(true)
                 .rasterizerDiscardEnable(false)
                 .polygonMode(polygonMode)
                 .lineWidth(getLineWidth())
@@ -358,9 +357,6 @@ public class StateInfo {
                 .depthTestEnable(isDepthTestEnabled())
                 .depthWriteEnable(isDepthMask())
                 .depthCompareOp(getDepthCompareOp())
-                .depthBoundsTestEnable(true)
-                .minDepthBounds(0f)
-                .maxDepthBounds(1.0f)
                 .stencilTestEnable(isStencilEnabled());
     }
 
