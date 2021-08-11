@@ -22,7 +22,5 @@ class TestColor {
         assertEquals(0.5f, c.rAsFloat(), 1e-2f);
         assertEquals(0.5f, c.gAsFloat(), 1e-2f);
         assertEquals(0.5f, c.bAsFloat(), 1e-2f);
-
-        fail("This fail should be removed");
     }
 }
