@@ -41,7 +41,8 @@ jobs:
           name: Artifacts-${{ matrix.os }}
           path: build/libs/
       - name: Capture test reports
-        if: steps.test.outcome != 'skipped'
+        # TODO Uncomment this once someone figures out why this isnt working   if: ${{ !((steps.test.outcome == 'cancelled') || (steps.test.outcome == 'skipped')) }}
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Reports-${{ matrix.java }}-${{ matrix.os }}

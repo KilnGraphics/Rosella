@@ -42,11 +42,9 @@ jobs:
         with:
           name: Build-${{ matrix.os }}
           path: build/libs/
-      - name: Help
-        if: always()
-        run: echo "${{steps.test.outcome}}, Cancel ${{steps.test.outcome == 'cancelled'}}, Skipp ${{steps.test.outcome == 'skipped'}}, Full ${{ !((steps.test.outcome == 'cancelled') || (steps.test.outcome == 'skipped')) }}"
       - name: Capture test reports
-        if: failure()
+        # TODO Uncomment this once someone figures out why this isnt working   if: ${{ !((steps.test.outcome == 'cancelled') || (steps.test.outcome == 'skipped')) }}
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Reports-${{ matrix.java }}-${{ matrix.os }}
