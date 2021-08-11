@@ -44,7 +44,7 @@ jobs:
           path: build/libs/
       - name: Help
         if: always()
-        run: echo "${{steps.test.outcome}}"
+        run: echo "${{steps.test.outcome}}, Cancel ${{steps.test.outcome == 'cancelled'}}, Skipp ${{steps.test.outcome == 'skipped'}}, Full ${{(steps.test.outcome == 'cancelled') || (steps.test.outcome == 'skipped')}}"
       - name: Capture test reports
         if: ${{ !((steps.test.outcome == 'cancelled') || (steps.test.outcome == 'skipped')) }}
         uses: actions/upload-artifact@v2
