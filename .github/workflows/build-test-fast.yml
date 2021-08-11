@@ -40,10 +40,10 @@ jobs:
         if: ${{ matrix.java == '16' }}
         uses: actions/upload-artifact@v2
         with:
-          name: Artifacts-${{ matrix.os }}
+          name: Build-${{ matrix.os }}
           path: build/libs/
       - name: Capture test reports
-        if: ${{ steps.test.outcome != 'skipped' }}
+        if: steps.test.outcome == 'failure'
         uses: actions/upload-artifact@v2
         with:
           name: Reports-${{ matrix.java }}-${{ matrix.os }}
