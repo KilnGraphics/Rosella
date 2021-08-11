@@ -30,10 +30,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-      - name: Test
+      - name: test
         run: ./gradlew fastCITest
       - name: Capture test reports
-        if: steps.Test.outcome != 'skipped'
+        if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v2
         with:
           name: Reports-${{ matrix.java }}-${{ matrix.os }}
