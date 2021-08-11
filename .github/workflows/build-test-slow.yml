@@ -30,7 +30,6 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Test
         run: ./gradlew slowCITest
-        continue-on-error: true
       - name: Capture test reports
         if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v2
