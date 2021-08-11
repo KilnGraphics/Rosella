@@ -43,7 +43,7 @@ jobs:
           name: Artifacts-${{ matrix.os }}
           path: build/libs/
       - name: Capture test reports
-        if: steps.test.outcome != 'skipped'
+        if: ${{ steps.test.outcome != 'skipped' }}
         uses: actions/upload-artifact@v2
         with:
           name: Reports-${{ matrix.java }}-${{ matrix.os }}
