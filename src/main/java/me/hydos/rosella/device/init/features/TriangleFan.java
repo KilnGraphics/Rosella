@@ -18,7 +18,7 @@ public class TriangleFan extends SimpleApplicationFeature {
     }
 
     private static boolean canEnable(DeviceBuildInformation meta) {
-        if (meta.isApplicationFeatureSupported(PortabilitySubset.NAME)) {
+        if (meta.isApplicationFeatureSupported(DeviceExtensionFeature.getIdFromExtensionName(PortabilitySubset.DEVICE_EXTENSION))) {
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 VkPhysicalDevicePortabilitySubsetFeaturesKHR portabilitySubsetFeatures = VkPhysicalDevicePortabilitySubsetFeaturesKHR.callocStack(stack)
                         .sType(KHRPortabilitySubset.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PORTABILITY_SUBSET_FEATURES_KHR);

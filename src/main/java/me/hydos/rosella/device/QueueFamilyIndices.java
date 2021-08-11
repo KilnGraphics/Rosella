@@ -1,21 +1,13 @@
 package me.hydos.rosella.device;
 
-import java.util.Objects;
-
 public class QueueFamilyIndices {
 
-    public Integer graphicsFamily;
-    public Integer presentFamily;
+    public static final int UNKNOWN_QUEUE_FAMILY_INDEX = Integer.MIN_VALUE;
+
+    public int graphicsFamily;
+    public int presentFamily;
 
     public boolean isComplete() {
-        return graphicsFamily != null && presentFamily != null;
-    }
-
-    public int[] unique() {
-        if (Objects.equals(graphicsFamily, presentFamily)) {
-            return new int[]{graphicsFamily};
-        } else {
-            return new int[]{graphicsFamily, presentFamily};
-        }
+        return graphicsFamily != UNKNOWN_QUEUE_FAMILY_INDEX && presentFamily != UNKNOWN_QUEUE_FAMILY_INDEX;
     }
 }

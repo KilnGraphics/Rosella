@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.render.pipeline.Pipeline;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.texture.TextureImage;
@@ -82,11 +82,11 @@ public abstract class Memory {
     private long createAllocator(VkCommon common) {
         try (MemoryStack stack = stackPush()) {
             VmaVulkanFunctions vulkanFunctions = VmaVulkanFunctions.callocStack(stack)
-                    .set(common.vkInstance.rawInstance, common.device.rawDevice);
+                    .set(common.vkInstance.rawInstance, common.device.getRawDevice());
 
             VmaAllocatorCreateInfo createInfo = VmaAllocatorCreateInfo.callocStack(stack)
-                    .physicalDevice(common.device.physicalDevice)
-                    .device(common.device.rawDevice)
+                    .physicalDevice(common.device.getRawDevice().getPhysicalDevice())
+                    .device(common.device.getRawDevice())
                     .pVulkanFunctions(vulkanFunctions)
                     .instance(common.vkInstance.rawInstance)
                     .vulkanApiVersion(Rosella.VULKAN_VERSION);
@@ -134,18 +134,18 @@ public abstract class Memory {
         try (MemoryStack stack = MemoryStack.stackPush()) {
 
             LongBuffer pTextureImage = stack.mallocLong(1);
-            ok(VK10.vkCreateImage(common.device.rawDevice, pImageCreateInfo, null, pTextureImage), "Failed to allocate image memory");
+            ok(VK10.vkCreateImage(common.device.getRawDevice(), pImageCreateInfo, null, pTextureImage), "Failed to allocate image memory");
             long textureImage = pTextureImage.get(0);
 
             VkMemoryRequirements requirements = VkMemoryRequirements.mallocStack(stack);
-            VK10.vkGetImageMemoryRequirements(common.device.rawDevice, textureImage, requirements);
+            VK10.vkGetImageMemoryRequirements(common.device.getRawDevice(), textureImage, requirements);
             VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.callocStack(stack)
                     .sType(VK10.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
                     .allocationSize(requirements.size())
                     .memoryTypeIndex(VkUtils.findMemoryType(common.device, requirements.memoryTypeBits(), memoryProperties));
 
             LongBuffer pTextureImageMemory = stack.mallocLong(1);
-            ok(VK10.vkAllocateMemory(common.device.rawDevice, allocateInfo, null, pTextureImageMemory));
+            ok(VK10.vkAllocateMemory(common.device.getRawDevice(), allocateInfo, null, pTextureImageMemory));
             long textureImageMemory = pTextureImageMemory.get(0);
 
 //            LongBuffer pImage = stack.mallocLong(1);
@@ -158,7 +158,7 @@ public abstract class Memory {
 //            long image = pImage.get(0);
 //            long allocation = pAllocation.get(0);
 //            ok(Vma.vmaBindImageMemory(allocator, textureImageMemory, textureImage), "Failed to bind image to memory");
-            ok(VK10.vkBindImageMemory(common.device.rawDevice, textureImage, textureImageMemory, 0), "Failed to bind image to memory");
+            ok(VK10.vkBindImageMemory(common.device.getRawDevice(), textureImage, textureImageMemory, 0), "Failed to bind image to memory");
             return new TextureImage(textureImage, textureImageMemory, 0);
         }
     }
@@ -210,7 +210,7 @@ public abstract class Memory {
     /**
      * Copies a buffer from one place to another. usually used to copy a staging buffer into GPU mem
      */
-    public void copyBuffer(long srcBuffer, long dstBuffer, int size, Renderer renderer, LegacyVulkanDevice device) {
+    public void copyBuffer(long srcBuffer, long dstBuffer, int size, Renderer renderer, VulkanDevice device) {
         try (MemoryStack stack = stackPush()) {
             PointerBuffer pCommandBuffer = stack.mallocPointer(1);
             VkCommandBuffer commandBuffer = renderer.beginCmdBuffer(pCommandBuffer, device);
@@ -225,7 +225,7 @@ public abstract class Memory {
                     .pCommandBuffers(pCommandBuffer);
             ok(renderer.queues.graphicsQueue.vkQueueSubmit(submitInfo, VK10.VK_NULL_HANDLE));
             ok(renderer.queues.graphicsQueue.vkQueueWaitIdle());
-            VK10.vkFreeCommandBuffers(device.rawDevice, renderer.commandPool, pCommandBuffer);
+            VK10.vkFreeCommandBuffers(device.getRawDevice(), renderer.commandPool, pCommandBuffer);
         }
     }
 
@@ -241,25 +241,25 @@ public abstract class Memory {
      */
     public void freeImage(TextureImage image) {
         deallocatorThreadPool.execute(() -> {
-            VK10.vkDestroyImage(common.device.rawDevice, image.pointer(), null);
-            VK10.vkFreeMemory(common.device.rawDevice, image.getTextureImageMemory(), null);
+            VK10.vkDestroyImage(common.device.getRawDevice(), image.pointer(), null);
+            VK10.vkFreeMemory(common.device.getRawDevice(), image.getTextureImageMemory(), null);
 //            Vma.vmaDestroyImage(allocator, image.pointer(), image.getTextureImageMemory());
             if (image.getView() != VK10.VK_NULL_HANDLE) {
-                VK10.vkDestroyImageView(common.device.rawDevice, image.getView(), null);
+                VK10.vkDestroyImageView(common.device.getRawDevice(), image.getView(), null);
             }
         });
     }
 
     public void freeSampler(TextureSampler sampler) {
         deallocatorThreadPool.execute(() -> {
-            VK10.vkDestroySampler(common.device.rawDevice, sampler.getPointer(), null);
+            VK10.vkDestroySampler(common.device.getRawDevice(), sampler.getPointer(), null);
         });
     }
 
     public void freePipeline(Pipeline pipeline) {
 //        deallocatorThreadPool.execute(() -> {
-            VK10.vkDestroyPipeline(common.device.rawDevice, pipeline.getGraphicsPipeline(), null);
-            VK10.vkDestroyPipelineLayout(common.device.rawDevice, pipeline.getPipelineLayout(), null);
+            VK10.vkDestroyPipeline(common.device.getRawDevice(), pipeline.getGraphicsPipeline(), null);
+            VK10.vkDestroyPipelineLayout(common.device.getRawDevice(), pipeline.getPipelineLayout(), null);
 //        });
     }
 
@@ -269,7 +269,7 @@ public abstract class Memory {
     public void freeDescriptorSets(long descriptorPool, ManagedBuffer<LongBuffer> descriptorSets) {
 //        deallocatorThreadPool.execute(() -> {
             // FIXME synchronize
-            VK10.vkFreeDescriptorSets(common.device.rawDevice, descriptorPool, descriptorSets.buffer().flip());
+            VK10.vkFreeDescriptorSets(common.device.getRawDevice(), descriptorPool, descriptorSets.buffer().flip());
             descriptorSets.free(common.device, this);
 //        });
     }

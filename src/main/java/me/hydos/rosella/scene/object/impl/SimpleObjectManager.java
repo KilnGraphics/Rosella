@@ -2,7 +2,7 @@ package me.hydos.rosella.scene.object.impl;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.pipeline.PipelineManager;
 import me.hydos.rosella.render.renderer.Renderer;

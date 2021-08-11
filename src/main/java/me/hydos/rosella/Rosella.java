@@ -1,6 +1,6 @@
 package me.hydos.rosella;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.device.init.DeviceBuilder;
@@ -55,7 +55,6 @@ public class Rosella {
     public final ObjectManager objectManager;
 
     public final VulkanInstance vulkanInstance;
-    public final VulkanDevice vulkanDevice;
 
     public Rosella(InitializationRegistry registry, Display display, String applicationName, int applicationVersion) {
         // TODO remove
@@ -76,10 +75,9 @@ public class Rosella {
         registry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
         registry.registerApplicationFeature(new TriangleFan());
 
-        this.vulkanDevice = new DeviceBuilder(this.vulkanInstance, registry).build();
-        common.device = new LegacyVulkanDevice(this.vulkanDevice);
+        common.device = new DeviceBuilder(this.vulkanInstance, registry).build();
 
-        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(this.vulkanDevice);
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(common.device);
         try {
             common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
         } catch (Exception ex) {
@@ -88,7 +86,7 @@ public class Rosella {
 
         // TODO: Tons and tons of old code. Need to remove
         common.memory = new ThreadPoolMemory(common);
-        common.semaphorePool = new SemaphorePool(common.device.rawDevice);
+        common.semaphorePool = new SemaphorePool(common.device.getRawDevice());
 
         this.objectManager = new SimpleObjectManager(this, common);
         this.renderer = new Renderer(this);
@@ -116,6 +114,7 @@ public class Rosella {
         // Setup core vulkan stuff
         common.display = display;
         common.vkInstance = new LegacyVulkanInstance(initializationRegistry, applicationName, VK10.VK_MAKE_VERSION(1, 0, 0), debugLogger);
+        this.vulkanInstance = common.vkInstance.newInstance;
 
         common.surface = display.createSurface(common);
         initializationRegistry.registerApplicationFeature(new RosellaLegacy(common));
@@ -123,9 +122,9 @@ public class Rosella {
         initializationRegistry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
         initializationRegistry.registerApplicationFeature(new TriangleFan());
 
-        common.device = new LegacyVulkanDevice(common.vkInstance.newInstance, initializationRegistry);
+        common.device = new DeviceBuilder(this.vulkanInstance, initializationRegistry).build();
 
-        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(common.device.newDevice);
+        RosellaLegacy.RosellaLegacyFeatures legacyFeatures = RosellaLegacy.getMetadata(common.device);
         try {
             common.queues = new VulkanQueues(legacyFeatures.graphicsQueue().get(), legacyFeatures.presentQueue().get());
         } catch (Exception ex) {
@@ -133,7 +132,7 @@ public class Rosella {
         }
 
         common.memory = new ThreadPoolMemory(common);
-        common.semaphorePool = new SemaphorePool(common.device.rawDevice);
+        common.semaphorePool = new SemaphorePool(common.device.getRawDevice());
 
         // Setup the object manager
         this.objectManager = new SimpleObjectManager(this, common);
@@ -144,9 +143,6 @@ public class Rosella {
 
         // Tell the display we are initialized
         display.onReady();
-
-        this.vulkanInstance = common.vkInstance.newInstance;
-        this.vulkanDevice = common.device.newDevice;
     }
 
     /**
@@ -162,9 +158,9 @@ public class Rosella {
         common.memory.free();
         common.semaphorePool.free();
 
-        vkDestroyCommandPool(common.device.rawDevice, renderer.commandPool, null);
+        vkDestroyCommandPool(common.device.getRawDevice(), renderer.commandPool, null);
 
-        vulkanDevice.destroy();
+        common.device.destroy();
 
         vkDestroySurfaceKHR(common.vkInstance.rawInstance, common.surface, null);
 

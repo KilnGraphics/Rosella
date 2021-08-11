@@ -1,8 +1,10 @@
 package me.hydos.rosella.util;
 
-import net.jpountz.xxhash.XXHashFactory;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -20,8 +22,13 @@ public class NamedID implements Comparable<NamedID> {
         assert(!name.isBlank());
 
         this.name = name;
-        byte[] bytes = name.getBytes(StandardCharsets.UTF_8);
-        this.id = XXHashFactory.fastestJavaInstance().hash64().hash(bytes, 0, bytes.length, 0);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            byte[] stringBytes = name.getBytes(StandardCharsets.UTF_8);
+            ByteBuffer newBuffer = stack.malloc(stringBytes.length);
+            newBuffer.put(0, stringBytes, stringBytes.length, 0);
+            this.id = HashUtil.hash64(newBuffer);
+        }
     }
 
     @Override

@@ -6,9 +6,8 @@ import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.ManagedBuffer;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.util.HashUtil;
 import me.hydos.rosella.vkobjects.VkCommon;
-import net.jpountz.xxhash.XXHash64;
-import net.jpountz.xxhash.XXHashFactory;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
@@ -19,16 +18,8 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.util.vma.Vma.VMA_MEMORY_USAGE_GPU_ONLY;
 import static org.lwjgl.vulkan.VK10.*;
 
-/**
- * To do what all the cool kids do, we make 2 big nut buffers TM
- */
 public class GlobalBufferManager {
 
-    /**
-     * xxHash64 is faster than xxHash32, so even if it may be overkill it makes more sense to use it anyway.
-     */
-    private static final XXHash64 BUFFER_HASH_FUNCTION = XXHashFactory.fastestInstance().hash64();
-    private static final long HASH_SEED = System.currentTimeMillis();
     private static final IntHash.Strategy PREHASHED_STRATEGY = new IntHash.Strategy() { // for some reason fastutil still does HashCommon.mix on the strategy
         @Override
         public int hashCode(int e) {
@@ -89,7 +80,7 @@ public class GlobalBufferManager {
     public BufferInfo getOrCreateIndexBuffer(ManagedBuffer<ByteBuffer> indexBytes) {
         ByteBuffer bytes = indexBytes.buffer();
         int previousPosition = bytes.position();
-        int hash = (int) BUFFER_HASH_FUNCTION.hash(bytes, HASH_SEED);
+        int hash = (int) HashUtil.hash64(bytes);
         bytes.position(previousPosition);
         usedIndexHashes.add(hash);
         BufferInfo buffer = indexHashToBufferMap.get(hash);
@@ -113,7 +104,7 @@ public class GlobalBufferManager {
     public BufferInfo getOrCreateVertexBuffer(ManagedBuffer<ByteBuffer> vertexBytes) {
         ByteBuffer bytes = vertexBytes.buffer();
         int previousPosition = bytes.position();
-        int hash = (int) BUFFER_HASH_FUNCTION.hash(bytes, HASH_SEED);
+        int hash = (int) HashUtil.hash64(bytes);
         bytes.position(previousPosition);
         usedVertexHashes.add(hash);
         BufferInfo buffer = vertexHashToBufferMap.get(hash);

@@ -1,6 +1,7 @@
 package me.hydos.rosella.render.pipeline;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.memory.MemoryCloseable;
 import me.hydos.rosella.render.PolygonMode;
@@ -90,7 +91,7 @@ public class Pipeline implements MemoryCloseable {
     }
 
     @Override
-    public void free(LegacyVulkanDevice device, Memory memory) {
+    public void free(VulkanDevice device, Memory memory) {
         memory.freePipeline(this);
     }
 }

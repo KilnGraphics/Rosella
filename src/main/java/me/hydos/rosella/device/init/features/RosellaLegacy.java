@@ -36,13 +36,13 @@ public class RosellaLegacy extends ApplicationFeature {
 
     public class RosellaLegacyInstance extends ApplicationFeature.Instance {
 
-        private QueueFamilyIndices indices = null;
+        private QueueFamilyIndices queueFamilyIndices;
 
         @Override
         public void testFeatureSupport(DeviceBuildInformation meta) {
             canEnable = false;
 
-            indices = VkUtils.findQueueFamilies(meta.getPhysicalDevice(), common.surface);
+            queueFamilyIndices = VkUtils.findQueueFamilies(meta.getPhysicalDevice(), common.surface);
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 boolean swapChainAdequate;
@@ -52,7 +52,7 @@ public class RosellaLegacy extends ApplicationFeature {
                 swapChainAdequate = swapchainSupport.formats.hasRemaining() && swapchainSupport.presentModes.hasRemaining();
                 featureSupported = meta.getPhysicalDeviceFeatures().samplerAnisotropy();
 
-                canEnable = indices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionAvailable(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+                canEnable = queueFamilyIndices.isComplete() && swapChainAdequate && featureSupported && meta.isExtensionAvailable(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
             }
         }
 
@@ -64,9 +64,9 @@ public class RosellaLegacy extends ApplicationFeature {
 
             meta.enableExtension(KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-            Future<VulkanQueue> graphicsRequest = meta.addQueueRequest(this.indices.graphicsFamily);
-            Future<VulkanQueue> presentRequest = meta.addQueueRequest(this.indices.presentFamily);
-            return new RosellaLegacyFeatures(graphicsRequest, presentRequest, this.indices);
+            Future<VulkanQueue> graphicsRequest = meta.addQueueRequest(queueFamilyIndices.graphicsFamily);
+            Future<VulkanQueue> presentRequest = meta.addQueueRequest(queueFamilyIndices.presentFamily);
+            return new RosellaLegacyFeatures(graphicsRequest, presentRequest);
         }
     }
 
@@ -84,6 +84,6 @@ public class RosellaLegacy extends ApplicationFeature {
         return (RosellaLegacyFeatures) o;
     }
 
-    public record RosellaLegacyFeatures(Future<VulkanQueue> graphicsQueue, Future<VulkanQueue> presentQueue, QueueFamilyIndices indices) {
+    public record RosellaLegacyFeatures(Future<VulkanQueue> graphicsQueue, Future<VulkanQueue> presentQueue) {
     }
 }

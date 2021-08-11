@@ -3,7 +3,7 @@ package me.hydos.rosella.render.shader
 import it.unimi.dsi.fastutil.Hash.VERY_FAST_LOAD_FACTOR
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import me.hydos.rosella.device.LegacyVulkanDevice
+import me.hydos.rosella.device.VulkanDevice
 import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.render.descriptorsets.DescriptorSets
 import me.hydos.rosella.render.renderer.Renderer
@@ -20,12 +20,12 @@ import org.lwjgl.vulkan.*
 import org.lwjgl.vulkan.VK10.*
 
 open class RawShaderProgram(
-        var vertexShader: Resource?,
-        var fragmentShader: Resource?,
-        val device: LegacyVulkanDevice,
-        val memory: Memory,
-        var maxObjCount: Int,
-        private vararg var poolObjects: PoolObjectInfo
+    var vertexShader: Resource?,
+    var fragmentShader: Resource?,
+    val device: VulkanDevice,
+    val memory: Memory,
+    var maxObjCount: Int,
+    private vararg var poolObjects: PoolObjectInfo
 ) {
     var descriptorPool: Long = 0
     var descriptorSetLayout: Long = 0
@@ -60,7 +60,7 @@ open class RawShaderProgram(
 
     private fun createPool(swapchain: Swapchain) {
         if (descriptorPool != 0L) {
-            vkDestroyDescriptorPool(device.rawDevice, descriptorPool, null)
+            vkDestroyDescriptorPool(device.getRawDevice(), descriptorPool, null)
         }
         MemoryStack.stackPush().use { stack ->
             val poolSizes = VkDescriptorPoolSize.callocStack(poolObjects.size, stack)
@@ -80,7 +80,7 @@ open class RawShaderProgram(
             val pDescriptorPool = stack.mallocLong(1)
             ok(
                 vkCreateDescriptorPool(
-                    device.rawDevice,
+                    device.getRawDevice(),
                     poolInfo,
                     null,
                     pDescriptorPool
@@ -110,7 +110,7 @@ open class RawShaderProgram(
             val pDescriptorSetLayout = it.mallocLong(1)
             ok(
                 vkCreateDescriptorSetLayout(
-                    device.rawDevice,
+                    device.getRawDevice(),
                     layoutInfo,
                     null,
                     pDescriptorSetLayout
@@ -148,7 +148,7 @@ open class RawShaderProgram(
 
             ok(
                 vkAllocateDescriptorSets(
-                    device.rawDevice,
+                    device.getRawDevice(),
                     allocInfo,
                     pDescriptorSets
                 ), "Failed to allocate descriptor sets"
@@ -193,7 +193,7 @@ open class RawShaderProgram(
                     }
                     descriptorWrite.dstSet(descriptorSet)
                 }
-                vkUpdateDescriptorSets(device.rawDevice, descriptorWrites, null)
+                vkUpdateDescriptorSets(device.getRawDevice(), descriptorWrites, null)
                 descriptorSets.setDescriptorPool(descriptorPool)
                 descriptorSets.add(descriptorSet)
             }
@@ -204,11 +204,11 @@ open class RawShaderProgram(
 
     fun free() {
         if (descriptorSetLayout != VK_NULL_HANDLE) {
-            vkDestroyDescriptorSetLayout(device.rawDevice, descriptorSetLayout, null)
+            vkDestroyDescriptorSetLayout(device.getRawDevice(), descriptorSetLayout, null)
             descriptorSetLayout = VK_NULL_HANDLE
         }
         if (descriptorPool != VK_NULL_HANDLE) {
-            vkDestroyDescriptorPool(device.rawDevice, descriptorPool, null)
+            vkDestroyDescriptorPool(device.getRawDevice(), descriptorPool, null)
             descriptorPool = VK_NULL_HANDLE
         }
     }

@@ -1,8 +1,13 @@
 package me.hydos.rosella.util;
 
+import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.ints.IntIntImmutablePair;
+import it.unimi.dsi.fastutil.ints.IntIntPair;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import me.hydos.rosella.device.QueueFamilyIndices;
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.renderer.Renderer;
@@ -65,7 +70,7 @@ public class VkUtils {
         }
     }
 
-    public static PointerBuffer allocateCommandBuffers(LegacyVulkanDevice device, long commandPool, int commandBuffersCount, int level) {
+    public static PointerBuffer allocateCommandBuffers(VulkanDevice device, long commandPool, int commandBuffersCount, int level) {
         PointerBuffer pCommandBuffers = stackGet().callocPointer(commandBuffersCount);
         try (MemoryStack stack = stackPush()) {
             VkCommandBufferAllocateInfo allocInfo = VkCommandBufferAllocateInfo.callocStack(stack)
@@ -74,12 +79,12 @@ public class VkUtils {
                     .level(level)
                     .commandBufferCount(commandBuffersCount);
 
-            ok(vkAllocateCommandBuffers(device.rawDevice, allocInfo, pCommandBuffers));
+            ok(vkAllocateCommandBuffers(device.getRawDevice(), allocInfo, pCommandBuffers));
         }
         return pCommandBuffers;
     }
 
-    public static PointerBuffer allocateCommandBuffers(LegacyVulkanDevice device, long commandPool, int commandBuffersCount) {
+    public static PointerBuffer allocateCommandBuffers(VulkanDevice device, long commandPool, int commandBuffersCount) {
         return allocateCommandBuffers(device, commandPool, commandBuffersCount, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
 
@@ -104,7 +109,7 @@ public class VkUtils {
         return createRenderArea(0, 0, swapchain);
     }
 
-    public static long createImageView(LegacyVulkanDevice device, long image, int format, int aspectFlags) {
+    public static long createImageView(VulkanDevice device, long image, int format, int aspectFlags) {
         try (MemoryStack stack = stackPush()) {
             VkImageViewCreateInfo viewInfo = VkImageViewCreateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
@@ -121,12 +126,12 @@ public class VkUtils {
                     );
 
             LongBuffer pImageView = stack.mallocLong(1);
-            ok(vkCreateImageView(device.rawDevice, viewInfo, null, pImageView), "Failed to create texture image view");
+            ok(vkCreateImageView(device.getRawDevice(), viewInfo, null, pImageView), "Failed to create texture image view");
             return pImageView.get(0);
         }
     }
 
-    public static void createSwapchainImageViews(Swapchain swapchain, LegacyVulkanDevice device) {
+    public static void createSwapchainImageViews(Swapchain swapchain, VulkanDevice device) {
         swapchain.setSwapChainImageViews(new LongArrayList(swapchain.getSwapChainImages().size()));
 
         for (long swapChainImage : swapchain.getSwapChainImages()) {
@@ -141,53 +146,39 @@ public class VkUtils {
         }
     }
 
-    public static long createTextureImageView(LegacyVulkanDevice device, int imgFormat, long textureImage) {
+    public static long createTextureImageView(VulkanDevice device, int imgFormat, long textureImage) {
         return createImageView(device, textureImage, imgFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-    }
-
-    public static QueueFamilyIndices findQueueFamilies(VkDevice device, long surface) {
-        return findQueueFamilies(device.getPhysicalDevice(), surface);
-    }
-
-    public static QueueFamilyIndices findQueueFamilies(LegacyVulkanDevice device, long surface) {
-        return findQueueFamilies(device.physicalDevice, surface);
     }
 
     public static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, long surface) {
         try (MemoryStack stack = stackPush()) {
-            QueueFamilyIndices indices = new QueueFamilyIndices();
-
+            QueueFamilyIndices queueFamilyIndices = new QueueFamilyIndices();
             IntBuffer queueFamilyCount = stack.ints(0);
             vkGetPhysicalDeviceQueueFamilyProperties(device, queueFamilyCount, null);
-
             VkQueueFamilyProperties.Buffer queueFamilies = VkQueueFamilyProperties.mallocStack(queueFamilyCount.get(0), stack);
             vkGetPhysicalDeviceQueueFamilyProperties(device, queueFamilyCount, queueFamilies);
-
             IntBuffer presentSupport = stack.ints(VK_FALSE);
-
-            for (int i = 0; i < queueFamilies.capacity() || !indices.isComplete(); i++) {
+            for (int i = 0; i < queueFamilies.capacity() || !queueFamilyIndices.isComplete(); i++) {
                 if ((queueFamilies.get(i).queueFlags() & VK_QUEUE_GRAPHICS_BIT) != 0) {
-                    indices.graphicsFamily = i;
+                    queueFamilyIndices.graphicsFamily = i;
                 }
                 KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, presentSupport);
                 if (presentSupport.get(0) == VK_TRUE) {
-                    indices.presentFamily = i;
+                    queueFamilyIndices.presentFamily = i;
                 }
             }
-
-            return indices;
+            return queueFamilyIndices;
         }
     }
 
-    public static void createCommandPool(LegacyVulkanDevice device, Renderer renderer, long surface) {
+    public static void createCommandPool(VulkanDevice device, VulkanQueues queues, Renderer renderer) {
         try (MemoryStack stack = stackPush()) {
-            QueueFamilyIndices queueFamilyIndices = findQueueFamilies(device, surface);
             VkCommandPoolCreateInfo poolInfo = VkCommandPoolCreateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
-                    .queueFamilyIndex(queueFamilyIndices.graphicsFamily);
+                    .queueFamilyIndex(queues.graphicsQueue.getQueueFamily());
 
             LongBuffer pCommandPool = stack.mallocLong(1);
-            ok(vkCreateCommandPool(device.rawDevice, poolInfo, null, pCommandPool));
+            ok(vkCreateCommandPool(device.getRawDevice(), poolInfo, null, pCommandPool));
 
             renderer.commandPool = pCommandPool.get(0);
         }
@@ -200,13 +191,13 @@ public class VkUtils {
         return clearValues;
     }
 
-    public static VkCommandBuffer beginSingleTimeCommands(Renderer renderer, LegacyVulkanDevice device) {
+    public static VkCommandBuffer beginSingleTimeCommands(Renderer renderer, VulkanDevice device) {
         MemoryStack stack = stackGet();
         PointerBuffer pCommandBuffer = stack.mallocPointer(1);
         return renderer.beginCmdBuffer(pCommandBuffer, device);
     }
 
-    public static void endSingleTimeCommands(VkCommandBuffer commandBuffer, LegacyVulkanDevice device, Renderer renderer) {
+    public static void endSingleTimeCommands(VkCommandBuffer commandBuffer, VulkanDevice device, Renderer renderer) {
         try (MemoryStack stack = stackPush()) {
             vkEndCommandBuffer(commandBuffer);
             VkSubmitInfo.Buffer submitInfo = VkSubmitInfo.callocStack(1, stack)
@@ -214,14 +205,14 @@ public class VkUtils {
                     .pCommandBuffers(stack.pointers(commandBuffer));
             renderer.queues.graphicsQueue.vkQueueSubmit(submitInfo, VK_NULL_HANDLE);
             renderer.queues.graphicsQueue.vkQueueWaitIdle();
-            vkFreeCommandBuffers(device.rawDevice, renderer.commandPool, commandBuffer);
+            vkFreeCommandBuffers(device.getRawDevice(), renderer.commandPool, commandBuffer);
         }
     }
 
-    public static int findMemoryType(LegacyVulkanDevice device, int typeFilter, int properties) {
+    public static int findMemoryType(VulkanDevice device, int typeFilter, int properties) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkPhysicalDeviceMemoryProperties memProperties = VkPhysicalDeviceMemoryProperties.mallocStack(stack);
-            vkGetPhysicalDeviceMemoryProperties(device.physicalDevice, memProperties);
+            vkGetPhysicalDeviceMemoryProperties(device.getRawDevice().getPhysicalDevice(), memProperties);
             for (int i = 0; i < memProperties.memoryTypeCount(); i++) {
                 if ((typeFilter & (1 << i)) != 0 && (memProperties.memoryTypes(i).propertyFlags() & properties) == properties) {
                     return i;
@@ -250,7 +241,7 @@ public class VkUtils {
         }
     }
 
-    public static TextureImage createTextureImage(Renderer renderer, Memory memory, LegacyVulkanDevice device, int width, int height, int imgFormat) {
+    public static TextureImage createTextureImage(Renderer renderer, Memory memory, VulkanDevice device, int width, int height, int imgFormat) {
         TextureImage image = createImage(
                 memory,
                 width,
@@ -275,7 +266,7 @@ public class VkUtils {
         return image;
     }
 
-    public static void transitionImageLayout(Renderer renderer, LegacyVulkanDevice device, DepthBuffer depthBuffer, long image, int format, int oldLayout, int newLayout) {
+    public static void transitionImageLayout(Renderer renderer, VulkanDevice device, DepthBuffer depthBuffer, long image, int format, int oldLayout, int newLayout) {
         try (MemoryStack stack = stackPush()) {
             VkImageMemoryBarrier.Buffer barrier = VkImageMemoryBarrier.callocStack(1, stack)
                     .sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
@@ -340,7 +331,7 @@ public class VkUtils {
         }
     }
 
-    public static void copyToTexture(Renderer renderer, LegacyVulkanDevice device, Memory memory, UploadableImage image, ImageRegion srcRegion, ImageRegion dstRegion, Texture texture) {
+    public static void copyToTexture(Renderer renderer, VulkanDevice device, Memory memory, UploadableImage image, ImageRegion srcRegion, ImageRegion dstRegion, Texture texture) {
         try (MemoryStack stack = stackPush()) {
             LongBuffer pBuffer = stack.mallocLong(1);
             BufferInfo stagingBuf = memory.createStagingBuf(
@@ -373,7 +364,7 @@ public class VkUtils {
         }
     }
 
-    public static void copyBufferToImage(Renderer renderer, LegacyVulkanDevice device, long buffer, long image, int srcImageWidth, int srcImageHeight, int srcXOffset, int srcYOffset, int srcPixelSize, int dstRegionWidth, int dstRegionHeight, int dstXOffset, int dstYOffset) {
+    public static void copyBufferToImage(Renderer renderer, VulkanDevice device, long buffer, long image, int srcImageWidth, int srcImageHeight, int srcXOffset, int srcYOffset, int srcPixelSize, int dstRegionWidth, int dstRegionHeight, int dstXOffset, int dstYOffset) {
         // TODO: add support for mip levels
         // TODO OPT: use linear layout until first prepare, then keep it at optimal. copying to linear is faster but reading is slower.
         try (MemoryStack stack = stackPush()) {

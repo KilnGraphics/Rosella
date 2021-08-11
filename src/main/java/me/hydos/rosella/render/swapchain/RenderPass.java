@@ -1,6 +1,6 @@
 package me.hydos.rosella.render.swapchain;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.render.renderer.Renderer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
@@ -20,7 +20,7 @@ public class RenderPass {
     public RenderPass() {
     }
 
-    public void create(LegacyVulkanDevice device, Swapchain swapchain, Renderer renderer) {
+    public void create(VulkanDevice device, Swapchain swapchain, Renderer renderer) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkAttachmentDescription.Buffer attachments = VkAttachmentDescription.callocStack(2, stack);
             VkAttachmentReference.Buffer attachmentRefs = VkAttachmentReference.callocStack(2, stack);
@@ -74,7 +74,7 @@ public class RenderPass {
                     .pDependencies(dependency);
 
             LongBuffer pRenderPass = stack.mallocLong(1);
-            ok(vkCreateRenderPass(device.rawDevice, renderPassInfo, null, pRenderPass));
+            ok(vkCreateRenderPass(device.getRawDevice(), renderPassInfo, null, pRenderPass));
             this.renderPass = pRenderPass.get(0);
         }
     }

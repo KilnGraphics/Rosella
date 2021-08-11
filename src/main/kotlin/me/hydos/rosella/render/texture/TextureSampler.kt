@@ -1,6 +1,6 @@
 package me.hydos.rosella.render.texture
 
-import me.hydos.rosella.device.LegacyVulkanDevice
+import me.hydos.rosella.device.VulkanDevice
 import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.memory.MemoryCloseable
 import org.lwjgl.system.MemoryStack
@@ -10,7 +10,7 @@ import org.lwjgl.vulkan.VkSamplerCreateInfo
 /**
  * The creation info for creating a Texture Sampler
  */
-class TextureSampler(private val createInfo: SamplerCreateInfo, device: LegacyVulkanDevice): MemoryCloseable {
+class TextureSampler(private val createInfo: SamplerCreateInfo, device: VulkanDevice): MemoryCloseable {
     var pointer = 0L
 
     init {
@@ -34,14 +34,14 @@ class TextureSampler(private val createInfo: SamplerCreateInfo, device: LegacyVu
                 samplerInfo.mipmapMode(VK10.VK_SAMPLER_MIPMAP_MODE_NEAREST)
             }
             val pTextureSampler = stack.mallocLong(1)
-            if (VK10.vkCreateSampler(device.rawDevice, samplerInfo, null, pTextureSampler) != VK10.VK_SUCCESS) {
+            if (VK10.vkCreateSampler(device.getRawDevice(), samplerInfo, null, pTextureSampler) != VK10.VK_SUCCESS) {
                 throw RuntimeException("Failed to create texture sampler")
             }
             pointer = pTextureSampler[0]
         }
     }
 
-    override fun free(device: LegacyVulkanDevice?, memory: Memory?) {
+    override fun free(device: VulkanDevice?, memory: Memory?) {
         memory!!.freeSampler(this)
     }
 

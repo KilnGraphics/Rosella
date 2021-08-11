@@ -1,6 +1,7 @@
 package me.hydos.rosella.render.swapchain;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.memory.MemoryCloseable;
 import me.hydos.rosella.render.renderer.Renderer;
@@ -23,7 +24,7 @@ public class DepthBuffer implements MemoryCloseable {
         return Objects.requireNonNull(depthImage);
     }
 
-    public void createDepthResources(LegacyVulkanDevice device, Memory memory, Swapchain swapchain, Renderer renderer) {
+    public void createDepthResources(VulkanDevice device, Memory memory, Swapchain swapchain, Renderer renderer) {
         int depthFormat = findDepthFormat(device);
         depthImage = VkUtils.createImage(
                 memory,
@@ -49,7 +50,7 @@ public class DepthBuffer implements MemoryCloseable {
         );
     }
 
-    public int findDepthFormat(LegacyVulkanDevice device) {
+    public int findDepthFormat(VulkanDevice device) {
         return findSupportedFormat(
                 MemoryStack.stackGet()
                         .ints(VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT),
@@ -63,13 +64,13 @@ public class DepthBuffer implements MemoryCloseable {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    private int findSupportedFormat(IntBuffer formatCandidates, int tiling, int features, LegacyVulkanDevice device) {
+    private int findSupportedFormat(IntBuffer formatCandidates, int tiling, int features, VulkanDevice device) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkFormatProperties props = VkFormatProperties.callocStack(stack);
 
             for (int i = 0; i < formatCandidates.capacity(); i++) {
                 int format = formatCandidates.get(i);
-                vkGetPhysicalDeviceFormatProperties(device.physicalDevice, format, props);
+                vkGetPhysicalDeviceFormatProperties(device.getRawDevice().getPhysicalDevice(), format, props);
 
                 if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures() & features) == features) {
                     return format;
@@ -83,7 +84,7 @@ public class DepthBuffer implements MemoryCloseable {
     }
 
     @Override
-    public void free(LegacyVulkanDevice device, Memory memory) {
+    public void free(VulkanDevice device, Memory memory) {
         depthImage.free(device, memory);
     }
 }

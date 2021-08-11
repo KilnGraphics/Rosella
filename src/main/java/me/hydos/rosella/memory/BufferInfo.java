@@ -1,10 +1,11 @@
 package me.hydos.rosella.memory;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 
 public record BufferInfo(long buffer, long allocation) implements MemoryCloseable {
     @Override
-    public void free(LegacyVulkanDevice device, Memory memory) {
+    public void free(VulkanDevice device, Memory memory) {
         memory.freeBuffer(this);
     }
 }

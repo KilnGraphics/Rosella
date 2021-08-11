@@ -1,6 +1,6 @@
 package me.hydos.rosella.vkobjects;
 
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.memory.Memory;
@@ -39,7 +39,7 @@ public class VkCommon {
     /**
      * The logical and physical device. used in most Vulkan calls.
      */
-    public LegacyVulkanDevice device;
+    public VulkanDevice device;
 
     /**
      * The Presentation and Graphics queue.

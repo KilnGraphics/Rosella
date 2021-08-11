@@ -1,6 +1,6 @@
 package me.hydos.rosella.render.shader.ubo
 
-import me.hydos.rosella.device.LegacyVulkanDevice
+import me.hydos.rosella.device.VulkanDevice
 import me.hydos.rosella.memory.BufferInfo
 import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.render.descriptorsets.DescriptorSets
@@ -14,7 +14,7 @@ import org.lwjgl.util.vma.Vma
 import org.lwjgl.vulkan.VK10
 
 open class RenderObjectUbo(
-        val device: LegacyVulkanDevice,
+        val device: VulkanDevice,
         val memory: Memory,
         private val renderObject: RenderObject,
         shaderProgram: ShaderProgram

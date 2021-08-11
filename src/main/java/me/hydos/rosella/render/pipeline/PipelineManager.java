@@ -5,7 +5,7 @@ import java.nio.LongBuffer;
 import java.util.Map;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.memory.MemoryCloseable;
 import me.hydos.rosella.render.Topology;
@@ -68,7 +68,7 @@ public class PipelineManager {
     /**
      * Initializes an existing pipeline with the creation data stored inside it.
      */
-    private Pipeline initializePipeline(LegacyVulkanDevice device, Swapchain swapchain, Pipeline pipeline) {
+    private Pipeline initializePipeline(VulkanDevice device, Swapchain swapchain, Pipeline pipeline) {
         long pipelineLayout;
         long graphicsPipeline;
 
@@ -122,7 +122,7 @@ public class PipelineManager {
                     .pSetLayouts(stack.longs(pipeline.getShaderProgram().getRaw().getDescriptorSetLayout()));
 
             LongBuffer pPipelineLayout = stack.longs(VK10.VK_NULL_HANDLE);
-            ok(VK10.vkCreatePipelineLayout(device.rawDevice, pipelineLayoutInfo, null, pPipelineLayout));
+            ok(VK10.vkCreatePipelineLayout(device.getRawDevice(), pipelineLayoutInfo, null, pPipelineLayout));
             pipelineLayout = pPipelineLayout.get(0);
 
             VkGraphicsPipelineCreateInfo.Buffer pipelineInfo = VkGraphicsPipelineCreateInfo.callocStack(1, stack)
@@ -142,12 +142,12 @@ public class PipelineManager {
                     .basePipelineIndex(-1);
 
             LongBuffer pGraphicsPipeline = stack.mallocLong(1);
-            ok(VK10.vkCreateGraphicsPipelines(device.rawDevice, VK10.VK_NULL_HANDLE, pipelineInfo, null, pGraphicsPipeline));
+            ok(VK10.vkCreateGraphicsPipelines(device.getRawDevice(), VK10.VK_NULL_HANDLE, pipelineInfo, null, pGraphicsPipeline));
             graphicsPipeline = pGraphicsPipeline.get(0);
 
             // TODO: do this in memory off thread
-            VK10.vkDestroyShaderModule(device.rawDevice, vertShaderModule, null);
-            VK10.vkDestroyShaderModule(device.rawDevice, fragShaderModule, null);
+            VK10.vkDestroyShaderModule(device.getRawDevice(), vertShaderModule, null);
+            VK10.vkDestroyShaderModule(device.getRawDevice(), fragShaderModule, null);
 
             pipeline.setRawInfo(pipelineLayout, graphicsPipeline);
 

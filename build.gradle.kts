@@ -49,13 +49,12 @@ dependencies {
     api("org.lwjgl", "lwjgl-stb")
     api("org.lwjgl", "lwjgl-vma")
     api("org.lwjgl", "lwjgl-vulkan")
+    api("org.lwjgl", "lwjgl-xxhash")
 
     api("org.joml", "joml", "1.10.1")
     api("it.unimi.dsi", "fastutil", "8.5.4")
     api("com.google.code.gson", "gson", "2.8.7")
     api("org.apache.logging.log4j", "log4j-core", "2.14.1")
-
-    implementation("org.lz4", "lz4-java", "1.8.0")
 
     runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = lwjglNatives)
@@ -63,6 +62,7 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-shaderc", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-vma", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-xxhash", classifier = lwjglNatives)
 
     if (lwjglNatives == "natives-macos" || lwjglNatives == "natives-macos-arm64") {
         runtimeOnly("org.lwjgl", "lwjgl-vulkan", classifier = lwjglNatives)

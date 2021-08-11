@@ -2,9 +2,8 @@ package me.hydos.rosella.render.swapchain
 
 import it.unimi.dsi.fastutil.longs.LongArrayList
 import it.unimi.dsi.fastutil.longs.LongList
-import me.hydos.rosella.device.QueueFamilyIndices
+import me.hydos.rosella.device.VulkanQueues
 import me.hydos.rosella.display.Display
-import me.hydos.rosella.util.VkUtils
 import me.hydos.rosella.util.VkUtils.ok
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -18,6 +17,7 @@ class Swapchain(
     display: Display,
     device: VkDevice,
     physicalDevice: VkPhysicalDevice,
+    queues: VulkanQueues,
     surface: Long
 ) {
     private var maxImages: IntBuffer
@@ -53,11 +53,9 @@ class Swapchain(
                 .imageArrayLayers(1)
                 .imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
 
-            val indices: QueueFamilyIndices = VkUtils.findQueueFamilies(device, surface)
-
-            if (indices.graphicsFamily != indices.presentFamily) {
+            if (queues.graphicsQueue.queueFamily != queues.presentQueue.queueFamily) {
                 createInfo.imageSharingMode(VK_SHARING_MODE_CONCURRENT)
-                    .pQueueFamilyIndices(it.ints(indices.graphicsFamily, indices.presentFamily))
+                    .pQueueFamilyIndices(it.ints(queues.graphicsQueue.queueFamily, queues.presentQueue.queueFamily))
             } else {
                 createInfo.imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
             }

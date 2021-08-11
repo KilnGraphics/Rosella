@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.device.LegacyVulkanDevice;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.render.info.InstanceInfo;
@@ -78,7 +78,7 @@ public class Renderer {
         this.depthBuffer = new DepthBuffer();
         this.mainRenderPass = new RenderPass();
 
-        VkUtils.createCommandPool(common.device, this, common.surface);
+        VkUtils.createCommandPool(common.device, common.queues, this);
         createSwapChain(common, common.display, ((SimpleObjectManager) rosella.objectManager));
         initialSwapchainCreated = true;
     }
@@ -88,7 +88,7 @@ public class Renderer {
     public VkCommandBuffer[] commandBuffers;
 
     private void createSwapChain(VkCommon common, Display display, SimpleObjectManager objectManager) {
-        this.swapchain = new Swapchain(display, common.device.rawDevice, common.device.physicalDevice, common.surface);
+        this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
         mainRenderPass.create(common.device, swapchain, this);
         VkUtils.createSwapchainImageViews(swapchain, common.device);
         depthBuffer.createDepthResources(common.device, common.memory, swapchain, this);
@@ -103,15 +103,15 @@ public class Renderer {
         createSyncObjects();
     }
 
-    public VkCommandBuffer beginCmdBuffer(PointerBuffer pCommandBuffer, LegacyVulkanDevice device) {
+    public VkCommandBuffer beginCmdBuffer(PointerBuffer pCommandBuffer, VulkanDevice device) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkCommandBufferAllocateInfo allocInfo = VkCommandBufferAllocateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
                     .level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                     .commandPool(commandPool)
                     .commandBufferCount(1);
-            ok(vkAllocateCommandBuffers(device.rawDevice, allocInfo, pCommandBuffer));
-            VkCommandBuffer commandBuffer = new VkCommandBuffer(pCommandBuffer.get(0), device.rawDevice);
+            ok(vkAllocateCommandBuffers(device.getRawDevice(), allocInfo, pCommandBuffer));
+            VkCommandBuffer commandBuffer = new VkCommandBuffer(pCommandBuffer.get(0), device.getRawDevice());
             VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
                     .flags(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -123,12 +123,12 @@ public class Renderer {
     public void render() {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             Frame thisFrame = inFlightFrames.get(currentFrameInFlight);
-            ok(vkWaitForFences(rosella.common.device.rawDevice, thisFrame.pFence(), true, UINT64_MAX));
+            ok(vkWaitForFences(rosella.common.device.getRawDevice(), thisFrame.pFence(), true, UINT64_MAX));
 
             IntBuffer pImageIndex = stack.mallocInt(1);
 
             int vkResult = KHRSwapchain.vkAcquireNextImageKHR(
-                    rosella.common.device.rawDevice,
+                    rosella.common.device.getRawDevice(),
                     swapchain.getSwapChain(),
                     UINT64_MAX,
                     thisFrame.imageAvailableSemaphore(),
@@ -152,7 +152,7 @@ public class Renderer {
 
             if (imagesInFlight.containsKey(imageIndex)) {
                 ok(vkWaitForFences(
-                        rosella.common.device.rawDevice,
+                        rosella.common.device.getRawDevice(),
                         imagesInFlight.get(imageIndex).fence(),
                         true,
                         UINT64_MAX
@@ -168,7 +168,7 @@ public class Renderer {
                     .pSignalSemaphores(thisFrame.pRenderFinishedSemaphore())
                     .pCommandBuffers(stack.pointers(commandBuffers[imageIndex]));
 
-            ok(vkResetFences(rosella.common.device.rawDevice, thisFrame.pFence()));
+            ok(vkResetFences(rosella.common.device.getRawDevice(), thisFrame.pFence()));
             ok(queues.graphicsQueue.vkQueueSubmit(submitInfo, thisFrame.fence()));
 
             VkPresentInfoKHR presentInfo = VkPresentInfoKHR.callocStack(stack)
@@ -189,7 +189,7 @@ public class Renderer {
                 throw new RuntimeException("Failed to present swap chain image");
             }
 
-            ok(vkDeviceWaitIdle(rosella.common.device.rawDevice));
+            ok(vkDeviceWaitIdle(rosella.common.device.getRawDevice()));
 
             currentFrameInFlight = (currentFrameInFlight + 1) % MAX_FRAMES_IN_FLIGHT;
         }
@@ -209,7 +209,7 @@ public class Renderer {
         for (RawShaderProgram shader : ((SimpleObjectManager) rosella.objectManager).shaderManager.getCachedShaders().keySet()) {
             if (shader.getDescriptorPool() != VK_NULL_HANDLE) {
                 // TODO: make descriptor pool a class
-                vkDestroyDescriptorPool(rosella.common.device.rawDevice, shader.getDescriptorPool(), null);
+                vkDestroyDescriptorPool(rosella.common.device.getRawDevice(), shader.getDescriptorPool(), null);
                 shader.setDescriptorPool(VK_NULL_HANDLE);
             }
         }
@@ -221,28 +221,28 @@ public class Renderer {
 
         for (long framebuffer : swapchain.getFrameBuffers()) {
             vkDestroyFramebuffer(
-                    rosella.common.device.rawDevice,
+                    rosella.common.device.getRawDevice(),
                     framebuffer,
                     null
             );
         }
 
-        vkDestroyRenderPass(rosella.common.device.rawDevice, mainRenderPass.getRawRenderPass(), null);
+        vkDestroyRenderPass(rosella.common.device.getRawDevice(), mainRenderPass.getRawRenderPass(), null);
         swapchain.getSwapChainImageViews().forEach(imageView ->
                 vkDestroyImageView(
-                        rosella.common.device.rawDevice,
+                        rosella.common.device.getRawDevice(),
                         imageView,
                         null
                 )
         );
 
-        swapchain.free(rosella.common.device.rawDevice);
+        swapchain.free(rosella.common.device.getRawDevice());
     }
 
-    public void clearCommandBuffers(LegacyVulkanDevice device) {
+    public void clearCommandBuffers(VulkanDevice device) {
         if (commandBuffers != null) {
             try (MemoryStack stack = MemoryStack.stackPush()) {
-                vkFreeCommandBuffers(device.rawDevice, commandPool, stack.pointers(commandBuffers));
+                vkFreeCommandBuffers(device.getRawDevice(), commandPool, stack.pointers(commandBuffers));
             }
             commandBuffers = null;
         }
@@ -264,18 +264,18 @@ public class Renderer {
             LongBuffer pFence = stack.mallocLong(1);
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
                 ok(vkCreateSemaphore(
-                        common.device.rawDevice,
+                        common.device.getRawDevice(),
                         semaphoreInfo,
                         null,
                         pImageAvailableSemaphore
                 ));
                 ok(vkCreateSemaphore(
-                        common.device.rawDevice,
+                        common.device.getRawDevice(),
                         semaphoreInfo,
                         null,
                         pRenderFinishedSemaphore
                 ));
-                ok(vkCreateFence(common.device.rawDevice, fenceInfo, null, pFence));
+                ok(vkCreateFence(common.device.getRawDevice(), fenceInfo, null, pFence));
                 inFlightFrames.add(
                         new Frame(
                                 pImageAvailableSemaphore.get(0),
@@ -308,7 +308,7 @@ public class Renderer {
             for (long imageView : swapchain.getSwapChainImageViews()) {
                 attachments.put(0, imageView);
                 framebufferInfo.pAttachments(attachments);
-                ok(vkCreateFramebuffer(common.device.rawDevice, framebufferInfo, null, pFramebuffer));
+                ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));
                 swapchain.getFrameBuffers().add(pFramebuffer.get(0));
             }
         }
@@ -346,7 +346,7 @@ public class Renderer {
                 commandBuffers[i] =
                         new VkCommandBuffer(
                                 pCommandBuffers.get(i),
-                                common.device.rawDevice
+                                common.device.getRawDevice()
                         );
             }
 
@@ -439,7 +439,7 @@ public class Renderer {
     // FIXME rewrite this whole thing but use the current as a framework
     // FIXME do we need to include the whole MIT license at the top of this file or does our project license work?
 //    public void screenshot(int width, int height) {
-//        VkDevice device = common.device.rawDevice;
+//        VkDevice device = common.device.getRawDevice();
 //
 //        try (MemoryStack stack = MemoryStack.create()) {
 //            // Check blit support for source and destination
@@ -702,9 +702,9 @@ public class Renderer {
         freeSwapChain();
 
         for (Frame frame : inFlightFrames) {
-            vkDestroySemaphore(common.device.rawDevice, frame.renderFinishedSemaphore(), null);
-            vkDestroySemaphore(common.device.rawDevice, frame.imageAvailableSemaphore(), null);
-            vkDestroyFence(common.device.rawDevice, frame.fence(), null);
+            vkDestroySemaphore(common.device.getRawDevice(), frame.renderFinishedSemaphore(), null);
+            vkDestroySemaphore(common.device.getRawDevice(), frame.imageAvailableSemaphore(), null);
+            vkDestroyFence(common.device.getRawDevice(), frame.fence(), null);
         }
     }
 
