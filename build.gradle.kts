@@ -78,12 +78,13 @@ tasks.test {
 
 tasks.register<Test>("fastCITest") {
     useJUnitPlatform {
-        excludeTags("exclude_frequent_ci")
+        excludeTags("exclude_frequent_ci", "requires_vulkan")
     }
 }
 
 tasks.register<Test>("slowCITest") {
     useJUnitPlatform {
+        excludeTags("requires_vulkan")
     } // In the future we can add tags to exclude tests that require certain vulkan features which arent available on github
 }
 
