@@ -30,8 +30,18 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-      - name: test
+      - name: Build
+        id: build
+        run: ./gradlew jar
+      - name: Test
+        id: test
         run: ./gradlew fastCITest
+      - name: Capture build artifacts
+        if: ${{ matrix.java == '16' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: Artifacts-${{ matrix.os }}
+          path: build/libs/
       - name: Capture test reports
         if: steps.test.outcome != 'skipped'
         uses: actions/upload-artifact@v2
