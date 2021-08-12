@@ -64,7 +64,6 @@ public class GenericSourceTest {
         loadMaterials();
         setupMainMenuScene();
         rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass, (SimpleObjectManager) rosella.objectManager);
-//        rosella.renderer.queueRecreateSwapchain(); FIXME: # C  [libVkLayer_khronos_validation.so+0xe16204]  CoreChecks::ValidateMemoryIsBoundToBuffer(BUFFER_STATE const*, char const*, char const*) const+0x14
 
         window.startAutomaticLoop(rosella, () -> {
 
