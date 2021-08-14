@@ -1,9 +1,10 @@
 package me.hydos.rosella.render.swapchain
 
 import it.unimi.dsi.fastutil.longs.LongArrayList
-import it.unimi.dsi.fastutil.longs.LongList
 import me.hydos.rosella.device.VulkanQueues
 import me.hydos.rosella.display.Display
+import me.hydos.rosella.render.fbo.Framebuffer
+import me.hydos.rosella.util.VkUtils
 import me.hydos.rosella.util.VkUtils.ok
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -20,13 +21,11 @@ class Swapchain(
     queues: VulkanQueues,
     surface: Long
 ) {
-    private var maxImages: IntBuffer
+    var imageCount: Int
     var swapChain: Long = 0
-    var swapChainImageViews: LongList = LongArrayList()
-    var frameBuffers: LongList = LongArrayList()
-    var swapChainImages: LongList = LongArrayList()
     var swapChainImageFormat = 0
     var swapChainExtent: VkExtent2D
+    var framebuffer: Framebuffer = Framebuffer()
 
     init {
         MemoryStack.stackPush().use {
@@ -37,7 +36,7 @@ class Swapchain(
             val extent: VkExtent2D = chooseSwapExtent(swapchainSupport.capabilities, display)!!
 
             val imageCount: IntBuffer = it.ints(swapchainSupport.capabilities.minImageCount() + 1)
-            this.maxImages = imageCount
+            this.imageCount = imageCount[0]
 
             if (swapchainSupport.capabilities.maxImageCount() > 0 && imageCount[0] > swapchainSupport.capabilities.maxImageCount()) {
                 imageCount.put(0, swapchainSupport.capabilities.maxImageCount())
@@ -94,10 +93,10 @@ class Swapchain(
                 )
             )
 
-            swapChainImages = LongArrayList(imageCount[0])
+            framebuffer.swapChainImages = LongArrayList(imageCount[0])
 
             for (i in 0 until pSwapchainImages.capacity()) {
-                swapChainImages.add(pSwapchainImages[i])
+                framebuffer.swapChainImages.add(pSwapchainImages[i])
             }
 
             swapChainImageFormat = surfaceFormat.format()

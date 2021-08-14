@@ -132,10 +132,10 @@ public class VkUtils {
     }
 
     public static void createSwapchainImageViews(Swapchain swapchain, VulkanDevice device) {
-        swapchain.setSwapChainImageViews(new LongArrayList(swapchain.getSwapChainImages().size()));
+        swapchain.getFramebuffer().frameBuffers = new LongArrayList(swapchain.getImageCount());
 
-        for (long swapChainImage : swapchain.getSwapChainImages()) {
-            swapchain.getSwapChainImageViews().add(
+        for (long swapChainImage : swapchain.getFramebuffer().swapChainImages) {
+            swapchain.getFramebuffer().swapChainImageViews.add(
                     createImageView(
                             device,
                             swapChainImage,

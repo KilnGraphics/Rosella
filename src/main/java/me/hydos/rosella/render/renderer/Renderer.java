@@ -219,7 +219,7 @@ public class Renderer {
         // Free Depth Buffer
         depthBuffer.free(rosella.common.device, rosella.common.memory);
 
-        for (long framebuffer : swapchain.getFrameBuffers()) {
+        for (long framebuffer : swapchain.getFramebuffer().frameBuffers) {
             vkDestroyFramebuffer(
                     rosella.common.device.getRawDevice(),
                     framebuffer,
@@ -228,7 +228,7 @@ public class Renderer {
         }
 
         vkDestroyRenderPass(rosella.common.device.getRawDevice(), mainRenderPass.getRawRenderPass(), null);
-        swapchain.getSwapChainImageViews().forEach(imageView ->
+        swapchain.getFramebuffer().swapChainImageViews.forEach(imageView ->
                 vkDestroyImageView(
                         rosella.common.device.getRawDevice(),
                         imageView,
@@ -250,7 +250,7 @@ public class Renderer {
 
     private void createSyncObjects() {
         inFlightFrames = new ObjectArrayList<>(MAX_FRAMES_IN_FLIGHT);
-        imagesInFlight = new Int2ObjectOpenHashMap<>(swapchain.getSwapChainImages().size());
+        imagesInFlight = new Int2ObjectOpenHashMap<>(swapchain.getImageCount());
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
 
@@ -294,7 +294,7 @@ public class Renderer {
     }
 
     private void createFrameBuffers() {
-        swapchain.setFrameBuffers(new LongArrayList(swapchain.getSwapChainImageViews().size()));
+        swapchain.getFramebuffer().frameBuffers = new LongArrayList(swapchain.getImageCount());
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             LongBuffer attachments = stack.longs(VK_NULL_HANDLE, depthBuffer.getDepthImage().getView());
@@ -305,11 +305,11 @@ public class Renderer {
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
                     .layers(1);
-            for (long imageView : swapchain.getSwapChainImageViews()) {
+            for (long imageView : swapchain.getFramebuffer().swapChainImageViews) {
                 attachments.put(0, imageView);
                 framebufferInfo.pAttachments(attachments);
                 ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));
-                swapchain.getFrameBuffers().add(pFramebuffer.get(0));
+                swapchain.getFramebuffer().frameBuffers.add(pFramebuffer.get(0));
             }
         }
     }
@@ -330,7 +330,7 @@ public class Renderer {
             }
             requireHardRebuild = false;
 
-            int commandBuffersCount = swapchain.getFrameBuffers().size();
+            int commandBuffersCount = swapchain.getFramebuffer().frameBuffers.size();
 
             clearCommandBuffers(common.device);
             commandBuffers = new VkCommandBuffer[commandBuffersCount];
@@ -362,7 +362,7 @@ public class Renderer {
                 for (int i = 0; i < commandBuffersCount; i++) {
                     VkCommandBuffer commandBuffer = commandBuffers[i];
                     ok(vkBeginCommandBuffer(commandBuffer, beginInfo));
-                    renderPassInfo.framebuffer(swapchain.getFrameBuffers().getLong(i));
+                    renderPassInfo.framebuffer(swapchain.getFramebuffer().frameBuffers.get(i));
                     vkCmdBeginRenderPass(commandBuffer, renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     RenderInfo previousRenderInfo = null;

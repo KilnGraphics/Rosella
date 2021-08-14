@@ -68,13 +68,13 @@ open class RawShaderProgram(
             poolObjects.forEachIndexed { i, poolObj ->
                 poolSizes[i]
                     .type(poolObj.getVkType())
-                    .descriptorCount(swapchain.swapChainImages.size * maxObjCount)
+                    .descriptorCount(swapchain.imageCount * maxObjCount)
             }
 
             val poolInfo = VkDescriptorPoolCreateInfo.callocStack(stack)
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO)
                 .pPoolSizes(poolSizes)
-                .maxSets(swapchain.swapChainImages.size * maxObjCount)
+                .maxSets(swapchain.imageCount * maxObjCount)
                 .flags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
 
             val pDescriptorPool = stack.mallocLong(1)
@@ -136,7 +136,7 @@ open class RawShaderProgram(
             createDescriptorSetLayout()
         }
         MemoryStack.stackPush().use { stack ->
-            val layouts = stack.mallocLong(swapchain.swapChainImages.size)
+            val layouts = stack.mallocLong(swapchain.imageCount)
             for (i in 0 until layouts.capacity()) {
                 layouts.put(i, descriptorSetLayout)
             }
@@ -144,7 +144,7 @@ open class RawShaderProgram(
                 .sType(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO)
                 .descriptorPool(descriptorPool)
                 .pSetLayouts(layouts)
-            val pDescriptorSets = stack.mallocLong(swapchain.swapChainImages.size)
+            val pDescriptorSets = stack.mallocLong(swapchain.imageCount)
 
             ok(
                 vkAllocateDescriptorSets(
