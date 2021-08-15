@@ -223,6 +223,11 @@ public enum ImageFormat {
     G16_B16R16_2PLANE_422_UNORM(216, VK11.VK_FORMAT_G16_B16R16_2PLANE_422_UNORM),
     G16_B16_R16_3PLANE_444_UNORM(217, VK11.VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM);
 
+    /**
+     * The highest id of any format.
+     */
+    public static final int maxId = 217;
+
     public final int id;
     public final int vulkan;
 
