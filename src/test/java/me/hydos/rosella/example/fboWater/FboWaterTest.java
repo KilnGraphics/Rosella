@@ -2,19 +2,29 @@ package me.hydos.rosella.example.fboWater;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.example.source.GenericSourceTest;
 import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
+import me.hydos.rosella.render.PolygonMode;
+import me.hydos.rosella.render.Topology;
+import me.hydos.rosella.render.material.Material;
+import me.hydos.rosella.render.model.GuiRenderObject;
+import me.hydos.rosella.render.pipeline.Pipeline;
 import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.resource.Global;
 import me.hydos.rosella.render.resource.Identifier;
+import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderProgram;
+import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.test_utils.NoclipCamera;
 import me.hydos.rosella.util.Color;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.system.Configuration;
+import org.lwjgl.vulkan.VK10;
 
 import java.util.List;
 
@@ -39,6 +49,9 @@ public class FboWaterTest {
     public static List<GlbRenderObject> terrainScene;
     public static GlbRenderObject skybox;
     public static GlbRenderObject waterQuad;
+    public static GuiRenderObject fboOverlay;
+
+    public static Material fboOverlayTexture;
 
     public static NoclipCamera camera = new NoclipCamera();
 
@@ -78,28 +91,38 @@ public class FboWaterTest {
             subModel.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
             rosella.objectManager.addObject(subModel);
         }
+
+        fboOverlay = new GuiRenderObject(
+                fboOverlayTexture,
+                -1f,
+                new Vector3f(),
+                camera.viewMatrix,
+                projectionMatrix
+        );
+
+        fboOverlay.modelMatrix.translate(0, 0, 0);
+        rosella.objectManager.addObject(fboOverlay);
     }
 
     private static void loadMaterials() {
-//        portalLogo = new Material(
-//                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
-//                        new Pipeline(
-//                                rosella.renderer.mainRenderPass,
-//                                guiShader,
-//                                Topology.TRIANGLES,
-//                                PolygonMode.FILL,
-//                                VertexFormats.POSITION_COLOR3f_UV0,
-//                                StateInfo.DEFAULT_GUI
-//                        )
-//                ),
-//                ImmutableTextureMap.builder()
-//                        .entry("texSampler", loadTexture(
-//                                VK10.VK_FORMAT_R8G8B8A8_SRGB,
-//                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
-//                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/gui/portal2logo.png"))
-//                        ))
-//                        .build()
-//        );
+        fboOverlayTexture = new Material(
+                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
+                        new Pipeline(
+                                rosella.renderer.mainRenderPass,
+                                guiShader,
+                                Topology.TRIANGLES,
+                                VertexFormats.POSITION_COLOR3f_UV0,
+                                StateInfo.DEFAULT_GUI
+                        )
+                ),
+                ImmutableTextureMap.builder()
+                        .entry("texSampler", loadTexture(
+                                VK10.VK_FORMAT_R8G8B8A8_SRGB,
+                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+                                Global.INSTANCE.ensureResource(new Identifier("example/waterFboTest", "textures/thisIsAnFbo.png"))
+                        ))
+                        .build()
+        );
     }
 
     private static void loadShaders() {
@@ -150,6 +173,32 @@ public class FboWaterTest {
                         new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
                 )
         );
+    }
+
+    public static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
+        TextureManager textureManager = ((SimpleObjectManager) rosella.objectManager).textureManager;
+
+        if (imageResource.equals(Resource.Empty.INSTANCE)) {
+            Rosella.LOGGER.error("Resource passed to loadTexture was empty, defaulting blank texture");
+            return textureManager.getTexture(TextureManager.BLANK_TEXTURE_ID);
+        }
+
+        int textureId = textureManager.generateTextureId();
+        UploadableImage image = new StbiImage(imageResource, ImageFormat.fromVkFormat(vkImgFormat));
+        textureManager.createTexture(
+                rosella.renderer,
+                textureId,
+                image.getWidth(),
+                image.getHeight(),
+                vkImgFormat
+        );
+        textureManager.setTextureSampler(
+                textureId,
+                "texSampler",
+                samplerCreateInfo
+        );
+        textureManager.drawToExistingTexture(rosella.renderer, textureId, image);
+        return textureManager.getTexture(textureId);
     }
 
     static {

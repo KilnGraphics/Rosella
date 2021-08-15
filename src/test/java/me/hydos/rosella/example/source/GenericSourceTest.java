@@ -181,7 +181,7 @@ public class GenericSourceTest {
         );
     }
 
-    private static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
+    public static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
         TextureManager textureManager = ((SimpleObjectManager) rosella.objectManager).textureManager;
 
         if (imageResource.equals(Resource.Empty.INSTANCE)) {
