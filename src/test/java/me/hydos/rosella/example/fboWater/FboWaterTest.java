@@ -53,10 +53,6 @@ public class FboWaterTest {
 
         camera.setup(window.pWindow);
         window.startAutomaticLoop(rosella, () -> {
-            for (GlbRenderObject glbRenderObject : terrainScene) {
-                glbRenderObject.modelMatrix.rotateAffineXYZ(0, 0, 0.01f);
-            }
-            //TODO: i guess some form of free flying camera?
             camera.update();
             return true;
         });
@@ -70,17 +66,11 @@ public class FboWaterTest {
         terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), basicShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
 
-        skybox.modelMatrix.scale(500, 500, 500);
-        skybox.modelMatrix.translate(0, 0, 0f);
         skybox.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
         rosella.objectManager.addObject(skybox);
 
-        int i = 0;
         for (GlbRenderObject subModel : terrainScene) {
-            i += 2.9;
-            subModel.modelMatrix.scale(60, 60, 60);
-            subModel.modelMatrix.translate(i, 0, 0);
-            subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
+            subModel.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
             rosella.objectManager.addObject(subModel);
         }
     }

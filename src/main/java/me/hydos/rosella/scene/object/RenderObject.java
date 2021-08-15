@@ -30,7 +30,7 @@ public class RenderObject implements Renderable {
     public Future<RenderInfo> renderInfo;
     public InstanceInfo instanceInfo;
 
-    public final Matrix4f modelMatrix = new Matrix4f();
+    public Matrix4f modelMatrix = new Matrix4f();
     public final Matrix4f viewMatrix;
     public final Matrix4f projectionMatrix;
     protected ByteBuffer indices;

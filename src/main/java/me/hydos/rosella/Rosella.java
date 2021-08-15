@@ -1,7 +1,5 @@
 package me.hydos.rosella;
 
-import me.hydos.rosella.device.VulkanDevice;
-import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.device.init.DeviceBuilder;
 import me.hydos.rosella.device.init.InitializationRegistry;
@@ -16,6 +14,7 @@ import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
 import me.hydos.rosella.memory.buffer.GlobalBufferManager;
 import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.render.util.SprirVUtilsKt;
 import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.SemaphorePool;
@@ -57,7 +56,7 @@ public class Rosella {
     public final VulkanInstance vulkanInstance;
 
     public Rosella(InitializationRegistry registry, Display display, String applicationName, int applicationVersion) {
-        // TODO remove
+        SprirVUtilsKt.init();
         registry.enableValidation(true);
 
         common.display = display;
@@ -104,6 +103,7 @@ public class Rosella {
 
     @Deprecated
     public Rosella(Display display, List<String> requestedValidationLayers, String applicationName, DebugLogger debugLogger) {
+        SprirVUtilsKt.init();
         List<String> requiredExtensions = display.getRequiredExtensions();
 
         InitializationRegistry initializationRegistry = new InitializationRegistry();
@@ -149,6 +149,7 @@ public class Rosella {
      * Free's the vulkan resources.
      */
     public void free() {
+        SprirVUtilsKt.free();
         common.device.waitForIdle();
         objectManager.free();
         bufferManager.free();

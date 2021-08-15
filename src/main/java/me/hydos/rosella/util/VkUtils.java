@@ -55,7 +55,7 @@ public class VkUtils {
             entry(VK10.VK_ERROR_FRAGMENTED_POOL, "VK_ERROR_FRAGMENTED_POOL"),
             entry(VK10.VK_ERROR_UNKNOWN, "VK_ERROR_UNKNOWN"),
             entry(KHRSurface.VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR"),
-            entry(EXTDebugReport.VK_ERROR_VALIDATION_FAILED_EXT, "VK_ERROR_VALIDATION_FAILED_EXT")
+            entry(EXTDebugReport.VK_ERROR_VALIDATION_FAILED_EXT, "VK_ERROR_VALIDATION_FAILED_EXT (Could also mean format not supported!)")
     );
 
     public static void ok(int vkResult) {

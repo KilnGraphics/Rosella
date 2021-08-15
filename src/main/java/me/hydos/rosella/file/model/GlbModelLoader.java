@@ -1,7 +1,6 @@
 package me.hydos.rosella.file.model;
 
 import me.hydos.rosella.Rosella;
-import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.model.AssimpHelperKt;
@@ -39,7 +38,7 @@ public class GlbModelLoader {
     }
 
     public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix, StateInfo stateInfo) {
-        AIScene scene = AssimpHelperKt.loadScene(glbFile, Assimp.aiProcess_FlipUVs | Assimp.aiProcess_DropNormals);
+        AIScene scene = AssimpHelperKt.loadScene(glbFile, Assimp.aiProcess_FlipUVs);
         List<AssimpMaterial> rawMaterials = new ArrayList<>();
         List<AITexture> rawTextures = new ArrayList<>();
 
@@ -105,25 +104,9 @@ public class GlbModelLoader {
                         VertexFormats.POSITION_COLOR3f_UV0,
                         stateInfo
                 );
-                materials.add(
-                        new Material(((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(pipeline), textureMap)
-                        /*new Material(
-                        images,
-                        program,
-                        ImageFormat.RGBA,
-                        Topology.TRIANGLES,
-                        VertexFormats.POSITION_COLOR3f_UV0,
-                        new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE),
-                        StateInfo.DEFAULT_3D //FIXME: make the user be able to specify this
-                )*/);
+                materials.add(new Material(((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(pipeline), textureMap));
             }
         }
-
-//        // Give Rosella our material's for prep so it doesnt yell at us later on
-//        for (Material material : materials) {
-//            rosella.objectManager.createMaterial(material);
-//        }
-//        rosella.objectManager.submitMaterials();
 
         // Create a list of GlbRenderObjects from the data we have
         List<MeshData> meshes = loadMeshes(scene, selector);
@@ -163,17 +146,39 @@ public class GlbModelLoader {
         PointerBuffer pMeshes = scene.mMeshes();
         IntBuffer meshIndices = node.mMeshes();
         for (int i = 0; i < meshIndices.capacity(); i++) {
-            processMesh(scene, AIMesh.create(pMeshes.get(meshIndices.get(i))), models);
+            processMesh(scene, AIMesh.create(pMeshes.get(meshIndices.get(i))), node, models);
         }
     }
 
-    private static void processMesh(AIScene scene, AIMesh mesh, List<MeshData> models) {
+    private static void processMesh(AIScene scene, AIMesh mesh, AINode node, List<MeshData> models) {
         MeshData meshData = new MeshData();
+        meshData.modelMatrix = convertMatrix(node.mTransformation());
         meshData.materialIndex = mesh.mMaterialIndex();
         processPositions(mesh, meshData.positions);
         processTexCoords(mesh, meshData.texCoords);
         processIndices(mesh, meshData.indices);
         models.add(meshData);
+    }
+
+    private static Matrix4f convertMatrix(AIMatrix4x4 assimpMat4) {
+        Matrix4f dest = new Matrix4f();
+        dest.m00(assimpMat4.a1());
+        dest.m10(assimpMat4.a2());
+        dest.m20(assimpMat4.a3());
+        dest.m30(assimpMat4.a4());
+        dest.m01(assimpMat4.b1());
+        dest.m11(assimpMat4.b2());
+        dest.m21(assimpMat4.b3());
+        dest.m31(assimpMat4.b4());
+        dest.m02(assimpMat4.c1());
+        dest.m12(assimpMat4.c2());
+        dest.m22(assimpMat4.c3());
+        dest.m32(assimpMat4.c4());
+        dest.m03(assimpMat4.d1());
+        dest.m13(assimpMat4.d2());
+        dest.m23(assimpMat4.d3());
+        dest.m33(assimpMat4.d4());
+        return dest;
     }
 
     private static void processPositions(AIMesh mesh, List<Vector3fc> positions) {
@@ -208,6 +213,7 @@ public class GlbModelLoader {
         public List<Vector3fc> positions = new ArrayList<>();
         public List<Vector2fc> texCoords = new ArrayList<>();
         public List<Integer> indices = new ArrayList<>();
+        public Matrix4f modelMatrix;
     }
 
     public static class AssimpMaterial {

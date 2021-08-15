@@ -6,7 +6,7 @@ import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import java.nio.ByteBuffer
 
-class StbiImage(byteBuffer: ByteBuffer, private val format: ImageFormat) : UploadableImage {
+class StbiImage(byteBuffer: ByteBuffer, private var format: ImageFormat) : UploadableImage {
 
     private var width: Int
     private var height: Int
@@ -21,12 +21,9 @@ class StbiImage(byteBuffer: ByteBuffer, private val format: ImageFormat) : Uploa
             val pHeight = stack.mallocInt(1)
             val pChannels = stack.mallocInt(1)
             var pixels: ByteBuffer? =
-                STBImage.stbi_load_from_memory(byteBuffer, pWidth, pHeight, pChannels, format.channels)
-            if (pixels != null) {
-                if (pChannels[0] != format.channels) {
-                    throw RuntimeException("Failed to load texture image. Expected channel count (${format.channels}) did not match returned channel count (${pChannels[0]})")
-                }
-            } else {
+                STBImage.stbi_load_from_memory(byteBuffer, pWidth, pHeight, pChannels, 4)
+            format = ImageFormat.RGBA
+            if (pixels == null) {
                 Rosella.LOGGER.warn("Failed to load image properly! Falling back to loading raw pixel data.")
                 pixels = byteBuffer
             }

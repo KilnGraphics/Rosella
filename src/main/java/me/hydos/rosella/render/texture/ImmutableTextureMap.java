@@ -7,8 +7,6 @@ import me.hydos.rosella.Rosella;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.lwjgl.vulkan.VK10.VK_FORMAT_R8G8B8A8_UNORM;
-
 public class ImmutableTextureMap implements TextureMap {
     private final Map<String, Texture> map;
 
@@ -18,8 +16,7 @@ public class ImmutableTextureMap implements TextureMap {
 
     public ImmutableTextureMap(UploadableImage[] images, SamplerCreateInfo samplerCreateInfo, Rosella rosella, TextureManager textureManager) {
         this.map = new Object2ObjectArrayMap<>();
-        for (int i = 0; i < images.length; i++) {
-            UploadableImage image = images[i];
+        for (UploadableImage image : images) {
             if (image == null) {
                 this.map.put("texSampler", TextureManager.BLANK_TEXTURE);
                 continue;
@@ -31,7 +28,7 @@ public class ImmutableTextureMap implements TextureMap {
                     textureId,
                     image.getWidth(),
                     image.getHeight(),
-                    VK_FORMAT_R8G8B8A8_UNORM
+                    image.getFormat().getSRGBFormat()
             );
             textureManager.setTextureSampler(
                     textureId,

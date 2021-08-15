@@ -99,11 +99,11 @@ public class GenericSourceTest {
 
         GlbModelLoader.NodeSelector basicTf3Nodes = (name) -> name.startsWith("lod_0_") && !name.contains("glove");
         GlbModelLoader.NodeSelector everything = (name) -> true;
-        twofort = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/2fort.glb")), basicShader, everything, viewMatrix, projectionMatrix);
-        engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
-        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
+        twofort = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
+        engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
+        engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
+        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
+        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
 
         for (GlbRenderObject subModel : twofort) {
             subModel.modelMatrix.scale(10f, 10f, 10f);
@@ -156,7 +156,7 @@ public class GenericSourceTest {
                         .entry("texSampler", loadTexture(
                                 VK10.VK_FORMAT_R8G8B8A8_UNORM, // TODO: maybe make this srgb
                                 new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
-                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/background/background01.png"))
+                                Global.INSTANCE.ensureResource(new Identifier("example/sourceTest", "textures/background/background01.png"))
                         ))
                         .build()
         );
@@ -175,7 +175,7 @@ public class GenericSourceTest {
                         .entry("texSampler", loadTexture(
                                 VK10.VK_FORMAT_R8G8B8A8_SRGB,
                                 new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
-                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/gui/portal2logo.png"))
+                                Global.INSTANCE.ensureResource(new Identifier("example/sourceTest", "textures/gui/portal2logo.png"))
                         ))
                         .build()
         );
@@ -210,8 +210,8 @@ public class GenericSourceTest {
     private static void loadShaders() {
         basicShader = rosella.objectManager.addShader(
                 new RawShaderProgram(
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/skybox.v.glsl")),
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/skybox.f.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
                         10240,

@@ -11,11 +11,12 @@ import org.lwjgl.system.MemoryUtil;
 
 public class GlbRenderObject extends RenderObject {
 
-    private final GlbModelLoader.MeshData meshData;
+    public final GlbModelLoader.MeshData meshData;
 
     protected GlbRenderObject(Material material, GlbModelLoader.MeshData meshData, Matrix4f modelViewMatrix, Matrix4f projectionMatrix) {
         super(Resource.Empty.INSTANCE, material, projectionMatrix, modelViewMatrix);
         this.meshData = meshData;
+        this.modelMatrix = meshData.modelMatrix;
         int vertexCount = meshData.positions.size();
         int size = material.pipeline().getVertexFormat().getSize();
         this.vertexBuffer = MemoryUtil.memAlloc(size * vertexCount);

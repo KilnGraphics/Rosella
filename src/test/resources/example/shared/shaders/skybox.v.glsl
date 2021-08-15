@@ -16,14 +16,13 @@ layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
     // Remove position from the view matrix and model matrix
-    mat4 viewMatrix = ubo.view;
+    mat4 viewMatrix = mat4(ubo.view);
     viewMatrix[3][0] = 0;
     viewMatrix[3][1] = 0;
     viewMatrix[3][2] = 0;
 
-    // mat4 modelMatrix = ubo.model;
     // this is a comment
-    // modelMatrix[3][0] = 0;
+
 
     vec4 worldPosition = ubo.model * vec4(inPosition, 1.0);
 
