@@ -82,13 +82,11 @@ public class FboWaterTest {
 
         terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
-
-        skybox.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
+        
         skybox.modelMatrix.scale(10);
         rosella.objectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-            subModel.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
             rosella.objectManager.addObject(subModel);
         }
 
@@ -210,5 +208,6 @@ public class FboWaterTest {
 
         window = new GlfwWindow(WIDTH, HEIGHT, "FrameBufferObject Water Test", false);
         rosella = new Rosella(window, "FBO_WATER_TEST", true);
+        projectionMatrix.m11(-projectionMatrix.m11());
     }
 }
