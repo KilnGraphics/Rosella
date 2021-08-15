@@ -21,7 +21,7 @@ void main() {
     viewMatrix[3][1] = 0;
     viewMatrix[3][2] = 0;
 
-//    mat4 modelMatrix = ubo.model;
+    // mat4 modelMatrix = ubo.model;
     // this is a comment
     // modelMatrix[3][0] = 0;
 
