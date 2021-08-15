@@ -24,9 +24,10 @@ public class FboWaterTest {
     public static final Rosella rosella;
 
     public static final int WIDTH = 1280;
-    public static final int TOP = 720;
+    public static final int HEIGHT = 720;
+    public static final int FOV = 90;
 
-    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -2000f, 2000f, true);
+    public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), WIDTH / HEIGHT, 0.1f, 1000, true);
 
     public static ShaderProgram basicShader;
     public static ShaderProgram skyboxShader;
@@ -76,7 +77,7 @@ public class FboWaterTest {
 
         int i = 0;
         for (GlbRenderObject subModel : terrainScene) {
-            i+= 2.9;
+            i += 2.9;
             subModel.modelMatrix.scale(60, 60, 60);
             subModel.modelMatrix.translate(i, 0, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
@@ -151,7 +152,7 @@ public class FboWaterTest {
             System.out.println("Failed to load renderdoc.");
         }
 
-        window = new GlfwWindow(WIDTH, TOP, "FrameBufferObject Water Test", false);
+        window = new GlfwWindow(WIDTH, HEIGHT, "FrameBufferObject Water Test", false);
         rosella = new Rosella(window, "FBO_WATER_TEST", true);
     }
 }

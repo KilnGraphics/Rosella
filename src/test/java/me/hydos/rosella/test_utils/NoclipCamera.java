@@ -63,28 +63,28 @@ public class NoclipCamera {
         float deltaRotation = 20 * deltaTime;
 
         if (forwardMotion) {
-            position.add(0, 0f, -deltaMovement);
+            position.add(0, 0f, deltaMovement);
         }
         if (backMotion) {
-            position.add(0f, 0f, deltaMovement);
+            position.add(0f, 0f, -deltaMovement);
         }
         if (leftMotion) {
-            position.add(-deltaMovement, 0f, 0f);
-        }
-        if (rightMotion) {
             position.add(deltaMovement, 0f, 0f);
         }
-        if (rotateLeftMotion) {
-            rotation.add(0, deltaRotation, 0);
+        if (rightMotion) {
+            position.add(-deltaMovement, 0f, 0f);
         }
-        if (rotateRightMotion) {
+        if (rotateLeftMotion) {
             rotation.add(0, -deltaRotation, 0);
         }
+        if (rotateRightMotion) {
+            rotation.add(0, deltaRotation, 0);
+        }
         if (upMotion) {
-            position.add(0, -deltaMovement, 0);
+            position.add(0, deltaMovement, 0);
         }
         if (downMotion) {
-            position.add(0, deltaMovement, 0f);
+            position.add(0, -deltaMovement, 0f);
         }
     }
 }
