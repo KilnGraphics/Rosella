@@ -29,7 +29,7 @@ public class FboWaterTest {
     public static final int HEIGHT = 720;
     public static final int FOV = 90;
 
-    public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), WIDTH / HEIGHT, 0.1f, 2000, true);
+    public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), (float) WIDTH / (float) HEIGHT, 0.1f, 4000f, true);
 
     public static ShaderProgram basicShader;
     public static ShaderProgram normalShader;

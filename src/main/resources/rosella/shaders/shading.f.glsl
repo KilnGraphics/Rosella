@@ -12,9 +12,10 @@ layout(location = 0) out vec4 outColor;
 void main() {
     // CONSTANTS
     vec3 lightColour = vec3(1.0, 1.0, 1.0);
+    float intensity = 1.0;
 
     vec3 unitNormal = normalize(surfaceNormal);
-    vec3 unitLightVector = normalize(toLightVector);
+    vec3 unitLightVector = normalize(toLightVector) * intensity;
 
     float nDotl = dot(unitNormal, unitLightVector);
     float brightness = max(nDotl, 0.0);
