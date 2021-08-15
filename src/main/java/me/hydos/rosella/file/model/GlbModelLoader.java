@@ -9,6 +9,7 @@ import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
+import me.hydos.rosella.render.vertex.VertexFormat;
 import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.apache.logging.log4j.LogManager;
@@ -33,11 +34,11 @@ public class GlbModelLoader {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix) {
-        return createGlbRenderObject(rosella, glbFile, program, selector, viewMatrix, projectionMatrix, StateInfo.DEFAULT_3D);
+    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, VertexFormat format, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix) {
+        return createGlbRenderObject(rosella, glbFile, program, format, selector, viewMatrix, projectionMatrix, StateInfo.DEFAULT_3D);
     }
 
-    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix, StateInfo stateInfo) {
+    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, VertexFormat format, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix, StateInfo stateInfo) {
         AIScene scene = AssimpHelperKt.loadScene(glbFile, Assimp.aiProcess_FlipUVs);
         List<AssimpMaterial> rawMaterials = new ArrayList<>();
         List<AITexture> rawTextures = new ArrayList<>();
@@ -101,7 +102,7 @@ public class GlbModelLoader {
                         rosella.renderer.mainRenderPass,
                         program,
                         Topology.TRIANGLES,
-                        VertexFormats.POSITION_COLOR3f_UV0,
+                        format,
                         stateInfo
                 );
                 materials.add(new Material(((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(pipeline), textureMap));
@@ -157,6 +158,7 @@ public class GlbModelLoader {
         processPositions(mesh, meshData.positions);
         processTexCoords(mesh, meshData.texCoords);
         processIndices(mesh, meshData.indices);
+        processNormals(mesh, meshData.normals);
         models.add(meshData);
     }
 
@@ -189,6 +191,14 @@ public class GlbModelLoader {
         }
     }
 
+    private static void processNormals(AIMesh mesh, List<Vector3fc> normals) {
+        AIVector3D.Buffer normalBuffer = requireNonNull(mesh.mNormals());
+        for (int i = 0; i < normalBuffer.capacity(); i++) {
+            AIVector3D normal = normalBuffer.get(i);
+            normals.add(new Vector3f(normal.x(), normal.y(), normal.z()));
+        }
+    }
+
     private static void processTexCoords(AIMesh mesh, List<Vector2fc> texCoords) {
         AIVector3D.Buffer aiTexCoords = requireNonNull(mesh.mTextureCoords(0));
         for (int i = 0; i < aiTexCoords.capacity(); i++) {
@@ -212,6 +222,7 @@ public class GlbModelLoader {
         public int materialIndex;
         public List<Vector3fc> positions = new ArrayList<>();
         public List<Vector2fc> texCoords = new ArrayList<>();
+        public List<Vector3fc> normals = new ArrayList<>();
         public List<Integer> indices = new ArrayList<>();
         public Matrix4f modelMatrix;
     }

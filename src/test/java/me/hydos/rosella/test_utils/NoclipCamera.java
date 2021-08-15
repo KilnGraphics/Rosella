@@ -60,7 +60,7 @@ public class NoclipCamera {
      */
     private void updateMovement() {
         float deltaMovement = 50 * deltaTime;
-        float deltaRotation = 20 * deltaTime;
+        float deltaRotation = 50 * deltaTime;
 
         if (forwardMotion) {
             position.add(0, 0f, deltaMovement);

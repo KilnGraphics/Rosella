@@ -4,7 +4,6 @@ import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
 import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
-import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.model.GuiRenderObject;
@@ -38,7 +37,8 @@ public class GenericSourceTest {
     public static final int TOP = 720;
 
     public static final Matrix4f viewMatrix = new Matrix4f();
-    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -2000f, 2000f, true);;
+    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -2000f, 2000f, true);
+    ;
 
     public static Material menuBackground;
     public static Material portalLogo;
@@ -99,11 +99,11 @@ public class GenericSourceTest {
 
         GlbModelLoader.NodeSelector basicTf3Nodes = (name) -> name.startsWith("lod_0_") && !name.contains("glove");
         GlbModelLoader.NodeSelector everything = (name) -> true;
-        twofort = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, basicTf3Nodes, viewMatrix, projectionMatrix);
-        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
-        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, everything, viewMatrix, projectionMatrix);
+        twofort = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, VertexFormats.POSITION_COLOR3f_UV0, basicTf3Nodes, viewMatrix, projectionMatrix);
+        engineer2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, VertexFormats.POSITION_COLOR3f_UV0, basicTf3Nodes, viewMatrix, projectionMatrix);
+        engineer3 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/engineer.glb")), basicShader, VertexFormats.POSITION_COLOR3f_UV0, basicTf3Nodes, viewMatrix, projectionMatrix);
+        spy = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, VertexFormats.POSITION_COLOR3f_UV0, everything, viewMatrix, projectionMatrix);
+        spy2 = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "sourceTest/models/spy.glb")), basicShader, VertexFormats.POSITION_COLOR3f_UV0, everything, viewMatrix, projectionMatrix);
 
         for (GlbRenderObject subModel : twofort) {
             subModel.modelMatrix.scale(10f, 10f, 10f);

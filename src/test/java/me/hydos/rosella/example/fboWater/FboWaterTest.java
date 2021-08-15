@@ -9,8 +9,10 @@ import me.hydos.rosella.render.resource.Global;
 import me.hydos.rosella.render.resource.Identifier;
 import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderProgram;
+import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.test_utils.NoclipCamera;
+import me.hydos.rosella.util.Color;
 import org.joml.Matrix4f;
 import org.lwjgl.system.Configuration;
 
@@ -30,6 +32,7 @@ public class FboWaterTest {
     public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), WIDTH / HEIGHT, 0.1f, 2000, true);
 
     public static ShaderProgram basicShader;
+    public static ShaderProgram normalShader;
     public static ShaderProgram skyboxShader;
     public static ShaderProgram guiShader;
 
@@ -61,12 +64,14 @@ public class FboWaterTest {
     }
 
     private static void setupMainMenuScene() {
+        rosella.renderer.lazilyClearColor(new Color(10, 20, 200, 255));
         GlbModelLoader.NodeSelector everything = (name) -> true;
 
-        terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), basicShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
-        skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
+        terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
+        skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
 
         skybox.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
+        skybox.modelMatrix.scale(10);
         rosella.objectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
@@ -102,6 +107,18 @@ public class FboWaterTest {
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
+                        rosella.common.device,
+                        rosella.common.memory,
+                        1024,
+                        RawShaderProgram.PoolUboInfo.INSTANCE,
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
+                )
+        );
+
+        normalShader = rosella.objectManager.addShader(
+                new RawShaderProgram(
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
                         1024,
