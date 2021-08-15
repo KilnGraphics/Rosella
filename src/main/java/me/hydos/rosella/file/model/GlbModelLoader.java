@@ -104,7 +104,7 @@ public class GlbModelLoader {
                         Topology.TRIANGLES,
                         PolygonMode.FILL,
                         VertexFormats.POSITION_COLOR3f_UV0,
-                        StateInfo.DEFAULT_3D
+                        stateInfo
                 );
                 materials.add(
                         new Material(((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(pipeline), textureMap)

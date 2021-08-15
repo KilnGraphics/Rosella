@@ -1,0 +1,157 @@
+package me.hydos.rosella.example.fboWater;
+
+import me.hydos.rosella.Rosella;
+import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.file.model.GlbModelLoader;
+import me.hydos.rosella.file.model.GlbRenderObject;
+import me.hydos.rosella.render.pipeline.state.StateInfo;
+import me.hydos.rosella.render.resource.Global;
+import me.hydos.rosella.render.resource.Identifier;
+import me.hydos.rosella.render.shader.RawShaderProgram;
+import me.hydos.rosella.render.shader.ShaderProgram;
+import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
+import me.hydos.rosella.test_utils.NoclipCamera;
+import org.joml.Matrix4f;
+import org.lwjgl.system.Configuration;
+
+import java.util.List;
+
+/**
+ * Test which contains source related stuff
+ */
+public class FboWaterTest {
+    public static final GlfwWindow window;
+    public static final Rosella rosella;
+
+    public static final int WIDTH = 1280;
+    public static final int TOP = 720;
+
+    public static final Matrix4f projectionMatrix = new Matrix4f().ortho(-WIDTH / 2f, WIDTH / 2f, -TOP / 2f, TOP / 2f, -2000f, 2000f, true);
+
+    public static ShaderProgram basicShader;
+    public static ShaderProgram skyboxShader;
+    public static ShaderProgram guiShader;
+
+    public static List<GlbRenderObject> terrainScene;
+    public static GlbRenderObject skybox;
+    public static GlbRenderObject waterQuad;
+
+    public static NoclipCamera camera = new NoclipCamera();
+
+    public static void main(String[] args) {
+        // TODO: Update Assimp when non-broken version is released
+        //  https://github.com/LWJGL/lwjgl3/issues/642
+        if (System.getProperty("os.name").contains("Linux")) {
+            Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
+        }
+
+        loadShaders();
+        loadMaterials();
+        setupMainMenuScene();
+        rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass, (SimpleObjectManager) rosella.objectManager);
+
+        camera.setup(window.pWindow);
+        window.startAutomaticLoop(rosella, () -> {
+            for (GlbRenderObject glbRenderObject : terrainScene) {
+                glbRenderObject.modelMatrix.rotateAffineXYZ(0, 0, 0.01f);
+            }
+            //TODO: i guess some form of free flying camera?
+            camera.update();
+            return true;
+        });
+
+        rosella.free();
+    }
+
+    private static void setupMainMenuScene() {
+        GlbModelLoader.NodeSelector everything = (name) -> true;
+
+        terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), basicShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
+        skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
+
+        skybox.modelMatrix.scale(500, 500, 500);
+        skybox.modelMatrix.translate(0, 0, -1f);
+        skybox.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
+        rosella.objectManager.addObject(skybox);
+
+        int i = 0;
+        for (GlbRenderObject subModel : terrainScene) {
+            i+= 2.9;
+            subModel.modelMatrix.scale(60, 60, 60);
+            subModel.modelMatrix.translate(i, 0, 0);
+            subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
+            rosella.objectManager.addObject(subModel);
+        }
+    }
+
+    private static void loadMaterials() {
+//        portalLogo = new Material(
+//                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
+//                        new Pipeline(
+//                                rosella.renderer.mainRenderPass,
+//                                guiShader,
+//                                Topology.TRIANGLES,
+//                                PolygonMode.FILL,
+//                                VertexFormats.POSITION_COLOR3f_UV0,
+//                                StateInfo.DEFAULT_GUI
+//                        )
+//                ),
+//                ImmutableTextureMap.builder()
+//                        .entry("texSampler", loadTexture(
+//                                VK10.VK_FORMAT_R8G8B8A8_SRGB,
+//                                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT),
+//                                Global.INSTANCE.ensureResource(new Identifier("example", "textures/gui/portal2logo.png"))
+//                        ))
+//                        .build()
+//        );
+    }
+
+    private static void loadShaders() {
+        basicShader = rosella.objectManager.addShader(
+                new RawShaderProgram(
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
+                        rosella.common.device,
+                        rosella.common.memory,
+                        1024,
+                        RawShaderProgram.PoolUboInfo.INSTANCE,
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
+                )
+        );
+
+        skyboxShader = rosella.objectManager.addShader(
+                new RawShaderProgram(
+                        Global.INSTANCE.ensureResource(new Identifier("example", "shared/shaders/skybox.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("example", "shared/shaders/skybox.f.glsl")),
+                        rosella.common.device,
+                        rosella.common.memory,
+                        2,
+                        RawShaderProgram.PoolUboInfo.INSTANCE,
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
+                )
+        );
+
+        guiShader = rosella.objectManager.addShader(
+                new RawShaderProgram(
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.f.glsl")),
+                        rosella.common.device,
+                        rosella.common.memory,
+                        1024,
+                        RawShaderProgram.PoolUboInfo.INSTANCE,
+                        new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
+                )
+        );
+    }
+
+    static {
+        try {
+            System.loadLibrary("renderdoc");
+        } catch (UnsatisfiedLinkError e) {
+            System.out.println("Failed to load renderdoc.");
+        }
+
+        window = new GlfwWindow(WIDTH, TOP, "FrameBufferObject Water Test", false);
+        rosella = new Rosella(window, "FBO_WATER_TEST", true);
+    }
+}
