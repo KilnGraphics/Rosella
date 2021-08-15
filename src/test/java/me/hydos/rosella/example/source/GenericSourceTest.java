@@ -148,7 +148,6 @@ public class GenericSourceTest {
                                 rosella.renderer.mainRenderPass, // TODO: fix renderpasses being gross af
                                 guiShader,
                                 Topology.TRIANGLES,
-                                PolygonMode.FILL,
                                 VertexFormats.POSITION_COLOR3f_UV0,
                                 StateInfo.DEFAULT_GUI
                         )
@@ -168,7 +167,6 @@ public class GenericSourceTest {
                                 rosella.renderer.mainRenderPass, // TODO: fix renderpasses being gross af
                                 guiShader,
                                 Topology.TRIANGLES,
-                                PolygonMode.FILL,
                                 VertexFormats.POSITION_COLOR3f_UV0,
                                 StateInfo.DEFAULT_GUI
                         )
