@@ -102,7 +102,6 @@ public class GlbModelLoader {
                         rosella.renderer.mainRenderPass,
                         program,
                         Topology.TRIANGLES,
-                        PolygonMode.FILL,
                         VertexFormats.POSITION_COLOR3f_UV0,
                         StateInfo.DEFAULT_3D
                 );

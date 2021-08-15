@@ -1,34 +1,18 @@
 package me.hydos.rosella.render.pipeline;
 
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
-import java.util.Map;
-
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.hydos.rosella.device.VulkanDevice;
-import me.hydos.rosella.memory.Memory;
-import me.hydos.rosella.memory.MemoryCloseable;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VK10;
-import org.lwjgl.vulkan.VkGraphicsPipelineCreateInfo;
-import org.lwjgl.vulkan.VkOffset2D;
-import org.lwjgl.vulkan.VkPipelineColorBlendAttachmentState;
-import org.lwjgl.vulkan.VkPipelineColorBlendStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineDepthStencilStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineInputAssemblyStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
-import org.lwjgl.vulkan.VkPipelineMultisampleStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineRasterizationStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
-import org.lwjgl.vulkan.VkPipelineVertexInputStateCreateInfo;
-import org.lwjgl.vulkan.VkPipelineViewportStateCreateInfo;
-import org.lwjgl.vulkan.VkRect2D;
-import org.lwjgl.vulkan.VkViewport;
+import org.lwjgl.vulkan.*;
+
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+import java.util.Map;
 
 import static me.hydos.rosella.util.VkUtils.ok;
 
@@ -104,7 +88,12 @@ public class PipelineManager {
                     .pViewports(viewport)
                     .pScissors(scissor);
 
-            VkPipelineRasterizationStateCreateInfo rasterizer = pipeline.getStateInfo().getRasterizationStateCreateInfo(pipeline.getPolygonMode().getVkId());
+            VkPipelineRasterizationStateCreateInfo rasterizer = pipeline.getStateInfo().getRasterizationStateCreateInfo(
+                    pipeline.getStateInfo().getPolygonMode().getVkId(),
+                    pipeline.getStateInfo().isDepthBiasEnabled(),
+                    pipeline.getStateInfo().getDepthBiasConstantFactor(),
+                    pipeline.getStateInfo().getDepthBiasSlopeFactor()
+            );
 
             VkPipelineMultisampleStateCreateInfo multisampling = VkPipelineMultisampleStateCreateInfo.callocStack()
                     .sType(VK10.VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO)

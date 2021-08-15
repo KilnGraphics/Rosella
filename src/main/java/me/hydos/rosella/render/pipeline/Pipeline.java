@@ -18,7 +18,6 @@ public class Pipeline implements MemoryCloseable {
     private final RenderPass renderPass;
     private final ShaderProgram shaderProgram;
     private final Topology topology;
-    private final PolygonMode polygonMode;
     private final VertexFormat vertexFormat;
     private final StateInfo stateInfo;
 
@@ -28,14 +27,12 @@ public class Pipeline implements MemoryCloseable {
     public Pipeline(RenderPass renderPass,
                     ShaderProgram shaderProgram,
                     Topology topology,
-                    PolygonMode polygonMode,
                     VertexFormat vertexFormat,
                     StateInfo stateInfo) {
 
         this.renderPass = renderPass;
         this.shaderProgram = shaderProgram;
         this.topology = topology;
-        this.polygonMode = polygonMode;
         this.vertexFormat = vertexFormat;
         this.stateInfo = stateInfo;
     }
@@ -50,10 +47,6 @@ public class Pipeline implements MemoryCloseable {
 
     public Topology getTopology() {
         return topology;
-    }
-
-    public PolygonMode getPolygonMode() {
-        return polygonMode;
     }
 
     public VertexFormat getVertexFormat() {
@@ -82,12 +75,12 @@ public class Pipeline implements MemoryCloseable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Pipeline pipeline = (Pipeline) o;
-        return renderPass.equals(pipeline.renderPass) && shaderProgram.equals(pipeline.shaderProgram) && topology == pipeline.topology && polygonMode == pipeline.polygonMode && vertexFormat.equals(pipeline.vertexFormat) && stateInfo.equals(pipeline.stateInfo);
+        return renderPass.equals(pipeline.renderPass) && shaderProgram.equals(pipeline.shaderProgram) && topology == pipeline.topology && vertexFormat.equals(pipeline.vertexFormat) && stateInfo.equals(pipeline.stateInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(renderPass, shaderProgram, topology, polygonMode, vertexFormat, stateInfo);
+        return Objects.hash(renderPass, shaderProgram, topology, vertexFormat, stateInfo);
     }
 
     @Override

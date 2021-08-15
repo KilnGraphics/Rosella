@@ -1,5 +1,6 @@
 package me.hydos.rosella.render.pipeline.state;
 
+import me.hydos.rosella.render.PolygonMode;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VK10;
@@ -13,10 +14,8 @@ import org.lwjgl.vulkan.VkRect2D;
 
 import java.util.Objects;
 
-import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_CLOCKWISE;
-import static org.lwjgl.vulkan.VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE;
-
 // TODO OPT: split this up into multiple things and allow for optional dynamic pipelines
+// TODO: make some of these variables rosella enums/classes rather than vulkan specific
 public class StateInfo {
     public static final StateInfo DEFAULT_GUI = new StateInfo(
             VK10.VK_COLOR_COMPONENT_R_BIT | VK10.VK_COLOR_COMPONENT_G_BIT | VK10.VK_COLOR_COMPONENT_B_BIT | VK10.VK_COLOR_COMPONENT_A_BIT,
@@ -28,7 +27,11 @@ public class StateInfo {
             VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO, VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO,
             VK10.VK_BLEND_OP_ADD,
             false,
-            VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            PolygonMode.FILL,
+            false,
+            0.0f,
+            0.0f,
             false,
             VK10.VK_COMPARE_OP_LESS,
             false,
@@ -46,7 +49,11 @@ public class StateInfo {
             VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO, VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO,
             VK10.VK_BLEND_OP_ADD,
             true,
-            VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            PolygonMode.FILL,
+            false,
+            0.0f,
+            0.0f,
             true,
             VK10.VK_COMPARE_OP_LESS,
             false,
@@ -64,7 +71,11 @@ public class StateInfo {
             VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO, VK10.VK_BLEND_FACTOR_ONE, VK10.VK_BLEND_FACTOR_ZERO,
             VK10.VK_BLEND_OP_ADD,
             true,
-            VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            PolygonMode.FILL,
+            false,
+            0.0f,
+            0.0f,
             true,
             VK10.VK_COMPARE_OP_LESS,
             false,
@@ -93,6 +104,12 @@ public class StateInfo {
     private boolean cullEnabled;
     private int frontFace;
 
+    private PolygonMode polygonMode;
+
+    private boolean depthBiasEnabled;
+    private float depthBiasConstantFactor;
+    private float depthBiasSlopeFactor;
+
     private boolean depthTestEnabled;
     private int depthCompareOp;
 
@@ -101,8 +118,7 @@ public class StateInfo {
 
     private float lineWidth;
 
-    public StateInfo(int colorMask, boolean depthMask, boolean scissorEnabled, int scissorX, int scissorY, int scissorWidth, int scissorHeight, boolean stencilEnabled, boolean blendEnabled, int srcColorBlendFactor, int dstColorBlendFactor, int srcAlphaBlendFactor, int dstAlphaBlendFactor, int blendOp, boolean cullEnabled, int frontFace, boolean depthTestEnabled, int depthCompareOp, boolean colorLogicOpEnabled, int colorLogicOp, float lineWidth) {
-
+    public StateInfo(int colorMask, boolean depthMask, boolean scissorEnabled, int scissorX, int scissorY, int scissorWidth, int scissorHeight, boolean stencilEnabled, boolean blendEnabled, int srcColorBlendFactor, int dstColorBlendFactor, int srcAlphaBlendFactor, int dstAlphaBlendFactor, int blendOp, boolean cullEnabled, int frontFace, PolygonMode polygonMode, boolean depthBiasEnabled, float depthBiasConstantFactor, float depthBiasSlopeFactor, boolean depthTestEnabled, int depthCompareOp, boolean colorLogicOpEnabled, int colorLogicOp, float lineWidth) {
         this.colorMask = colorMask;
         this.depthMask = depthMask;
         this.scissorEnabled = scissorEnabled;
@@ -119,6 +135,10 @@ public class StateInfo {
         this.blendOp = blendOp;
         this.cullEnabled = cullEnabled;
         this.frontFace = frontFace;
+        this.polygonMode = polygonMode;
+        this.depthBiasEnabled = depthBiasEnabled;
+        this.depthBiasConstantFactor = depthBiasConstantFactor;
+        this.depthBiasSlopeFactor = depthBiasSlopeFactor;
         this.depthTestEnabled = depthTestEnabled;
         this.depthCompareOp = depthCompareOp;
         this.colorLogicOpEnabled = colorLogicOpEnabled;
@@ -127,7 +147,7 @@ public class StateInfo {
     }
 
     public StateInfo(StateInfo info) {
-        this(info.colorMask, info.depthMask, info.scissorEnabled, info.scissorX, info.scissorY, info.scissorWidth, info.scissorHeight, info.stencilEnabled, info.blendEnabled, info.srcColorBlendFactor, info.dstColorBlendFactor, info.srcAlphaBlendFactor, info.dstAlphaBlendFactor, info.blendOp, info.cullEnabled, info.frontFace, info.depthTestEnabled, info.depthCompareOp, info.colorLogicOpEnabled, info.colorLogicOp, info.lineWidth);
+        this(info.colorMask, info.depthMask, info.scissorEnabled, info.scissorX, info.scissorY, info.scissorWidth, info.scissorHeight, info.stencilEnabled, info.blendEnabled, info.srcColorBlendFactor, info.dstColorBlendFactor, info.srcAlphaBlendFactor, info.dstAlphaBlendFactor, info.blendOp, info.cullEnabled, info.frontFace, info.polygonMode, info.depthBiasEnabled, info.depthBiasConstantFactor, info.depthBiasSlopeFactor, info.depthTestEnabled, info.depthCompareOp, info.colorLogicOpEnabled, info.colorLogicOp, info.lineWidth);
     }
 
     public StateInfo snapshot() {
@@ -207,6 +227,26 @@ public class StateInfo {
     public StateInfo setCullEnabled(boolean cullEnabled) {
         this.cullEnabled = cullEnabled;
         return this;
+    }
+
+    public void setFrontFace(int frontFace) {
+        this.frontFace = frontFace;
+    }
+
+    public void setPolygonMode(PolygonMode polygonMode) {
+        this.polygonMode = polygonMode;
+    }
+
+    public void setDepthBiasEnabled(boolean depthBiasEnabled) {
+        this.depthBiasEnabled = depthBiasEnabled;
+    }
+
+    public void setDepthBiasConstantFactor(float depthBiasConstantFactor) {
+        this.depthBiasConstantFactor = depthBiasConstantFactor;
+    }
+
+    public void setDepthBiasSlopeFactor(float depthBiasSlopeFactor) {
+        this.depthBiasSlopeFactor = depthBiasSlopeFactor;
     }
 
     public StateInfo setDepthTestEnabled(boolean depthTestEnabled) {
@@ -298,6 +338,22 @@ public class StateInfo {
         return frontFace;
     }
 
+    public PolygonMode getPolygonMode() {
+        return polygonMode;
+    }
+
+    public boolean isDepthBiasEnabled() {
+        return depthBiasEnabled;
+    }
+
+    public float getDepthBiasConstantFactor() {
+        return depthBiasConstantFactor;
+    }
+
+    public float getDepthBiasSlopeFactor() {
+        return depthBiasSlopeFactor;
+    }
+
     public boolean isDepthTestEnabled() {
         return depthTestEnabled;
     }
@@ -339,7 +395,7 @@ public class StateInfo {
     }
 
     @NotNull
-    public VkPipelineRasterizationStateCreateInfo getRasterizationStateCreateInfo(int polygonMode) {
+    public VkPipelineRasterizationStateCreateInfo getRasterizationStateCreateInfo(int polygonMode, boolean depthBiasEnabled, float depthBiasConstantFactor, float depthBiasSlopeFactor) {
         return VkPipelineRasterizationStateCreateInfo.callocStack()
                 .sType(VK10.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO)
                 .rasterizerDiscardEnable(false)
@@ -347,7 +403,9 @@ public class StateInfo {
                 .lineWidth(getLineWidth())
                 .cullMode(isCullEnabled() ? VK10.VK_CULL_MODE_BACK_BIT : VK10.VK_CULL_MODE_NONE)
                 .frontFace(getFrontFace()) // TODO: try messing with this
-                .depthBiasEnable(false);
+                .depthBiasEnable(depthBiasEnabled)
+                .depthBiasConstantFactor(depthBiasConstantFactor)
+                .depthBiasSlopeFactor(depthBiasSlopeFactor);
     }
 
     @NotNull
