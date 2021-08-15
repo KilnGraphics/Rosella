@@ -5,7 +5,10 @@ import me.hydos.rosella.render.shader.ShaderType
 import org.lwjgl.system.MemoryUtil.NULL
 import org.lwjgl.system.NativeResource
 import org.lwjgl.util.shaderc.Shaderc.*
+import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
+
 
 fun compileShaderFile(shader: Resource, shaderType: ShaderType): SpirV {
     val source = shader.openStream().readBytes().decodeToString()
@@ -28,7 +31,17 @@ fun compileShader(filename: String, source: String, shaderType: ShaderType): Spi
     }
     shaderc_compiler_release(compiler)
 
+    writeToFile(shaderc_result_get_bytes(result)!!, filename)
     return SpirV(result, shaderc_result_get_bytes(result))
+}
+
+fun writeToFile(bytecode: ByteBuffer, filename: String) {
+    val file = File("$filename-" + bytecode.hashCode().toString() + ".spriv")
+    file.parentFile.mkdirs()
+
+    val channel = FileOutputStream(file, false).channel
+    channel.write(bytecode)
+    channel.close()
 }
 
 class SpirV(private val handle: Long, private var bytecode: ByteBuffer?) : NativeResource {

@@ -27,7 +27,7 @@ public class FboWaterTest {
     public static final int HEIGHT = 720;
     public static final int FOV = 90;
 
-    public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), WIDTH / HEIGHT, 0.1f, 1000, true);
+    public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), WIDTH / HEIGHT, 0.1f, 2000, true);
 
     public static ShaderProgram basicShader;
     public static ShaderProgram skyboxShader;
@@ -71,7 +71,7 @@ public class FboWaterTest {
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
 
         skybox.modelMatrix.scale(500, 500, 500);
-        skybox.modelMatrix.translate(0, 0, -1f);
+        skybox.modelMatrix.translate(0, 0, 0f);
         skybox.modelMatrix.rotateAffineXYZ((float) Math.toRadians(180), 0, 0);
         rosella.objectManager.addObject(skybox);
 
