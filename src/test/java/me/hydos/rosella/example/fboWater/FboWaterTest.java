@@ -98,7 +98,7 @@ public class FboWaterTest {
                 projectionMatrix
         );
 
-        fboOverlay.modelMatrix.translate(0, 0, 0);
+        fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
         rosella.objectManager.addObject(fboOverlay);
     }
 
