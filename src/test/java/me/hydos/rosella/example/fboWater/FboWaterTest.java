@@ -19,6 +19,7 @@ import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
+import me.hydos.rosella.scene.object.FboRenderObject;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.test_utils.NoclipCamera;
 import me.hydos.rosella.util.Color;
@@ -92,12 +93,20 @@ public class FboWaterTest {
 
         terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
-        
+
+        GlbRenderObject waterPlane = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
+        waterFboObjectManager.addObject(waterPlane);
+
+        FboRenderObject fboRenderObject = FboRenderObject.create(secondFbo, -1f, rosella, camera.viewMatrix, projectionMatrix, guiShader);
+        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
+        mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
+
         skybox.modelMatrix.scale(10);
         mainObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-            mainObjectManager.addObject(subModel);
+//            mainObjectManager.addObject(subModel);
+            waterFboObjectManager.addObject(subModel);
         }
 
         fboOverlay = new GuiRenderObject(
@@ -108,7 +117,7 @@ public class FboWaterTest {
                 projectionMatrix
         );
 
-        fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
+//        fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
         mainObjectManager.addObject(fboOverlay);
     }
 

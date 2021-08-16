@@ -79,6 +79,10 @@ public class TextureManager {
         textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, null));
     }
 
+    public void createTextureRaw(Renderer renderer, int textureId, int width, int height, int imgFormat, TextureImage image) {
+        textureMap.put(textureId, new Texture(imgFormat, width, height, image, null));
+    }
+
     public void setTextureSampler(int textureId, String samplerName, SamplerCreateInfo samplerCreateInfo) {
         Map<String, TextureSampler> textureNoMap = samplerCache.computeIfAbsent(samplerCreateInfo, s -> new HashMap<>());
         TextureSampler textureSampler = textureNoMap.computeIfAbsent(samplerName, t -> new TextureSampler(samplerCreateInfo, common.device));

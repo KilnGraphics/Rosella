@@ -30,6 +30,7 @@ public class FrameBufferObject {
     public final DepthBuffer depthBuffer = new DepthBuffer();
     public boolean isSwapchainBased;
     public List<Long> imageViews;
+    public List<TextureImage> images;
     public List<Long> frameBuffers;
     public VkCommandBuffer[] commandBuffers;
     public SimpleObjectManager objectManager;
@@ -79,7 +80,7 @@ public class FrameBufferObject {
 
     protected void setBlankImages(Swapchain swapchain, VkCommon common) {
         imageViews = new ArrayList<>(swapchain.getImageCount());
-        List<TextureImage> images = new ArrayList<>();
+        this.images = new ArrayList<>();
         for (int i = 0; i < swapchain.getImageCount(); i++) {
             images.add(
                     VkUtils.createImage(
