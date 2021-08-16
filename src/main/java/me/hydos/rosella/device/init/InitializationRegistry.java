@@ -11,7 +11,6 @@ import java.util.*;
  */
 public class InitializationRegistry {
 
-    private boolean validationEnabled = false;
     private VulkanVersion minRequiredVersion = VulkanVersion.VULKAN_1_0;
     private VulkanVersion maxSupportedVersion = VulkanVersion.VULKAN_1_2;
 
@@ -24,14 +23,6 @@ public class InitializationRegistry {
 
     private final Map<NamedID, MarkedFeature> features = new HashMap<>();
     private final Set<NamedID> requiredFeatures = new HashSet<>();
-
-    public void enableValidation(boolean enable) {
-        this.validationEnabled = enable;
-    }
-
-    public boolean getEnableValidation() {
-        return this.validationEnabled;
-    }
 
     public void addDebugCallback(VulkanDebugCallback.Callback callback) {
         this.debugCallbacks.add(callback);
@@ -49,7 +40,7 @@ public class InitializationRegistry {
         this.optionalInstanceLayers.add(layer);
     }
 
-    public void addRequiredInstanceExtensions(String extension) {
+    public void addRequiredInstanceExtension(String extension) {
         this.requiredInstanceExtensions.add(extension);
     }
 

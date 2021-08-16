@@ -4,10 +4,7 @@ import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.device.init.DeviceBuilder;
 import me.hydos.rosella.device.init.InitializationRegistry;
 import me.hydos.rosella.device.init.VulkanInstance;
-import me.hydos.rosella.device.init.features.PhysicalDeviceProperties2;
-import me.hydos.rosella.device.init.features.PortabilitySubset;
-import me.hydos.rosella.device.init.features.RosellaLegacy;
-import me.hydos.rosella.device.init.features.TriangleFan;
+import me.hydos.rosella.device.init.features.*;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
@@ -18,7 +15,6 @@ import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.shader.ShaderManager;
 import me.hydos.rosella.render.texture.TextureManager;
 import me.hydos.rosella.render.util.SprirVUtilsKt;
-import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.SemaphorePool;
 import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
@@ -28,6 +24,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringFormatterMessageFactory;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.EXTDebugUtils;
+import org.lwjgl.vulkan.EXTValidationFeatures;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkLayerProperties;
 
@@ -102,7 +100,7 @@ public class Rosella {
 
     @Deprecated
     public Rosella(Display display, String applicationName, boolean enableBasicValidation) {
-        this(display, enableBasicValidation ? Collections.singletonList("VK_LAYER_KHRONOS_validation") : Collections.emptyList(), applicationName, new DefaultDebugLogger());
+        this(display, enableBasicValidation ? Collections.singletonList(ValidationLayers.INSTANCE_LAYER_NAME) : Collections.emptyList(), applicationName, new DefaultDebugLogger());
     }
 
     @Deprecated
@@ -112,7 +110,7 @@ public class Rosella {
 
         InitializationRegistry initializationRegistry = new InitializationRegistry();
         requestedValidationLayers.forEach(initializationRegistry::addRequiredInstanceLayer);
-        requiredExtensions.forEach(initializationRegistry::addRequiredInstanceExtensions);
+        requiredExtensions.forEach(initializationRegistry::addRequiredInstanceExtension);
         PhysicalDeviceProperties2.addInstanceExtension(initializationRegistry); // Required to detect triangle fan support
 
         // Setup core vulkan stuff

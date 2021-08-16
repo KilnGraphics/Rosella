@@ -34,7 +34,7 @@ class TextureSampler(private val createInfo: SamplerCreateInfo, device: VulkanDe
                 samplerInfo.mipmapMode(VK10.VK_SAMPLER_MIPMAP_MODE_NEAREST)
             }
             val pTextureSampler = stack.mallocLong(1)
-            if (VK10.vkCreateSampler(device.getRawDevice(), samplerInfo, null, pTextureSampler) != VK10.VK_SUCCESS) {
+            if (VK10.vkCreateSampler(device.rawDevice, samplerInfo, null, pTextureSampler) != VK10.VK_SUCCESS) {
                 throw RuntimeException("Failed to create texture sampler")
             }
             pointer = pTextureSampler[0]

@@ -1,5 +1,6 @@
 package me.hydos.rosella.debug;
 
+import me.hydos.rosella.Rosella;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkDebugUtilsMessengerCallbackDataEXT;
@@ -37,7 +38,7 @@ public class VulkanDebugCallback {
             callbacks.forEach(cb -> cb.call(severity, type, callbackData));
 
         } catch (Exception ex) {
-            // TODO log?
+            Rosella.LOGGER.error("Unable to process debug callback", ex);
         }
         return VK10.VK_FALSE;
     }

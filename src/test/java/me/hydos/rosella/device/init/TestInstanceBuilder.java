@@ -1,6 +1,7 @@
 package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.annotations.RequiresVulkan;
+import me.hydos.rosella.device.init.features.ValidationLayers;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.vulkan.VK10;
 
@@ -24,7 +25,7 @@ public class TestInstanceBuilder {
     @RequiresVulkan
     void testEnableValidation() {
         InitializationRegistry registry = new InitializationRegistry();
-        registry.enableValidation(true);
+        registry.addRequiredInstanceLayer(ValidationLayers.INSTANCE_LAYER_NAME);
 
         assertDoesNotThrow(() -> {
             InstanceBuilder builder = new InstanceBuilder(registry);

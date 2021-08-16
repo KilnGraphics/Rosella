@@ -12,6 +12,7 @@ import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.vma.Vma;
+import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkFramebufferCreateInfo;
 
@@ -88,7 +89,7 @@ public class FrameBufferObject {
                     swapchain.getSwapChainExtent().height(),
                     swapchain.getSwapChainImageFormat(),
                     VK_IMAGE_TILING_OPTIMAL,
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                     Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
             );
@@ -97,7 +98,7 @@ public class FrameBufferObject {
                     common.device,
                     image.pointer(),
                     swapchain.getSwapChainImageFormat(),
-                    VK_IMAGE_LAYOUT_UNDEFINED,
+                    VK_IMAGE_LAYOUT_UNDEFINED, // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
             );
 
