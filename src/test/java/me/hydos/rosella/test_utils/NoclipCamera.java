@@ -92,6 +92,7 @@ public class NoclipCamera {
         viewMatrix.identity();
         viewMatrix.rotate(rotation.x, X_AXIS);
         viewMatrix.rotate(rotation.y, Y_AXIS);
+        viewMatrix.rotate(rotation.z, Z_AXIS);
         viewMatrix.translate(position.x, position.y, position.z);
     }
 
