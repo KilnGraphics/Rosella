@@ -1,7 +1,6 @@
 package me.hydos.rosella.render.swapchain;
 
 import me.hydos.rosella.device.VulkanDevice;
-import me.hydos.rosella.render.renderer.Renderer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
@@ -15,12 +14,12 @@ public class RenderPass {
 
     private long renderPass;
 
-    // TODO: have a create function that can be called on swapchain recreation or whatever
-    // TODO: add subpass support
     public RenderPass() {
+        // TODO: have a create function that can be called on swapchain recreation or whatever
+        // TODO: add subpass support
     }
 
-    public void create(VulkanDevice device, Swapchain swapchain, Renderer renderer) {
+    public void create(VulkanDevice device, Swapchain swapchain) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             VkAttachmentDescription.Buffer attachments = VkAttachmentDescription.callocStack(2, stack);
             VkAttachmentReference.Buffer attachmentRefs = VkAttachmentReference.callocStack(2, stack);
@@ -40,7 +39,7 @@ public class RenderPass {
                     .layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
             attachments.get(1)
-                    .format(renderer.depthBuffer.findDepthFormat(device))
+                    .format(DepthBuffer.findDepthFormat(device))
                     .samples(VK_SAMPLE_COUNT_1_BIT)
                     .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
                     .storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)

@@ -26,7 +26,7 @@ open class RenderObjectUbo(
     override fun create(swapchain: Swapchain) {
         MemoryStack.stackPush().use { stack ->
             uboFrames = ArrayList(swapchain.imageCount)
-            for (i in swapchain.framebuffer.swapChainImages.indices) {
+            for (i in swapchain.swapChainImages.indices) {
                 val pBuffer = stack.mallocLong(1)
                 uboFrames.add(
                     memory.createBuffer(

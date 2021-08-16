@@ -1,16 +1,15 @@
 package me.hydos.rosella.render.renderer;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
+import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.info.InstanceInfo;
 import me.hydos.rosella.render.info.RenderInfo;
 import me.hydos.rosella.render.shader.RawShaderProgram;
-import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.Frame;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
@@ -48,9 +47,6 @@ public class Renderer {
     // The presentation and graphics queue
     public final VulkanQueues queues;
 
-    // The depth buffer as Vulkan forces us to create our own
-    public final DepthBuffer depthBuffer;
-
     // The main render pass used by the engine.
     // At some point there will be multiple of these, so we won't have this field anymore.
     public final RenderPass mainRenderPass;
@@ -75,7 +71,6 @@ public class Renderer {
         this.common = rosella.common;
 
         this.queues = common.queues;
-        this.depthBuffer = new DepthBuffer();
         this.mainRenderPass = new RenderPass();
 
         VkUtils.createCommandPool(common.device, common.queues, this);
@@ -89,9 +84,9 @@ public class Renderer {
 
     private void createSwapChain(VkCommon common, Display display, SimpleObjectManager objectManager) {
         this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
-        mainRenderPass.create(common.device, swapchain, this);
-        VkUtils.createSwapchainImageViews(swapchain, common.device);
-        depthBuffer.createDepthResources(common.device, common.memory, swapchain, this);
+        mainRenderPass.create(common.device, swapchain);
+        common.fboManager.recreateSwapchainImageViews(swapchain, common);
+        common.fboManager.recreateDepthResources(swapchain, common, this);
         createFrameBuffers();
 
         // Engine may still be initialising so we do a null check just in case
@@ -215,27 +210,8 @@ public class Renderer {
         }
 
         clearCommandBuffers(rosella.common.device);
-
-        // Free Depth Buffer
-        depthBuffer.free(rosella.common.device, rosella.common.memory);
-
-        for (long framebuffer : swapchain.getFramebuffer().frameBuffers) {
-            vkDestroyFramebuffer(
-                    rosella.common.device.getRawDevice(),
-                    framebuffer,
-                    null
-            );
-        }
-
+        common.fboManager.free(common);
         vkDestroyRenderPass(rosella.common.device.getRawDevice(), mainRenderPass.getRawRenderPass(), null);
-        swapchain.getFramebuffer().swapChainImageViews.forEach(imageView ->
-                vkDestroyImageView(
-                        rosella.common.device.getRawDevice(),
-                        imageView,
-                        null
-                )
-        );
-
         swapchain.free(rosella.common.device.getRawDevice());
     }
 
@@ -294,24 +270,7 @@ public class Renderer {
     }
 
     private void createFrameBuffers() {
-        swapchain.getFramebuffer().frameBuffers = new LongArrayList(swapchain.getImageCount());
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            LongBuffer attachments = stack.longs(VK_NULL_HANDLE, depthBuffer.getDepthImage().getView());
-            LongBuffer pFramebuffer = stack.mallocLong(1);
-            VkFramebufferCreateInfo framebufferInfo = VkFramebufferCreateInfo.callocStack(stack)
-                    .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
-                    .renderPass(mainRenderPass.getRawRenderPass())
-                    .width(swapchain.getSwapChainExtent().width())
-                    .height(swapchain.getSwapChainExtent().height())
-                    .layers(1);
-            for (long imageView : swapchain.getFramebuffer().swapChainImageViews) {
-                attachments.put(0, imageView);
-                framebufferInfo.pAttachments(attachments);
-                ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));
-                swapchain.getFramebuffer().frameBuffers.add(pFramebuffer.get(0));
-            }
-        }
+        swapchain.setMainFbo(new FrameBufferObject(true, swapchain, common, mainRenderPass, this));
     }
 
     /**
@@ -330,7 +289,7 @@ public class Renderer {
             }
             requireHardRebuild = false;
 
-            int commandBuffersCount = swapchain.getFramebuffer().frameBuffers.size();
+            int commandBuffersCount = swapchain.getMainFbo().frameBuffers.size();
 
             clearCommandBuffers(common.device);
             commandBuffers = new VkCommandBuffer[commandBuffersCount];
@@ -362,7 +321,7 @@ public class Renderer {
                 for (int i = 0; i < commandBuffersCount; i++) {
                     VkCommandBuffer commandBuffer = commandBuffers[i];
                     ok(vkBeginCommandBuffer(commandBuffer, beginInfo));
-                    renderPassInfo.framebuffer(swapchain.getFramebuffer().frameBuffers.get(i));
+                    renderPassInfo.framebuffer(swapchain.getMainFbo().frameBuffers.get(i));
                     vkCmdBeginRenderPass(commandBuffer, renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     RenderInfo previousRenderInfo = null;

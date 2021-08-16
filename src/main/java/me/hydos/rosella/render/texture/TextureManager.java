@@ -74,7 +74,7 @@ public class TextureManager {
                 return;
             }
         }
-        TextureImage textureImage = VkUtils.createTextureImage(renderer, common.memory, common.device, width, height, imgFormat);
+        TextureImage textureImage = VkUtils.createTextureImage(renderer, common, width, height, imgFormat);
         textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
         textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, null));
     }
@@ -96,7 +96,6 @@ public class TextureManager {
             VkUtils.transitionImageLayout(
                     renderer,
                     common.device,
-                    renderer.depthBuffer,
                     texture.getTextureImage().pointer(),
                     texture.getImageFormat(),
                     VK10.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -126,7 +125,6 @@ public class TextureManager {
             VkUtils.transitionImageLayout(
                     renderer,
                     common.device,
-                    renderer.depthBuffer,
                     texture.getTextureImage().pointer(),
                     texture.getImageFormat(),
                     VK10.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,

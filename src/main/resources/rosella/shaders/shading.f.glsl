@@ -18,7 +18,7 @@ void main() {
     vec3 unitLightVector = normalize(toLightVector) * intensity;
 
     float nDotl = dot(unitNormal, unitLightVector);
-    float brightness = max(nDotl, 0.0);
+    float brightness = max(nDotl, 0.2);
     vec3 diffuse = brightness * lightColour;
 
     outColor = vec4(diffuse, 1.0) * texture(texSampler, fragTexCoord);

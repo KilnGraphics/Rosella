@@ -4,6 +4,7 @@ import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.memory.Memory;
+import me.hydos.rosella.render.fbo.FboManager;
 import me.hydos.rosella.util.SemaphorePool;
 
 /**
@@ -45,4 +46,9 @@ public class VkCommon {
      * The Presentation and Graphics queue.
      */
     public VulkanQueues queues;
+
+    /**
+     * Manages all FrameBuffer Objects.
+     */
+    public FboManager fboManager = new FboManager();
 }

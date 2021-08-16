@@ -1,15 +1,12 @@
 package me.hydos.rosella.util;
 
-import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.ints.IntIntImmutablePair;
-import it.unimi.dsi.fastutil.ints.IntIntPair;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import me.hydos.rosella.device.QueueFamilyIndices;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.Memory;
+import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
@@ -18,6 +15,7 @@ import me.hydos.rosella.render.texture.ImageRegion;
 import me.hydos.rosella.render.texture.Texture;
 import me.hydos.rosella.render.texture.TextureImage;
 import me.hydos.rosella.render.texture.UploadableImage;
+import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.vma.Vma;
@@ -30,7 +28,8 @@ import java.util.Map;
 
 import static java.util.Map.entry;
 import static java.util.Map.ofEntries;
-import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryStack.stackGet;
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
 
 public class VkUtils {
@@ -131,21 +130,6 @@ public class VkUtils {
         }
     }
 
-    public static void createSwapchainImageViews(Swapchain swapchain, VulkanDevice device) {
-        swapchain.getFramebuffer().frameBuffers = new LongArrayList(swapchain.getImageCount());
-
-        for (long swapChainImage : swapchain.getFramebuffer().swapChainImages) {
-            swapchain.getFramebuffer().swapChainImageViews.add(
-                    createImageView(
-                            device,
-                            swapChainImage,
-                            swapchain.getSwapChainImageFormat(),
-                            VK_IMAGE_ASPECT_COLOR_BIT
-                    )
-            );
-        }
-    }
-
     public static long createTextureImageView(VulkanDevice device, int imgFormat, long textureImage) {
         return createImageView(device, textureImage, imgFormat, VK_IMAGE_ASPECT_COLOR_BIT);
     }
@@ -241,9 +225,9 @@ public class VkUtils {
         }
     }
 
-    public static TextureImage createTextureImage(Renderer renderer, Memory memory, VulkanDevice device, int width, int height, int imgFormat) {
+    public static TextureImage createTextureImage(Renderer renderer, VkCommon common, int width, int height, int imgFormat) {
         TextureImage image = createImage(
-                memory,
+                common.memory,
                 width,
                 height,
                 imgFormat,
@@ -255,8 +239,7 @@ public class VkUtils {
 
         transitionImageLayout(
                 renderer,
-                device,
-                renderer.depthBuffer,
+                common.device,
                 image.pointer(),
                 imgFormat,
                 VK_IMAGE_LAYOUT_UNDEFINED,
@@ -266,7 +249,7 @@ public class VkUtils {
         return image;
     }
 
-    public static void transitionImageLayout(Renderer renderer, VulkanDevice device, DepthBuffer depthBuffer, long image, int format, int oldLayout, int newLayout) {
+    public static void transitionImageLayout(Renderer renderer, VulkanDevice device, long image, int format, int oldLayout, int newLayout) {
         try (MemoryStack stack = stackPush()) {
             VkImageMemoryBarrier.Buffer barrier = VkImageMemoryBarrier.callocStack(1, stack)
                     .sType(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER)
@@ -282,7 +265,7 @@ public class VkUtils {
                                 .baseArrayLayer(0)
                                 .layerCount(1);
                         if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-                            subresourceRange.aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT | (depthBuffer.hasStencilComponent(format) ? VK_IMAGE_ASPECT_STENCIL_BIT : 0));
+                            subresourceRange.aspectMask(VK_IMAGE_ASPECT_DEPTH_BIT | (DepthBuffer.hasStencilComponent(format) ? VK_IMAGE_ASPECT_STENCIL_BIT : 0));
                         } else {
                             subresourceRange.aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
                         }
