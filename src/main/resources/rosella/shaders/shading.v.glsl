@@ -21,7 +21,7 @@ void main() {
     fragTexCoord = inTexCoord;
 
     // CONSTANTS
-    vec3 lightPosition = vec3(0.0, 2.0, 0.0);
+    vec3 lightPosition = vec3(100.0, 100.0, 100.0);
 
     surfaceNormal = (ubo.model * vec4(inNormal, 0.0)).xyz;
     toLightVector = lightPosition - worldPosition.xyz;
