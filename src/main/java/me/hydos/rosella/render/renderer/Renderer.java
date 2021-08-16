@@ -74,7 +74,7 @@ public class Renderer {
         this.mainRenderPass = new RenderPass();
 
         VkUtils.createCommandPool(common.device, common.queues, this);
-        createSwapChain(common, common.display, ((SimpleObjectManager) rosella.objectManager));
+        createSwapChain(common, common.display);
         initialSwapchainCreated = true;
     }
 
@@ -83,7 +83,7 @@ public class Renderer {
     public long commandPool = 0;
     public VkCommandBuffer[] commandBuffers;
 
-    private void createSwapChain(VkCommon common, Display display, SimpleObjectManager objectManager) {
+    private void createSwapChain(VkCommon common, Display display) {
         this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
         mainRenderPass.create(common.device, swapchain);
         common.fboManager.recreateSwapchainImageViews(swapchain, common);
@@ -95,7 +95,7 @@ public class Renderer {
             common.pipelineManager.rebuildPipelines();
         }
 
-        rebuildCommandBuffers(mainRenderPass, objectManager);
+        rebuildCommandBuffers(mainRenderPass);
         createSyncObjects();
     }
 
@@ -147,7 +147,9 @@ public class Renderer {
 
             for (RawShaderProgram shader : common.shaderManager.getCachedShaders().keySet()) {
                 shader.prepareTexturesForRender(rosella.renderer, common.textureManager);
-                shader.updateUbos(imageIndex, swapchain, (SimpleObjectManager) rosella.objectManager);
+                for (FrameBufferObject fbo : common.fboManager.fbos) {
+                    shader.updateUbos(imageIndex, swapchain, fbo.objectManager);
+                }
             }
 
             if (imagesInFlight.containsKey(imageIndex)) {
@@ -202,7 +204,7 @@ public class Renderer {
 
         rosella.common.device.waitForIdle();
         freeSwapChain();
-        createSwapChain(rosella.common, window, ((SimpleObjectManager) rosella.objectManager));
+        createSwapChain(rosella.common, window);
     }
 
     public void freeSwapChain() {
@@ -275,25 +277,26 @@ public class Renderer {
     }
 
     private void createFrameBuffers() {
-        common.fboManager.setMainFbo(new FrameBufferObject(true, swapchain, common, mainRenderPass, this));
+        common.fboManager.setMainFbo(new FrameBufferObject(true, swapchain, common, mainRenderPass, this, rosella.baseObjectManager));
     }
 
     @Deprecated
-    public void rebuildCommandBuffers(RenderPass renderPass, SimpleObjectManager simpleObjectManager) {
+    public void rebuildCommandBuffers(RenderPass renderPass) {
         if (common.fboManager.fbos.size() == 0) {
             Rosella.LOGGER.warn("Tried to rebuild command buffers but 0 fbo's exist. This will cause problems soon!");
         }
         for (FrameBufferObject fbo : common.fboManager.fbos) {
-            rebuildCommandBuffers(renderPass, simpleObjectManager, fbo);
+            rebuildCommandBuffers(renderPass, fbo);
         }
     }
 
     /**
      * Create the Command Buffers
      */
-    public void rebuildCommandBuffers(RenderPass renderPass, SimpleObjectManager simpleObjectManager, FrameBufferObject frameBufferObject) {
+    public void rebuildCommandBuffers(RenderPass renderPass, FrameBufferObject frameBufferObject) {
+        SimpleObjectManager objectManager = frameBufferObject.objectManager;
         if (!recreateSwapChain) {
-            for (Renderable renderObject : simpleObjectManager.renderObjects) {
+            for (Renderable renderObject : objectManager.renderObjects) {
                 if (requireHardRebuild) {
                     renderObject.hardRebuild(rosella);
                 } else {
@@ -330,7 +333,7 @@ public class Renderer {
             renderPassInfo.renderArea(renderArea)
                     .pClearValues(clearValues);
 
-            if (rosella.bufferManager != null && !simpleObjectManager.renderObjects.isEmpty()) {
+            if (rosella.bufferManager != null && !objectManager.renderObjects.isEmpty()) {
                 for (int i = 0; i < commandBuffersCount; i++) {
                     VkCommandBuffer commandBuffer = commandBuffers[i];
                     ok(vkBeginCommandBuffer(commandBuffer, beginInfo));
@@ -339,7 +342,7 @@ public class Renderer {
 
                     RenderInfo previousRenderInfo = null;
                     long previousGraphicsPipeline = VK_NULL_HANDLE;
-                    for (Renderable renderObject : simpleObjectManager.renderObjects) {
+                    for (Renderable renderObject : objectManager.renderObjects) {
                         try {
                             RenderInfo currentRenderInfo = renderObject.getRenderInfo().get();
                             InstanceInfo currentInstanceInfo = renderObject.getInstanceInfo();
@@ -649,7 +652,7 @@ public class Renderer {
     public void clearColor(Color color) {
         if (clearColor != color) {
             lazilyClearColor(color);
-            rebuildCommandBuffers(mainRenderPass, ((SimpleObjectManager) rosella.objectManager));
+            rebuildCommandBuffers(mainRenderPass);
         }
     }
 

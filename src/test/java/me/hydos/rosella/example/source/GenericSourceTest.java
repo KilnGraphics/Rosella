@@ -63,7 +63,7 @@ public class GenericSourceTest {
         loadShaders();
         loadMaterials();
         setupMainMenuScene();
-        rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass, (SimpleObjectManager) rosella.objectManager);
+        rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass);
 
         window.startAutomaticLoop(rosella, () -> {
 
@@ -89,11 +89,13 @@ public class GenericSourceTest {
     }
 
     private static void setupMainMenuScene() {
-        rosella.objectManager.addObject(
+        SimpleObjectManager objectManager = rosella.common.fboManager.getObjectManager();
+
+        objectManager.addObject(
                 new GuiRenderObject(menuBackground, -1f, new Vector3f(0, 0, 0), WIDTH, -TOP, viewMatrix, projectionMatrix)
         );
 
-        rosella.objectManager.addObject(
+        objectManager.addObject(
                 new GuiRenderObject(portalLogo, -0.9f, new Vector3f(0, 0, 0), WIDTH / 4f, -TOP / 8f, -1f, -2.6f, viewMatrix, projectionMatrix)
         );
 
@@ -109,35 +111,35 @@ public class GenericSourceTest {
             subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(0, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : engineer2) {
             subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(40, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : engineer3) {
             subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(-40, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : spy) {
             subModel.modelMatrix.scale(10, 10, 10);
             subModel.modelMatrix.translate(20, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
 
         for (GlbRenderObject subModel : spy2) {
             subModel.modelMatrix.scale(10f, 10f, 10f);
             subModel.modelMatrix.translate(-20, 36, 0);
             subModel.modelMatrix.rotateAffineXYZ(-90, 0, 0);
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
     }
 
@@ -208,7 +210,9 @@ public class GenericSourceTest {
     }
 
     private static void loadShaders() {
-        basicShader = rosella.objectManager.addShader(
+        SimpleObjectManager objectManager = rosella.common.fboManager.getObjectManager();
+
+        basicShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
@@ -220,7 +224,7 @@ public class GenericSourceTest {
                 )
         );
 
-        guiShader = rosella.objectManager.addShader(
+        guiShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.f.glsl")),

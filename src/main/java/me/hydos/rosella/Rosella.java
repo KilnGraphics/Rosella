@@ -54,7 +54,7 @@ public class Rosella {
     public final GlobalBufferManager bufferManager;
     public final VkCommon common = new VkCommon();
     public final Renderer renderer;
-    public final ObjectManager objectManager;
+    public final SimpleObjectManager baseObjectManager;
 
     public final VulkanInstance vulkanInstance;
 
@@ -91,10 +91,10 @@ public class Rosella {
         common.memory = new ThreadPoolMemory(common);
         common.semaphorePool = new SemaphorePool(common.device.getRawDevice());
 
-        this.objectManager = new SimpleObjectManager(this, common);
+        this.baseObjectManager = new SimpleObjectManager(this, common);
         this.renderer = new Renderer(this);
         this.common.textureManager.initializeBlankTexture(renderer);
-        this.objectManager.postInit(renderer);
+        this.baseObjectManager.postInit(renderer);
         this.bufferManager = new GlobalBufferManager(this);
 
         display.onReady();
@@ -139,12 +139,12 @@ public class Rosella {
         common.semaphorePool = new SemaphorePool(common.device.getRawDevice());
 
         // Setup the object manager
-        this.objectManager = new SimpleObjectManager(this, common);
+        this.baseObjectManager = new SimpleObjectManager(this, common);
         this.common.shaderManager = new ShaderManager(this);
         this.common.textureManager = new TextureManager(common);
         this.renderer = new Renderer(this); //TODO: make swapchain, etc initialization happen outside of the renderer and in here
         this.common.textureManager.initializeBlankTexture(renderer); // TODO: move this maybe
-        this.objectManager.postInit(renderer);
+        this.baseObjectManager.postInit(renderer);
         this.common.pipelineManager = new PipelineManager(common, renderer);
         this.bufferManager = new GlobalBufferManager(this);
 
@@ -158,7 +158,7 @@ public class Rosella {
     public void free() {
         SprirVUtilsKt.free();
         common.device.waitForIdle();
-        objectManager.free();
+        baseObjectManager.free();
         common.shaderManager.free();
         common.textureManager.free();
         common.pipelineManager.free();

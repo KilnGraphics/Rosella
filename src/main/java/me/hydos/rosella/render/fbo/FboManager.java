@@ -2,6 +2,7 @@ package me.hydos.rosella.render.fbo;
 
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.Swapchain;
+import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.vkobjects.VkCommon;
 
 import java.util.ArrayList;
@@ -35,10 +36,18 @@ public class FboManager {
     }
 
     public void setMainFbo(FrameBufferObject mainFbo) {
-        if(this.mainFbo != null) {
+        if (this.mainFbo != null) {
             throw new RuntimeException("Tried to replace existing Main Frame Buffer Object");
         }
         this.mainFbo = mainFbo;
         fbos.add(mainFbo);
+    }
+
+    public SimpleObjectManager getObjectManager() {
+        if (this.activeFbo == null) {
+            return mainFbo.objectManager;
+        } else {
+            return activeFbo.objectManager;
+        }
     }
 }

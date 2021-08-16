@@ -65,7 +65,7 @@ public class FboWaterTest {
         loadShaders();
         loadMaterials();
         setupMainMenuScene();
-        rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass, (SimpleObjectManager) rosella.objectManager);
+        rosella.renderer.rebuildCommandBuffers(rosella.renderer.mainRenderPass);
 
         camera.setup(window.pWindow);
         window.startAutomaticLoop(rosella, () -> {
@@ -77,6 +77,8 @@ public class FboWaterTest {
     }
 
     private static void setupMainMenuScene() {
+        SimpleObjectManager objectManager = rosella.common.fboManager.getObjectManager();
+
         rosella.renderer.lazilyClearColor(new Color(10, 20, 200, 255));
         GlbModelLoader.NodeSelector everything = (name) -> true;
 
@@ -84,10 +86,10 @@ public class FboWaterTest {
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
         
         skybox.modelMatrix.scale(10);
-        rosella.objectManager.addObject(skybox);
+        objectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-            rosella.objectManager.addObject(subModel);
+            objectManager.addObject(subModel);
         }
 
         fboOverlay = new GuiRenderObject(
@@ -99,7 +101,7 @@ public class FboWaterTest {
         );
 
         fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
-        rosella.objectManager.addObject(fboOverlay);
+        objectManager.addObject(fboOverlay);
     }
 
     private static void loadMaterials() {
@@ -124,7 +126,9 @@ public class FboWaterTest {
     }
 
     private static void loadShaders() {
-        basicShader = rosella.objectManager.addShader(
+        SimpleObjectManager objectManager = rosella.common.fboManager.getObjectManager();
+
+        basicShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
@@ -136,7 +140,7 @@ public class FboWaterTest {
                 )
         );
 
-        normalShader = rosella.objectManager.addShader(
+        normalShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.f.glsl")),
@@ -148,7 +152,7 @@ public class FboWaterTest {
                 )
         );
 
-        skyboxShader = rosella.objectManager.addShader(
+        skyboxShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("example", "shared/shaders/skybox.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("example", "shared/shaders/skybox.f.glsl")),
@@ -160,7 +164,7 @@ public class FboWaterTest {
                 )
         );
 
-        guiShader = rosella.objectManager.addShader(
+        guiShader = objectManager.addShader(
                 new RawShaderProgram(
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.v.glsl")),
                         Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/gui.f.glsl")),

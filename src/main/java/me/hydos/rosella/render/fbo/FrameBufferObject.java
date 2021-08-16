@@ -1,10 +1,12 @@
 package me.hydos.rosella.render.fbo;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import me.hydos.rosella.Rosella;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
+import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
@@ -22,12 +24,14 @@ import static org.lwjgl.vulkan.VK10.*;
  */
 public class FrameBufferObject {
 
+    public final DepthBuffer depthBuffer = new DepthBuffer();
     public boolean isSwapchainBased;
     public List<Long> imageViews;
     public List<Long> frameBuffers;
-    public final DepthBuffer depthBuffer = new DepthBuffer();
+    public SimpleObjectManager objectManager;
 
-    public FrameBufferObject(boolean useSwapchainImages, Swapchain swapchain, VkCommon common, RenderPass renderPass, Renderer renderer) {
+    public FrameBufferObject(boolean useSwapchainImages, Swapchain swapchain, VkCommon common, RenderPass renderPass, Renderer renderer, SimpleObjectManager objectManager) {
+        this.objectManager = objectManager.duplicate();
         this.frameBuffers = new LongArrayList(swapchain.getImageCount());
         this.isSwapchainBased = useSwapchainImages;
         if (useSwapchainImages) {

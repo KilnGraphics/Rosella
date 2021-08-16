@@ -16,7 +16,6 @@ import java.util.List;
  */
 public class SimpleObjectManager implements ObjectManager {
 
-    public Renderer renderer;
     private final VkCommon common;
     private final Rosella rosella;
     public final List<Renderable> renderObjects = new ObjectArrayList<>();
@@ -24,6 +23,11 @@ public class SimpleObjectManager implements ObjectManager {
     public SimpleObjectManager(Rosella rosella, VkCommon common) {
         this.rosella = rosella;
         this.common = common;
+    }
+
+    public SimpleObjectManager(SimpleObjectManager objectManager) {
+        this.rosella = objectManager.rosella;
+        this.common = objectManager.common;
     }
 
     @Override
@@ -47,6 +51,9 @@ public class SimpleObjectManager implements ObjectManager {
 
     @Override
     public void postInit(Renderer renderer) {
-        this.renderer = renderer;
+    }
+
+    public SimpleObjectManager duplicate() {
+        return new SimpleObjectManager(this);
     }
 }
