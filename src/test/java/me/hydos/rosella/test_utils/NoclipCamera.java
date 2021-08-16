@@ -2,6 +2,7 @@ package me.hydos.rosella.test_utils;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -14,7 +15,7 @@ public class NoclipCamera {
     public static float mouseSensitivity = .2f;
 
     private static final float FULL_ROTATION = (float) (Math.PI * 2.0);
-    private static final Vector3f ZERO = new Vector3f();
+    private static final Vector3fc ZERO = new Vector3f();
 
     private double lastUpdateTime = 0;
     public float deltaTime = 0;
