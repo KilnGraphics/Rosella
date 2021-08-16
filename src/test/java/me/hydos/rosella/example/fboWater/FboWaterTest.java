@@ -2,10 +2,8 @@ package me.hydos.rosella.example.fboWater;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
-import me.hydos.rosella.example.source.GenericSourceTest;
 import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
-import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.material.Material;
@@ -77,7 +75,7 @@ public class FboWaterTest {
 
         camera.setup(window.pWindow);
         window.startAutomaticLoop(rosella, () -> {
-            camera.update();
+            camera.updateMatrix();
             return true;
         });
 
