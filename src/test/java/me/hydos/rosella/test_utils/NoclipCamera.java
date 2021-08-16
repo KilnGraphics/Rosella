@@ -15,9 +15,6 @@ public class NoclipCamera {
 
     private static final float FULL_ROTATION = (float) (Math.PI * 2.0);
     private static final Vector3f ZERO = new Vector3f();
-    private static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
-    private static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
-    private static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
 
     private double lastUpdateTime = 0;
     public float deltaTime = 0;
@@ -90,9 +87,7 @@ public class NoclipCamera {
         updateMovement();
 
         viewMatrix.identity();
-        viewMatrix.rotate(rotation.x, X_AXIS);
-        viewMatrix.rotate(rotation.y, Y_AXIS);
-        viewMatrix.rotate(rotation.z, Z_AXIS);
+        viewMatrix.rotateXYZ(rotation);
         viewMatrix.translate(position.x, position.y, position.z);
     }
 
