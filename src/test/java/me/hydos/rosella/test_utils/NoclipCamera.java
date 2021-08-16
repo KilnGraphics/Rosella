@@ -12,7 +12,7 @@ public class NoclipCamera {
 
     public static final boolean PREFER_RAW_INPUT = true;
     public static float moveSpeed = 50.0f;
-    public static float mouseSensitivity = .2f;
+    public static float mouseSensitivity = .6f;
 
     private static final float FULL_ROTATION = (float) (Math.PI * 2.0);
     private static final Vector3fc ZERO = new Vector3f();

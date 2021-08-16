@@ -1,12 +1,10 @@
 package me.hydos.rosella.util;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import me.hydos.rosella.device.QueueFamilyIndices;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.Memory;
-import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
@@ -15,6 +13,8 @@ import me.hydos.rosella.render.texture.ImageRegion;
 import me.hydos.rosella.render.texture.Texture;
 import me.hydos.rosella.render.texture.TextureImage;
 import me.hydos.rosella.render.texture.UploadableImage;
+import me.hydos.rosella.scene.object.FboRenderObject;
+import me.hydos.rosella.scene.object.Renderable;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -24,6 +24,7 @@ import org.lwjgl.vulkan.*;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Map.entry;
@@ -92,10 +93,20 @@ public class VkUtils {
                 .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
     }
 
-    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass) {
-        return VkRenderPassBeginInfo.callocStack()
+    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, List<Renderable> renderObjects) {
+        VkRenderPassBeginInfo vkRenderPassBeginInfo = VkRenderPassBeginInfo.callocStack()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .renderPass(renderPass.getRawRenderPass());
+
+        for (Renderable renderObject : renderObjects) {
+            if (renderObject instanceof FboRenderObject) {
+                // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
+                VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
+                        .pAttachments(MemoryStack.stackGet().longs(renderObject.getInstanceInfo().material().textures().get("texSampler").getTextureImage().getView()));
+                vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
+            }
+        }
+        return vkRenderPassBeginInfo;
     }
 
     public static VkRect2D createRenderArea(int x, int y, Swapchain swapchain) {

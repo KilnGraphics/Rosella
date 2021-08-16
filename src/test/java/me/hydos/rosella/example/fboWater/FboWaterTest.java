@@ -103,8 +103,8 @@ public class FboWaterTest {
         mainObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-//            mainObjectManager.addObject(subModel);
-            waterFboObjectManager.addObject(subModel);
+            mainObjectManager.addObject(subModel);
+//            waterFboObjectManager.addObject(subModel);
         }
 
         fboOverlay = new GuiRenderObject(
@@ -219,11 +219,11 @@ public class FboWaterTest {
     }
 
     static {
-        try {
-            System.loadLibrary("renderdoc");
-        } catch (UnsatisfiedLinkError e) {
-            System.out.println("Failed to load renderdoc.");
-        }
+//        try {
+//            System.loadLibrary("renderdoc");
+//        } catch (UnsatisfiedLinkError e) {
+//            System.out.println("Failed to load renderdoc.");
+//        }
 
         window = new GlfwWindow(WIDTH, HEIGHT, "FrameBufferObject Water Test", false);
         rosella = new Rosella(window, "FBO_WATER_TEST", true);

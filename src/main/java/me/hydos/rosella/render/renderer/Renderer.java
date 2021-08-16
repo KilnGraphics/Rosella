@@ -85,7 +85,7 @@ public class Renderer {
     private void createSwapChain(VkCommon common, Display display) {
         this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
         mainRenderPass.create(common.device, swapchain);
-        common.fboManager.recreateSwapchainImageViews(swapchain, common, this);
+        common.fboManager.recreateSwapchainImageViews(swapchain, common);
         common.fboManager.recreateDepthResources(swapchain, common, this);
         createFrameBuffers();
 
@@ -293,7 +293,7 @@ public class Renderer {
             }
             requireHardRebuild = false;
 
-            int commandBuffersCount = swapchain.getSwapChainImages().size();
+            int commandBuffersCount = frameBufferObject.frameBuffers.size();
 
             frameBufferObject.clearCommandBuffers(common.device, commandPool);
             frameBufferObject.commandBuffers = new VkCommandBuffer[commandBuffersCount];
@@ -314,7 +314,7 @@ public class Renderer {
             }
 
             VkCommandBufferBeginInfo beginInfo = VkUtils.createBeginInfo();
-            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass);
+            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass, objectManager.renderObjects);
             VkRect2D renderArea = VkUtils.createRenderArea(0, 0, swapchain); // TODO: when scissoring, make sure this is correct
             VkClearValue.Buffer clearValues = VkUtils.createClearValues(clearColor.rAsFloat(), clearColor.gAsFloat(), clearColor.bAsFloat(), clearDepth, clearStencil);
 

@@ -38,7 +38,6 @@ public class FboRenderObject extends GuiRenderObject {
                 ImmutableTextureMap.builder()
                         .entry("texSampler", createFboTextureObject(
                                 VK10.VK_FORMAT_R8G8B8A8_SRGB,
-                                frameBufferObject,
                                 rosella
                         ))
                         .build()
@@ -46,17 +45,16 @@ public class FboRenderObject extends GuiRenderObject {
         return new FboRenderObject(fboMaterial, z, new Vector3f(), viewMatrix, projectionMatrix);
     }
 
-    public static Texture createFboTextureObject(int vkImgFormat, FrameBufferObject frameBufferObject, Rosella rosella) {
+    public static Texture createFboTextureObject(int vkImgFormat, Rosella rosella) {
         TextureManager textureManager = rosella.common.textureManager;
 
         int textureId = textureManager.generateTextureId();
-        textureManager.createTextureRaw(
+        textureManager.createTexture(
                 rosella.renderer,
                 textureId,
                 rosella.renderer.swapchain.getSwapChainExtent().width(),
                 rosella.renderer.swapchain.getSwapChainExtent().height(), //FIXME: this might break on resize?
-                vkImgFormat,
-                frameBufferObject.images.get(0) //FIXME: hardcoded to 0. ew
+                vkImgFormat
         );
         textureManager.setTextureSampler(
                 textureId,
