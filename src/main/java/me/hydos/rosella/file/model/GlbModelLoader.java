@@ -95,7 +95,7 @@ public class GlbModelLoader {
                     }
                 }
 
-                TextureMap textureMap = new ImmutableTextureMap(images, new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE), rosella, ((SimpleObjectManager) rosella.objectManager).textureManager);
+                TextureMap textureMap = new ImmutableTextureMap(images, new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.CLAMP_TO_EDGE), rosella, rosella.common.textureManager);
 
                 // FIXME: generate shaders for models based on their properties
                 Pipeline pipeline = new Pipeline(
@@ -105,7 +105,7 @@ public class GlbModelLoader {
                         format,
                         stateInfo
                 );
-                materials.add(new Material(((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(pipeline), textureMap));
+                materials.add(new Material(rosella.common.pipelineManager.registerPipeline(pipeline), textureMap));
             }
         }
 

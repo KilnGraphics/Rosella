@@ -77,6 +77,7 @@ public class Renderer {
         createSwapChain(common, common.display, ((SimpleObjectManager) rosella.objectManager));
         initialSwapchainCreated = true;
     }
+
     public Swapchain swapchain;
 
     public long commandPool = 0;
@@ -90,8 +91,8 @@ public class Renderer {
         createFrameBuffers();
 
         // Engine may still be initialising so we do a null check just in case
-        if (objectManager.pipelineManager != null) {
-            objectManager.pipelineManager.rebuildPipelines();
+        if (common.pipelineManager != null) {
+            common.pipelineManager.rebuildPipelines();
         }
 
         rebuildCommandBuffers(mainRenderPass, objectManager);
@@ -116,6 +117,10 @@ public class Renderer {
     }
 
     public void render() {
+        if (commandBuffers == null) {
+            throw new RuntimeException("Tried to render a scene with no command buffers built!");
+        }
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             Frame thisFrame = inFlightFrames.get(currentFrameInFlight);
             ok(vkWaitForFences(rosella.common.device.getRawDevice(), thisFrame.pFence(), true, UINT64_MAX));
@@ -140,8 +145,8 @@ public class Renderer {
 
             int imageIndex = pImageIndex.get(0);
 
-            for (RawShaderProgram shader : (((SimpleObjectManager) rosella.objectManager)).shaderManager.getCachedShaders().keySet()) {
-                shader.prepareTexturesForRender(rosella.renderer, ((SimpleObjectManager) rosella.objectManager).textureManager);
+            for (RawShaderProgram shader : common.shaderManager.getCachedShaders().keySet()) {
+                shader.prepareTexturesForRender(rosella.renderer, common.textureManager);
                 shader.updateUbos(imageIndex, swapchain, (SimpleObjectManager) rosella.objectManager);
             }
 
@@ -201,7 +206,7 @@ public class Renderer {
     }
 
     public void freeSwapChain() {
-        for (RawShaderProgram shader : ((SimpleObjectManager) rosella.objectManager).shaderManager.getCachedShaders().keySet()) {
+        for (RawShaderProgram shader : common.shaderManager.getCachedShaders().keySet()) {
             if (shader.getDescriptorPool() != VK_NULL_HANDLE) {
                 // TODO: make descriptor pool a class
                 vkDestroyDescriptorPool(rosella.common.device.getRawDevice(), shader.getDescriptorPool(), null);
@@ -270,16 +275,24 @@ public class Renderer {
     }
 
     private void createFrameBuffers() {
-        swapchain.setMainFbo(new FrameBufferObject(true, swapchain, common, mainRenderPass, this));
+        common.fboManager.setMainFbo(new FrameBufferObject(true, swapchain, common, mainRenderPass, this));
+    }
+
+    @Deprecated
+    public void rebuildCommandBuffers(RenderPass renderPass, SimpleObjectManager simpleObjectManager) {
+        if (common.fboManager.fbos.size() == 0) {
+            Rosella.LOGGER.warn("Tried to rebuild command buffers but 0 fbo's exist. This will cause problems soon!");
+        }
+        for (FrameBufferObject fbo : common.fboManager.fbos) {
+            rebuildCommandBuffers(renderPass, simpleObjectManager, fbo);
+        }
     }
 
     /**
      * Create the Command Buffers
      */
-    public void rebuildCommandBuffers(RenderPass renderPass, SimpleObjectManager simpleObjectManager) {
+    public void rebuildCommandBuffers(RenderPass renderPass, SimpleObjectManager simpleObjectManager, FrameBufferObject frameBufferObject) {
         if (!recreateSwapChain) {
-            simpleObjectManager.rebuildCmdBuffers(renderPass, null, null); //TODO: move it into here
-
             for (Renderable renderObject : simpleObjectManager.renderObjects) {
                 if (requireHardRebuild) {
                     renderObject.hardRebuild(rosella);
@@ -289,7 +302,7 @@ public class Renderer {
             }
             requireHardRebuild = false;
 
-            int commandBuffersCount = swapchain.getMainFbo().frameBuffers.size();
+            int commandBuffersCount = swapchain.getSwapChainImages().size();
 
             clearCommandBuffers(common.device);
             commandBuffers = new VkCommandBuffer[commandBuffersCount];
@@ -321,7 +334,7 @@ public class Renderer {
                 for (int i = 0; i < commandBuffersCount; i++) {
                     VkCommandBuffer commandBuffer = commandBuffers[i];
                     ok(vkBeginCommandBuffer(commandBuffer, beginInfo));
-                    renderPassInfo.framebuffer(swapchain.getMainFbo().frameBuffers.get(i));
+                    renderPassInfo.framebuffer(frameBufferObject.frameBuffers.get(i));
                     vkCmdBeginRenderPass(commandBuffer, renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
                     RenderInfo previousRenderInfo = null;

@@ -5,6 +5,9 @@ import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.display.Display;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.fbo.FboManager;
+import me.hydos.rosella.render.pipeline.PipelineManager;
+import me.hydos.rosella.render.shader.ShaderManager;
+import me.hydos.rosella.render.texture.TextureManager;
 import me.hydos.rosella.util.SemaphorePool;
 
 /**
@@ -51,4 +54,19 @@ public class VkCommon {
      * Manages all FrameBuffer Objects.
      */
     public FboManager fboManager = new FboManager();
+
+    /**
+     * Manages all Shaders being used.
+     */
+    public ShaderManager shaderManager;
+
+    /**
+     * Manages all Textures being used.
+     */
+    public TextureManager textureManager;
+
+    /**
+     * Manages all Pipelines being used.
+     */
+    public PipelineManager pipelineManager;
 }

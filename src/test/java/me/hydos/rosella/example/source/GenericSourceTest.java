@@ -143,7 +143,7 @@ public class GenericSourceTest {
 
     private static void loadMaterials() {
         menuBackground = new Material(
-                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
+                rosella.common.pipelineManager.registerPipeline(
                         new Pipeline(
                                 rosella.renderer.mainRenderPass, // TODO: fix renderpasses being gross af
                                 guiShader,
@@ -162,7 +162,7 @@ public class GenericSourceTest {
         );
 
         portalLogo = new Material(
-                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
+                rosella.common.pipelineManager.registerPipeline(
                         new Pipeline(
                                 rosella.renderer.mainRenderPass, // TODO: fix renderpasses being gross af
                                 guiShader,
@@ -182,7 +182,7 @@ public class GenericSourceTest {
     }
 
     public static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
-        TextureManager textureManager = ((SimpleObjectManager) rosella.objectManager).textureManager;
+        TextureManager textureManager = rosella.common.textureManager;
 
         if (imageResource.equals(Resource.Empty.INSTANCE)) {
             Rosella.LOGGER.error("Resource passed to loadTexture was empty, defaulting blank texture");

@@ -104,7 +104,7 @@ public class FboWaterTest {
 
     private static void loadMaterials() {
         fboOverlayTexture = new Material(
-                ((SimpleObjectManager) rosella.objectManager).pipelineManager.registerPipeline(
+                rosella.common.pipelineManager.registerPipeline(
                         new Pipeline(
                                 rosella.renderer.mainRenderPass,
                                 guiShader,
@@ -174,7 +174,7 @@ public class FboWaterTest {
     }
 
     public static Texture loadTexture(int vkImgFormat, SamplerCreateInfo samplerCreateInfo, Resource imageResource) {
-        TextureManager textureManager = ((SimpleObjectManager) rosella.objectManager).textureManager;
+        TextureManager textureManager = rosella.common.textureManager;
 
         if (imageResource.equals(Resource.Empty.INSTANCE)) {
             Rosella.LOGGER.error("Resource passed to loadTexture was empty, defaulting blank texture");

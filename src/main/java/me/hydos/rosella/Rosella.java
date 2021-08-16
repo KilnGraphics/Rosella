@@ -13,7 +13,10 @@ import me.hydos.rosella.logging.DebugLogger;
 import me.hydos.rosella.logging.DefaultDebugLogger;
 import me.hydos.rosella.memory.ThreadPoolMemory;
 import me.hydos.rosella.memory.buffer.GlobalBufferManager;
+import me.hydos.rosella.render.pipeline.PipelineManager;
 import me.hydos.rosella.render.renderer.Renderer;
+import me.hydos.rosella.render.shader.ShaderManager;
+import me.hydos.rosella.render.texture.TextureManager;
 import me.hydos.rosella.render.util.SprirVUtilsKt;
 import me.hydos.rosella.scene.object.ObjectManager;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
@@ -55,7 +58,8 @@ public class Rosella {
 
     public final VulkanInstance vulkanInstance;
 
-    public Rosella(InitializationRegistry registry, Display display, String applicationName, int applicationVersion) {
+    //FIXME: i don't see why we have this. it is alot of duplicated code too. just leaving it out for now to make my life a bit easier
+/*    public Rosella(InitializationRegistry registry, Display display, String applicationName, int applicationVersion) {
         SprirVUtilsKt.init();
         registry.enableValidation(true);
 
@@ -89,12 +93,12 @@ public class Rosella {
 
         this.objectManager = new SimpleObjectManager(this, common);
         this.renderer = new Renderer(this);
-        ((SimpleObjectManager) objectManager).textureManager.initializeBlankTexture(renderer);
+        this.common.textureManager.initializeBlankTexture(renderer);
         this.objectManager.postInit(renderer);
         this.bufferManager = new GlobalBufferManager(this);
 
         display.onReady();
-    }
+    }*/
 
     @Deprecated
     public Rosella(Display display, String applicationName, boolean enableBasicValidation) {
@@ -136,9 +140,12 @@ public class Rosella {
 
         // Setup the object manager
         this.objectManager = new SimpleObjectManager(this, common);
+        this.common.shaderManager = new ShaderManager(this);
+        this.common.textureManager = new TextureManager(common);
         this.renderer = new Renderer(this); //TODO: make swapchain, etc initialization happen outside of the renderer and in here
-        ((SimpleObjectManager) objectManager).textureManager.initializeBlankTexture(renderer); // TODO: move this maybe
+        this.common.textureManager.initializeBlankTexture(renderer); // TODO: move this maybe
         this.objectManager.postInit(renderer);
+        this.common.pipelineManager = new PipelineManager(common, renderer);
         this.bufferManager = new GlobalBufferManager(this);
 
         // Tell the display we are initialized
@@ -152,6 +159,9 @@ public class Rosella {
         SprirVUtilsKt.free();
         common.device.waitForIdle();
         objectManager.free();
+        common.shaderManager.free();
+        common.textureManager.free();
+        common.pipelineManager.free();
         bufferManager.free();
         renderer.free();
 

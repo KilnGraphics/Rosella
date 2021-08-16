@@ -33,9 +33,9 @@ open class RawShaderProgram(
     private val preparableTextures = ReferenceOpenHashSet<Texture?>(3, VERY_FAST_LOAD_FACTOR)
 
     fun updateUbos(currentImage: Int, swapchain: Swapchain, objectManager: SimpleObjectManager) {
-        val updated = ObjectOpenHashSet<Ubo>();
+        val updated = ObjectOpenHashSet<Ubo>()
         for (renderObject in objectManager.renderObjects) {
-            val currentUbo = renderObject.instanceInfo.ubo;
+            val currentUbo = renderObject.instanceInfo.ubo
             if (!updated.contains(currentUbo)) {
                 currentUbo.update(
                     currentImage,

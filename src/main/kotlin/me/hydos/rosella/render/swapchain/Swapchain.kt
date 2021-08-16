@@ -3,7 +3,6 @@ package me.hydos.rosella.render.swapchain
 import it.unimi.dsi.fastutil.longs.LongArrayList
 import me.hydos.rosella.device.VulkanQueues
 import me.hydos.rosella.display.Display
-import me.hydos.rosella.render.fbo.FrameBufferObject
 import me.hydos.rosella.util.VkUtils.ok
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -25,7 +24,6 @@ class Swapchain(
     var swapChainImageFormat = 0
     var swapChainExtent: VkExtent2D
     var swapChainImages = LongArrayList()
-    lateinit var mainFbo: FrameBufferObject
 
     init {
         MemoryStack.stackPush().use {

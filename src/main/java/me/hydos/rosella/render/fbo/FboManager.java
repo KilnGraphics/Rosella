@@ -33,4 +33,12 @@ public class FboManager {
             fbo.setSwapchainImages(swapchain, common);
         }
     }
+
+    public void setMainFbo(FrameBufferObject mainFbo) {
+        if(this.mainFbo != null) {
+            throw new RuntimeException("Tried to replace existing Main Frame Buffer Object");
+        }
+        this.mainFbo = mainFbo;
+        fbos.add(mainFbo);
+    }
 }

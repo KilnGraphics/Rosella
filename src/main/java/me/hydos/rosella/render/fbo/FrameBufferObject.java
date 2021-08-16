@@ -23,7 +23,7 @@ import static org.lwjgl.vulkan.VK10.*;
 public class FrameBufferObject {
 
     public boolean isSwapchainBased;
-    public List<Long> imageViews = new ArrayList<>();
+    public List<Long> imageViews;
     public List<Long> frameBuffers;
     public final DepthBuffer depthBuffer = new DepthBuffer();
 
@@ -54,6 +54,7 @@ public class FrameBufferObject {
     }
 
     protected void setSwapchainImages(Swapchain swapchain, VkCommon common) {
+        imageViews = new ArrayList<>(swapchain.getImageCount());
         for (long swapChainImage : swapchain.getSwapChainImages()) {
             imageViews.add(
                     VkUtils.createImageView(
