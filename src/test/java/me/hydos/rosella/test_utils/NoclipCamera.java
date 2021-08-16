@@ -1,6 +1,7 @@
 package me.hydos.rosella.test_utils;
 
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
@@ -9,8 +10,10 @@ import org.lwjgl.glfw.GLFW;
  */
 public class NoclipCamera {
 
+    private static final Vector3f EMPTY = new Vector3f();
     private static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
     private static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
+    private static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
     private double lastUpdateTime = 0;
     public float deltaTime = 0;
     public Matrix4f viewMatrix = new Matrix4f();
@@ -26,19 +29,25 @@ public class NoclipCamera {
     public boolean rotateLeftMotion;
     public boolean rotateRightMotion;
 
+    public boolean hideCursor;
+
     public void setup(long pWindow) {
         GLFW.glfwSetKeyCallback(pWindow, (window1, key, scancode, keyAction, mods) -> {
-            boolean movement = keyAction == 1 || keyAction == 2;
+            boolean movement = keyAction == GLFW.GLFW_PRESS || keyAction == GLFW.GLFW_REPEAT;
             switch (key) {
                 case GLFW.GLFW_KEY_W -> forwardMotion = movement;
                 case GLFW.GLFW_KEY_S -> backMotion = movement;
                 case GLFW.GLFW_KEY_A -> leftMotion = movement;
                 case GLFW.GLFW_KEY_D -> rightMotion = movement;
+                case GLFW.GLFW_KEY_SPACE -> upMotion = movement;
+                case GLFW.GLFW_KEY_LEFT_SHIFT -> downMotion = movement;
 
                 case GLFW.GLFW_KEY_LEFT -> rotateLeftMotion = movement;
                 case GLFW.GLFW_KEY_RIGHT -> rotateRightMotion = movement;
-                case GLFW.GLFW_KEY_UP -> upMotion = movement;
-                case GLFW.GLFW_KEY_DOWN -> downMotion = movement;
+
+                case GLFW.GLFW_KEY_ESCAPE -> {
+                    if (keyAction == GLFW.GLFW_PRESS) hideCursor = !hideCursor;
+                }
             }
         });
     }
@@ -50,8 +59,8 @@ public class NoclipCamera {
         updateMovement();
 
         viewMatrix.identity();
-        viewMatrix.rotate((float) Math.toRadians(rotation.x), X_AXIS);
-        viewMatrix.rotate((float) Math.toRadians(rotation.y), Y_AXIS);
+        viewMatrix.rotate(rotation.x, X_AXIS);
+        viewMatrix.rotate(rotation.y, Y_AXIS);
         viewMatrix.translate(position.x, position.y, position.z);
     }
 
@@ -59,32 +68,52 @@ public class NoclipCamera {
      * Its so ugly it gets its own method to be separate from the good code
      */
     private void updateMovement() {
-        float deltaMovement = 50 * deltaTime;
-        float deltaRotation = 50 * deltaTime;
+        float deltaMovement = 50.0f * deltaTime;
+        float deltaRotation = (float) Math.toRadians(50.0f * deltaTime);
 
-        if (forwardMotion) {
-            position.add(0, 0f, deltaMovement);
-        }
-        if (backMotion) {
-            position.add(0f, 0f, -deltaMovement);
-        }
-        if (leftMotion) {
-            position.add(deltaMovement, 0f, 0f);
-        }
-        if (rightMotion) {
-            position.add(-deltaMovement, 0f, 0f);
-        }
         if (rotateLeftMotion) {
             rotation.add(0, -deltaRotation, 0);
+            rotation.y %= 360.0f;
         }
         if (rotateRightMotion) {
             rotation.add(0, deltaRotation, 0);
+            rotation.y %= 360.0f;
         }
+
+        Vector3f motionVector = new Vector3f();
+
+        if (forwardMotion) {
+            motionVector.add(0, 0f, 1f);
+        }
+        if (backMotion) {
+            motionVector.add(0f, 0f, -1f);
+        }
+        if (leftMotion) {
+            motionVector.add(1f, 0f, 0f);
+        }
+        if (rightMotion) {
+            motionVector.add(-1f, 0f, 0f);
+        }
+
+        if (!motionVector.equals(EMPTY)) {
+            motionVector.normalize(deltaMovement);
+        }
+
+        motionVector.rotateX(-rotation.x);
+        motionVector.rotateY(-rotation.y);
+        motionVector.rotateZ(-rotation.z);
+
+        // we normalize before we process y movement on purpose. it feels really unnatural otherwise.
+        // TODO: figure out why the proj matrix requires these to be reversed
         if (upMotion) {
-            position.add(0, deltaMovement, 0);
+            motionVector.add(0, -deltaMovement, 0);
         }
         if (downMotion) {
-            position.add(0, -deltaMovement, 0f);
+            motionVector.add(0, deltaMovement, 0f);
         }
+
+        position.add(motionVector);
     }
+
+
 }
