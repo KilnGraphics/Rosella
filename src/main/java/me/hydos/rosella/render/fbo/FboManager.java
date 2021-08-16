@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class FboManager {
 
-    public FrameBufferObject mainFbo; //FIXME: this is useless because we hardcode it in the swapchain. ill get to it soon
+    private FrameBufferObject mainFbo; //FIXME: this is useless because we hardcode it in the swapchain. ill get to it soon
     public FrameBufferObject activeFbo; // FIXME: same as above
     public List<FrameBufferObject> fbos = new ArrayList<>();
 
@@ -31,7 +31,11 @@ public class FboManager {
 
     public void recreateSwapchainImageViews(Swapchain swapchain, VkCommon common) {
         for (FrameBufferObject fbo : fbos) {
-            fbo.setSwapchainImages(swapchain, common);
+            if (fbo.isSwapchainBased) {
+                fbo.setSwapchainImages(swapchain, common);
+            } else {
+                fbo.setBlankImages(swapchain, common);
+            }
         }
     }
 
@@ -44,10 +48,23 @@ public class FboManager {
     }
 
     public SimpleObjectManager getObjectManager() {
+        return getActiveFbo().objectManager;
+    }
+
+    public FrameBufferObject getActiveFbo() {
         if (this.activeFbo == null) {
-            return mainFbo.objectManager;
+            return mainFbo;
         } else {
-            return activeFbo.objectManager;
+            return activeFbo;
         }
+    }
+
+    public FrameBufferObject addFbo(FrameBufferObject frameBufferObject) {
+        this.fbos.add(frameBufferObject);
+        return frameBufferObject;
+    }
+
+    public FrameBufferObject getPresentingFbo() {
+        return mainFbo;
     }
 }

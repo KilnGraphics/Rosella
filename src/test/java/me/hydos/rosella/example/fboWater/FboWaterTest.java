@@ -7,6 +7,7 @@ import me.hydos.rosella.file.model.GlbModelLoader;
 import me.hydos.rosella.file.model.GlbRenderObject;
 import me.hydos.rosella.render.PolygonMode;
 import me.hydos.rosella.render.Topology;
+import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.model.GuiRenderObject;
 import me.hydos.rosella.render.pipeline.Pipeline;
@@ -53,6 +54,9 @@ public class FboWaterTest {
 
     public static Material fboOverlayTexture;
 
+    public static FrameBufferObject mainFbo;
+    public static FrameBufferObject secondFbo;
+
     public static NoclipCamera camera = new NoclipCamera();
 
     public static void main(String[] args) {
@@ -61,6 +65,9 @@ public class FboWaterTest {
         if (System.getProperty("os.name").contains("Linux")) {
             Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
         }
+
+        mainFbo = rosella.common.fboManager.getActiveFbo();
+        secondFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
 
         loadShaders();
         loadMaterials();
@@ -77,7 +84,8 @@ public class FboWaterTest {
     }
 
     private static void setupMainMenuScene() {
-        SimpleObjectManager objectManager = rosella.common.fboManager.getObjectManager();
+        SimpleObjectManager mainObjectManager = mainFbo.objectManager;
+        SimpleObjectManager waterFboObjectManager = secondFbo.objectManager;
 
         rosella.renderer.lazilyClearColor(new Color(10, 20, 200, 255));
         GlbModelLoader.NodeSelector everything = (name) -> true;
@@ -86,10 +94,10 @@ public class FboWaterTest {
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
         
         skybox.modelMatrix.scale(10);
-        objectManager.addObject(skybox);
+        mainObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-            objectManager.addObject(subModel);
+            mainObjectManager.addObject(subModel);
         }
 
         fboOverlay = new GuiRenderObject(
@@ -101,7 +109,7 @@ public class FboWaterTest {
         );
 
         fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
-        objectManager.addObject(fboOverlay);
+        mainObjectManager.addObject(fboOverlay);
     }
 
     private static void loadMaterials() {

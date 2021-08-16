@@ -1,15 +1,18 @@
 package me.hydos.rosella.render.fbo;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import me.hydos.rosella.Rosella;
+import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
+import me.hydos.rosella.render.texture.TextureImage;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.vma.Vma;
+import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkFramebufferCreateInfo;
 
 import java.nio.LongBuffer;
@@ -28,6 +31,7 @@ public class FrameBufferObject {
     public boolean isSwapchainBased;
     public List<Long> imageViews;
     public List<Long> frameBuffers;
+    public VkCommandBuffer[] commandBuffers;
     public SimpleObjectManager objectManager;
 
     public FrameBufferObject(boolean useSwapchainImages, Swapchain swapchain, VkCommon common, RenderPass renderPass, Renderer renderer, SimpleObjectManager objectManager) {
@@ -36,6 +40,8 @@ public class FrameBufferObject {
         this.isSwapchainBased = useSwapchainImages;
         if (useSwapchainImages) {
             setSwapchainImages(swapchain, common);
+        } else {
+            setBlankImages(swapchain, common);
         }
 
         depthBuffer.createDepthResources(common.device, common.memory, swapchain, renderer);
@@ -71,6 +77,36 @@ public class FrameBufferObject {
         }
     }
 
+    protected void setBlankImages(Swapchain swapchain, VkCommon common) {
+        imageViews = new ArrayList<>(swapchain.getImageCount());
+        List<TextureImage> images = new ArrayList<>();
+        for (int i = 0; i < swapchain.getImageCount(); i++) {
+            images.add(
+                    VkUtils.createImage(
+                            common.memory,
+                            swapchain.getSwapChainExtent().width(),
+                            swapchain.getSwapChainExtent().height(),
+                            swapchain.getSwapChainImageFormat(),
+                            VK_IMAGE_TILING_OPTIMAL,
+                            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                            Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
+                    )
+            );
+        }
+
+        for (TextureImage image : images) {
+            imageViews.add(
+                    VkUtils.createImageView(
+                            common.device,
+                            image.pointer(),
+                            swapchain.getSwapChainImageFormat(),
+                            VK_IMAGE_ASPECT_COLOR_BIT
+                    )
+            );
+        }
+    }
+
     public void free(VkCommon common) {
         depthBuffer.free(common.device, common.memory);
         for (long framebuffer : frameBuffers) {
@@ -87,6 +123,15 @@ public class FrameBufferObject {
                     imageView,
                     null
             );
+        }
+    }
+
+    public void clearCommandBuffers(VulkanDevice device, long commandPool) {
+        if (commandBuffers != null) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                vkFreeCommandBuffers(device.getRawDevice(), commandPool, stack.pointers(commandBuffers));
+            }
+            commandBuffers = null;
         }
     }
 }

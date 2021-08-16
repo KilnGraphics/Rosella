@@ -81,7 +81,6 @@ public class Renderer {
     public Swapchain swapchain;
 
     public long commandPool = 0;
-    public VkCommandBuffer[] commandBuffers;
 
     private void createSwapChain(VkCommon common, Display display) {
         this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
@@ -117,10 +116,6 @@ public class Renderer {
     }
 
     public void render() {
-        if (commandBuffers == null) {
-            throw new RuntimeException("Tried to render a scene with no command buffers built!");
-        }
-
         try (MemoryStack stack = MemoryStack.stackPush()) {
             Frame thisFrame = inFlightFrames.get(currentFrameInFlight);
             ok(vkWaitForFences(rosella.common.device.getRawDevice(), thisFrame.pFence(), true, UINT64_MAX));
@@ -168,7 +163,7 @@ public class Renderer {
                     .pWaitSemaphores(thisFrame.pImageAvailableSemaphore())
                     .pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT))
                     .pSignalSemaphores(thisFrame.pRenderFinishedSemaphore())
-                    .pCommandBuffers(stack.pointers(commandBuffers[imageIndex]));
+                    .pCommandBuffers(stack.pointers(common.fboManager.getPresentingFbo().commandBuffers[imageIndex]));
 
             ok(vkResetFences(rosella.common.device.getRawDevice(), thisFrame.pFence()));
             ok(queues.graphicsQueue.vkQueueSubmit(submitInfo, thisFrame.fence()));
@@ -216,19 +211,12 @@ public class Renderer {
             }
         }
 
-        clearCommandBuffers(rosella.common.device);
+        for (FrameBufferObject fbo : common.fboManager.fbos) {
+            fbo.clearCommandBuffers(rosella.common.device, commandPool);
+        }
         common.fboManager.free(common);
         vkDestroyRenderPass(rosella.common.device.getRawDevice(), mainRenderPass.getRawRenderPass(), null);
         swapchain.free(rosella.common.device.getRawDevice());
-    }
-
-    public void clearCommandBuffers(VulkanDevice device) {
-        if (commandBuffers != null) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                vkFreeCommandBuffers(device.getRawDevice(), commandPool, stack.pointers(commandBuffers));
-            }
-            commandBuffers = null;
-        }
     }
 
     private void createSyncObjects() {
@@ -307,8 +295,8 @@ public class Renderer {
 
             int commandBuffersCount = swapchain.getSwapChainImages().size();
 
-            clearCommandBuffers(common.device);
-            commandBuffers = new VkCommandBuffer[commandBuffersCount];
+            frameBufferObject.clearCommandBuffers(common.device, commandPool);
+            frameBufferObject.commandBuffers = new VkCommandBuffer[commandBuffersCount];
 
             PointerBuffer pCommandBuffers = VkUtils.allocateCommandBuffers(
                     common.device,
@@ -318,7 +306,7 @@ public class Renderer {
             );
 
             for (int i = 0; i < commandBuffersCount; i++) {
-                commandBuffers[i] =
+               frameBufferObject.commandBuffers[i] =
                         new VkCommandBuffer(
                                 pCommandBuffers.get(i),
                                 common.device.getRawDevice()
@@ -335,7 +323,7 @@ public class Renderer {
 
             if (rosella.bufferManager != null && !objectManager.renderObjects.isEmpty()) {
                 for (int i = 0; i < commandBuffersCount; i++) {
-                    VkCommandBuffer commandBuffer = commandBuffers[i];
+                    VkCommandBuffer commandBuffer = frameBufferObject.commandBuffers[i];
                     ok(vkBeginCommandBuffer(commandBuffer, beginInfo));
                     renderPassInfo.framebuffer(frameBufferObject.frameBuffers.get(i));
                     vkCmdBeginRenderPass(commandBuffer, renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
