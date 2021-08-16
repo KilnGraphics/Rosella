@@ -104,9 +104,9 @@ public class NoclipCamera {
 
             posMotion.normalize(moveSpeed * deltaTime, modifiedMotion);
 
-            modifiedMotion.rotateX(-rotation.x);
+//            modifiedMotion.rotateX(-rotation.x);
             modifiedMotion.rotateY(-rotation.y);
-            modifiedMotion.rotateZ(-rotation.z);
+//            modifiedMotion.rotateZ(-rotation.z);
 
             position.add(modifiedMotion);
         }
