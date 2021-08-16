@@ -42,7 +42,7 @@ public class FrameBufferObject {
         if (useSwapchainImages) {
             setSwapchainImages(swapchain, common);
         } else {
-            setBlankImages(swapchain, common);
+            setBlankImages(swapchain, common, renderer);
         }
 
         depthBuffer.createDepthResources(common.device, common.memory, swapchain, renderer);
@@ -78,22 +78,30 @@ public class FrameBufferObject {
         }
     }
 
-    protected void setBlankImages(Swapchain swapchain, VkCommon common) {
+    protected void setBlankImages(Swapchain swapchain, VkCommon common, Renderer renderer) {
         imageViews = new ArrayList<>(swapchain.getImageCount());
         this.images = new ArrayList<>();
         for (int i = 0; i < swapchain.getImageCount(); i++) {
-            images.add(
-                    VkUtils.createImage(
-                            common.memory,
-                            swapchain.getSwapChainExtent().width(),
-                            swapchain.getSwapChainExtent().height(),
-                            swapchain.getSwapChainImageFormat(),
-                            VK_IMAGE_TILING_OPTIMAL,
-                            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                            Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
-                    )
+            TextureImage image = VkUtils.createImage(
+                    common.memory,
+                    swapchain.getSwapChainExtent().width(),
+                    swapchain.getSwapChainExtent().height(),
+                    swapchain.getSwapChainImageFormat(),
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
             );
+            VkUtils.transitionImageLayout(
+                    renderer,
+                    common.device,
+                    image.pointer(),
+                    swapchain.getSwapChainImageFormat(),
+                    VK_IMAGE_LAYOUT_UNDEFINED,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+            );
+
+            images.add(image);
         }
 
         for (TextureImage image : images) {

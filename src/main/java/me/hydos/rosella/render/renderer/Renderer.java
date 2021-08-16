@@ -85,7 +85,7 @@ public class Renderer {
     private void createSwapChain(VkCommon common, Display display) {
         this.swapchain = new Swapchain(display, common.device.getRawDevice(), common.device.getRawDevice().getPhysicalDevice(), common.queues, common.surface);
         mainRenderPass.create(common.device, swapchain);
-        common.fboManager.recreateSwapchainImageViews(swapchain, common);
+        common.fboManager.recreateSwapchainImageViews(swapchain, common, this);
         common.fboManager.recreateDepthResources(swapchain, common, this);
         createFrameBuffers();
 

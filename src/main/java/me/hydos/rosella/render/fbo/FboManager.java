@@ -29,12 +29,12 @@ public class FboManager {
         }
     }
 
-    public void recreateSwapchainImageViews(Swapchain swapchain, VkCommon common) {
+    public void recreateSwapchainImageViews(Swapchain swapchain, VkCommon common, Renderer renderer) {
         for (FrameBufferObject fbo : fbos) {
             if (fbo.isSwapchainBased) {
                 fbo.setSwapchainImages(swapchain, common);
             } else {
-                fbo.setBlankImages(swapchain, common);
+                fbo.setBlankImages(swapchain, common, renderer);
             }
         }
     }
