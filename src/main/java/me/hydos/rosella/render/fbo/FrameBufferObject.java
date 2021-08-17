@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static me.hydos.rosella.util.VkUtils.ok;
+import static org.lwjgl.system.JNI.callPPPPI;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 import static org.lwjgl.vulkan.VK10.*;
 
 /**
@@ -102,10 +104,14 @@ public class FrameBufferObject {
                     .renderPass(renderPass.getRawRenderPass())
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
-                    .pAttachments(stack.longs(VK_NULL_HANDLE, VK_NULL_HANDLE)) // FIXME: ugly lwjgl stuff. does this count as a bug?
                     .layers(1);
 
-            ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));
+            // FIXME: Very big LWJGL3 Bug https://github.com/LWJGL/lwjgl3/issues/673
+            // FIXME: Everything below this line is a hack minus the last line
+            VkFramebufferCreateInfo.nattachmentCount(framebufferInfo.address(), 2);
+
+//            ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));
+            ok(callPPPPI(common.device.getRawDevice().address(), framebufferInfo.address(), null, memAddress(pFramebuffer), common.device.getRawDevice().getCapabilities().vkCreateFramebuffer));
             frameBuffers.add(pFramebuffer.get(0));
         }
     }

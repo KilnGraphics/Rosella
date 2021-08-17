@@ -5,6 +5,7 @@ import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.Memory;
+import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
@@ -94,18 +95,20 @@ public class VkUtils {
                 .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
     }
 
-    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, List<Renderable> renderObjects) {
+    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, List<Renderable> renderObjects, FrameBufferObject fbo) {
         VkRenderPassBeginInfo vkRenderPassBeginInfo = VkRenderPassBeginInfo.callocStack()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .renderPass(renderPass.getRawRenderPass());
 
-        for (Renderable renderObject : renderObjects) {
-            if (renderObject instanceof FboRenderObject) {
-                // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
-                VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
-                        .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
-                        .pAttachments(MemoryStack.stackGet().longs(renderObject.getInstanceInfo().material().textures().get("texSampler").getTextureImage().getView()));
-                vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
+        if (!fbo.isSwapchainBased) { // FIXME: this is hardcoded. ideally the fbo that will be used should be specified in the FboRenderObject.
+            for (Renderable renderObject : renderObjects) {
+                if (renderObject instanceof FboRenderObject) {
+                    // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
+                    VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
+                            .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
+                            .pAttachments(MemoryStack.stackGet().longs(renderObject.getInstanceInfo().material().textures().get("texSampler").getTextureImage().getView()));
+                    vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
+                }
             }
         }
         return vkRenderPassBeginInfo;
