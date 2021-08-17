@@ -19,7 +19,7 @@ public interface DeviceBuildInformation {
 
     VkPhysicalDeviceProperties getPhysicalDeviceProperties();
 
-    VkPhysicalDeviceFeatures getPhysicalDeviceFeatures();
+    DeviceFeatureBuilder getDeviceFeatures();
 
     /**
      * Checks if a device extension is supported

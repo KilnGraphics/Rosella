@@ -92,7 +92,7 @@ public class DeviceBuilder {
 
         private final VkPhysicalDevice physicalDevice;
         private final VkPhysicalDeviceProperties properties;
-        private final VkPhysicalDeviceFeatures availableFeatures;
+        private final DeviceFeatureBuilder availableFeatures;
         private final Map<String, VkExtensionProperties> extensionProperties;
         private final List<VkQueueFamilyProperties> queueFamilyProperties;
 
@@ -113,8 +113,8 @@ public class DeviceBuilder {
             this.properties = VkPhysicalDeviceProperties.mallocStack(stack);
             VK10.vkGetPhysicalDeviceProperties(physicalDevice, this.properties);
 
-            this.availableFeatures = VkPhysicalDeviceFeatures.mallocStack(stack);
-            VK10.vkGetPhysicalDeviceFeatures(physicalDevice, availableFeatures);
+            this.availableFeatures = new DeviceFeatureBuilder(stack, properties.apiVersion());
+            VK10.vkGetPhysicalDeviceFeatures(physicalDevice, this.availableFeatures.vulkanFeatures.features());
 
             VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, null);
             VkQueueFamilyProperties.Buffer queueFamilyPropertiesBuffer = VkQueueFamilyProperties.mallocStack(count.get(0), stack);
@@ -312,7 +312,7 @@ public class DeviceBuilder {
         }
 
         @Override
-        public VkPhysicalDeviceFeatures getPhysicalDeviceFeatures() {
+        public DeviceFeatureBuilder getDeviceFeatures() {
             return this.availableFeatures;
         }
 

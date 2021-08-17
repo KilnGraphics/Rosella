@@ -26,7 +26,7 @@ public class TriangleFan extends SimpleApplicationFeature {
                 VkPhysicalDeviceFeatures2 features2 = VkPhysicalDeviceFeatures2.callocStack(stack)
                         .sType(KHRGetPhysicalDeviceProperties2.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR)
                         .pNext(portabilitySubsetFeatures.address())
-                        .features(meta.getPhysicalDeviceFeatures());
+                        .features(meta.getDeviceFeatures().getVk10Features());
 
                 KHRGetPhysicalDeviceProperties2.vkGetPhysicalDeviceFeatures2KHR(meta.getPhysicalDevice(), features2);
 
