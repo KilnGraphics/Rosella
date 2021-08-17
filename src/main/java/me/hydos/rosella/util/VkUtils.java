@@ -102,11 +102,11 @@ public class VkUtils {
 
         if (!fbo.isSwapchainBased) { // FIXME: this is hardcoded. ideally the fbo that will be used should be specified in the FboRenderObject.
             for (Renderable renderObject : renderObjects) {
-                if (renderObject instanceof FboRenderObject) {
+                if (renderObject instanceof FboRenderObject fboRenderObject) {
                     // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
                     VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
                             .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
-                            .pAttachments(MemoryStack.stackGet().longs(renderObject.getInstanceInfo().material().textures().get("texSampler").getTextureImage().getView()));
+                            .pAttachments(MemoryStack.stackGet().longs(fboRenderObject.colourTexture.getTextureImage().getView(), fboRenderObject.depthTexture.getTextureImage().getView()));
                     vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
                 }
             }
@@ -148,6 +148,10 @@ public class VkUtils {
 
     public static long createTextureImageView(VulkanDevice device, int imgFormat, long textureImage) {
         return createImageView(device, textureImage, imgFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    public static long createDepthTextureImageView(VulkanDevice device, int imgFormat, long textureImage) {
+        return createImageView(device, textureImage, imgFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
     public static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, long surface) {
@@ -260,6 +264,30 @@ public class VkUtils {
                 imgFormat,
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+        );
+
+        return image;
+    }
+
+    public static TextureImage createDepthTextureImage(Renderer renderer, VkCommon common, int width, int height, int imgFormat) {
+        TextureImage image = createImage(
+                common.memory,
+                width,
+                height,
+                imgFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
+        );
+
+        transitionImageLayout(
+                renderer,
+                common.device,
+                image.pointer(),
+                imgFormat,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         );
 
         return image;

@@ -64,7 +64,12 @@ public class TextureManager {
         return textureMap.get(textureId);
     }
 
+    @Deprecated
     public void createTexture(Renderer renderer, int textureId, int width, int height, int imgFormat) {
+        createTexture(renderer, textureId, width, height, imgFormat, false);
+    }
+
+    public void createTexture(Renderer renderer, int textureId, int width, int height, int imgFormat, boolean createDepthTexture) {
         Texture currentTexture = textureMap.get(textureId);
         if (currentTexture != null) {
             if (currentTexture.getImageFormat() != imgFormat || currentTexture.getWidth() != width || currentTexture.getHeight() != height) {
@@ -74,8 +79,14 @@ public class TextureManager {
                 return;
             }
         }
-        TextureImage textureImage = VkUtils.createTextureImage(renderer, common, width, height, imgFormat);
-        textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
+        TextureImage textureImage;
+        if (!createDepthTexture) {
+            textureImage = VkUtils.createTextureImage(renderer, common, width, height, imgFormat);
+            textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
+        } else {
+            textureImage = VkUtils.createDepthTextureImage(renderer, common, width, height, imgFormat);
+            textureImage.setView(VkUtils.createDepthTextureImageView(common.device, imgFormat, textureImage.pointer()));
+        }
         textureMap.put(textureId, new Texture(imgFormat, width, height, textureImage, null));
     }
 
