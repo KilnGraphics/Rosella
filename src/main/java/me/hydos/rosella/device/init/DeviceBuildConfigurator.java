@@ -1,7 +1,7 @@
 package me.hydos.rosella.device.init;
 
 import me.hydos.rosella.device.VulkanQueue;
-import org.lwjgl.vulkan.VkPhysicalDeviceFeatures;
+import org.lwjgl.vulkan.VkPhysicalDeviceFeatures2;
 
 import java.util.concurrent.Future;
 
@@ -28,5 +28,5 @@ public interface DeviceBuildConfigurator extends DeviceBuildInformation {
      *
      * @return A VkPhysicalDeviceProperties instance to configure the device.
      */
-    VkPhysicalDeviceFeatures configureDeviceFeatures();
+    DeviceFeatureBuilder configureDeviceFeatures();
 }

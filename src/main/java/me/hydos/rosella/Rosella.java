@@ -16,6 +16,7 @@ import me.hydos.rosella.render.shader.ShaderManager;
 import me.hydos.rosella.render.texture.TextureManager;
 import me.hydos.rosella.render.util.SprirVUtilsKt;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
+import me.hydos.rosella.util.NamedID;
 import me.hydos.rosella.util.SemaphorePool;
 import me.hydos.rosella.vkobjects.LegacyVulkanInstance;
 import me.hydos.rosella.vkobjects.VkCommon;
@@ -123,6 +124,7 @@ public class Rosella {
 
         initializationRegistry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
         initializationRegistry.registerApplicationFeature(new TriangleFan());
+        initializationRegistry.registerApplicationFeature(new ImagelessFrameBuffers()); // Absolutely Required for Multiple FBO's to work
 
         common.device = new DeviceBuilder(this.vulkanInstance, initializationRegistry).build();
 

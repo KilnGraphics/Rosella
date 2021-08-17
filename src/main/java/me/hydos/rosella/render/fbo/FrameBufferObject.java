@@ -45,7 +45,7 @@ public class FrameBufferObject {
         if (useSwapchainImages) {
             setupFboBasedOnImageViews(swapchain, common, renderPass);
         } else {
-            setupFboUsingExperimentalStuff(swapchain, common);
+            setupFboUsingExperimentalStuff(swapchain, common, renderPass);
         }
     }
 
@@ -69,25 +69,40 @@ public class FrameBufferObject {
         }
     }
 
-    private void setupFboUsingExperimentalStuff(Swapchain swapchain, VkCommon common) {
+    private void setupFboUsingExperimentalStuff(Swapchain swapchain, VkCommon common, RenderPass renderPass) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             LongBuffer pFramebuffer = stack.mallocLong(1);
 
-            VkFramebufferAttachmentImageInfo.Buffer attachmentImageInfo = VkFramebufferAttachmentImageInfo.callocStack(1, stack)
+            VkFramebufferAttachmentImageInfo.Buffer attachmentImageInfos = VkFramebufferAttachmentImageInfo.callocStack(2, stack);
+
+            attachmentImageInfos.get(0)
+                    .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO)
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
-                    .layerCount(1);
+                    .layerCount(1)
+                    .pViewFormats(stack.ints(VK_FORMAT_B8G8R8A8_UNORM))  //FIXME: get the format from the renderpass
+                    .usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
-            VkFramebufferAttachmentsCreateInfo.Buffer attachmentsCreateInfo = VkFramebufferAttachmentsCreateInfo.callocStack(1, stack)
-                    .pAttachmentImageInfos(attachmentImageInfo);
+            attachmentImageInfos.get(1)
+                    .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO)
+                    .width(swapchain.getSwapChainExtent().width())
+                    .height(swapchain.getSwapChainExtent().height())
+                    .layerCount(1)
+                    .pViewFormats(stack.ints(VK_FORMAT_D32_SFLOAT)) //FIXME: get the format from the renderpass
+                    .usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+            VkFramebufferAttachmentsCreateInfo.Buffer attachmentCreateInfo = VkFramebufferAttachmentsCreateInfo.callocStack(1, stack)
+                    .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO)
+                    .pAttachmentImageInfos(attachmentImageInfos);
 
             VkFramebufferCreateInfo framebufferInfo = VkFramebufferCreateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
-                    .pNext(attachmentsCreateInfo.address())
+                    .pNext(attachmentCreateInfo.address())
                     .flags(VK12.VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT)
-                    .renderPass(VK_NULL_HANDLE)
+                    .renderPass(renderPass.getRawRenderPass())
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
+                    .pAttachments(stack.longs(VK_NULL_HANDLE, VK_NULL_HANDLE)) // FIXME: ugly lwjgl stuff. does this count as a bug?
                     .layers(1);
 
             ok(vkCreateFramebuffer(common.device.getRawDevice(), framebufferInfo, null, pFramebuffer));

@@ -32,6 +32,7 @@ import static java.util.Map.ofEntries;
 import static org.lwjgl.system.MemoryStack.stackGet;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.VK10.*;
+import static org.lwjgl.vulkan.VK12.VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO;
 
 public class VkUtils {
     private static final Map<Integer, String> ERROR_NAMES = ofEntries(
@@ -102,6 +103,7 @@ public class VkUtils {
             if (renderObject instanceof FboRenderObject) {
                 // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
                 VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
+                        .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
                         .pAttachments(MemoryStack.stackGet().longs(renderObject.getInstanceInfo().material().textures().get("texSampler").getTextureImage().getView()));
                 vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
             }

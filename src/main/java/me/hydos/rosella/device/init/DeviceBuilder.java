@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 /**
  * Used to build devices.
- *
+ * <p>
  * This class will select and create the best device based on the criteria specified by the provided InitializationRegistry.
  */
 public class DeviceBuilder {
@@ -50,32 +50,32 @@ public class DeviceBuilder {
             PointerBuffer pPhysicalDevices = stack.mallocPointer(deviceCount.get(0));
             VkUtils.ok(VK10.vkEnumeratePhysicalDevices(this.instance.getInstance(), deviceCount, pPhysicalDevices));
 
-            for(int i = 0; i < deviceCount.get(0); i++) {
+            for (int i = 0; i < deviceCount.get(0); i++) {
                 devices.add(new DeviceMeta(new VkPhysicalDevice(pPhysicalDevices.get(i), this.instance.getInstance()), stack));
             }
 
             devices.forEach(DeviceMeta::processSupport);
             devices.sort((a, b) -> { // This is sorting in descending order so that we can use the first device
-                if(!a.isValid() || !b.isValid()) {
-                    if(a.isValid()) {
+                if (!a.isValid() || !b.isValid()) {
+                    if (a.isValid()) {
                         return -1;
                     }
-                    if(b.isValid()) {
+                    if (b.isValid()) {
                         return 1;
                     }
                     return 0;
                 }
-                if(a.getFeatureRanking() != b.getFeatureRanking()) {
+                if (a.getFeatureRanking() != b.getFeatureRanking()) {
                     return (int) (b.getFeatureRanking() - a.getFeatureRanking());
                 }
-                if(a.getPerformanceRanking() != b.getPerformanceRanking()) {
+                if (a.getPerformanceRanking() != b.getPerformanceRanking()) {
                     return b.getPerformanceRanking() - a.getPerformanceRanking();
                 }
                 return 0;
             });
 
             DeviceMeta selectedDevice = devices.get(0);
-            if(!selectedDevice.isValid()) {
+            if (!selectedDevice.isValid()) {
                 throw new RuntimeException("Failed to find suitable device");
             }
 
@@ -99,7 +99,7 @@ public class DeviceBuilder {
         private boolean isBuilding = false;
         private final List<QueueRequest> queueRequests = new ArrayList<>();
         private final Set<String> enabledExtensions = new HashSet<>();
-        private final VkPhysicalDeviceFeatures enabledFeatures;
+        private final DeviceFeatureBuilder featureBuilder;
 
         private DeviceMeta(VkPhysicalDevice physicalDevice, MemoryStack stack) {
             this.stack = stack;
@@ -120,7 +120,7 @@ public class DeviceBuilder {
             VkQueueFamilyProperties.Buffer queueFamilyPropertiesBuffer = VkQueueFamilyProperties.mallocStack(count.get(0), stack);
             VK10.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, count, queueFamilyPropertiesBuffer);
             ArrayList<VkQueueFamilyProperties> queueFamilyPropertiesList = new ArrayList<>();
-            for(int i = 0; i < count.get(0); i++) {
+            for (int i = 0; i < count.get(0); i++) {
                 queueFamilyPropertiesList.add(queueFamilyPropertiesBuffer.get(i));
             }
             this.queueFamilyProperties = Collections.unmodifiableList(queueFamilyPropertiesList);
@@ -129,20 +129,20 @@ public class DeviceBuilder {
             VkExtensionProperties.Buffer extensionPropertiesBuffer = VkExtensionProperties.mallocStack(count.get(0), stack);
             VkUtils.ok(VK10.vkEnumerateDeviceExtensionProperties(this.physicalDevice, (CharSequence) null, count, extensionPropertiesBuffer));
             Map<String, VkExtensionProperties> extensionPropertiesMap = new HashMap<>();
-            for(int i = 0; i < count.get(0); i++) {
+            for (int i = 0; i < count.get(0); i++) {
                 VkExtensionProperties properties = extensionPropertiesBuffer.get(i);
                 extensionPropertiesMap.put(properties.extensionNameString(), properties);
             }
             this.extensionProperties = Collections.unmodifiableMap(extensionPropertiesMap);
 
-            this.enabledFeatures = VkPhysicalDeviceFeatures.callocStack(stack);
+            this.featureBuilder = new DeviceFeatureBuilder(stack, Rosella.VULKAN_VERSION);
         }
 
         private void processSupport() {
-            for(ApplicationFeature.Instance feature : this.sortedFeatures) {
+            for (ApplicationFeature.Instance feature : this.sortedFeatures) {
                 try {
                     feature.testFeatureSupport(this);
-                    if(feature.isSupported()) {
+                    if (feature.isSupported()) {
                         this.unsatisfiedRequirements.remove(feature.getFeatureName());
                     }
                 } catch (Exception ex) {
@@ -179,14 +179,14 @@ public class DeviceBuilder {
         }
 
         private VulkanDevice createDevice() {
-            assert(!this.isBuilding);
+            assert (!this.isBuilding);
             this.isBuilding = true;
 
             Map<NamedID, Object> enabledFeatures = new HashMap<>();
 
-            for(ApplicationFeature.Instance feature : this.sortedFeatures) {
+            for (ApplicationFeature.Instance feature : this.sortedFeatures) {
                 try {
-                    if(feature.isSupported()) {
+                    if (feature.isSupported()) {
                         Object metadata = feature.enableFeature(this);
                         enabledFeatures.put(feature.getFeatureName(), metadata);
                     }
@@ -195,11 +195,11 @@ public class DeviceBuilder {
                 }
             }
 
-            VkDeviceCreateInfo deviceInfo = VkDeviceCreateInfo.callocStack(this.stack);
-            deviceInfo.sType(VK10.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
-            deviceInfo.pQueueCreateInfos(this.generateQueueMappings());
-            deviceInfo.ppEnabledExtensionNames(this.generateEnabledExtensionNames());
-            deviceInfo.pEnabledFeatures(this.enabledFeatures);
+            VkDeviceCreateInfo deviceInfo = VkDeviceCreateInfo.callocStack(this.stack)
+                    .sType(VK10.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
+                    .pQueueCreateInfos(this.generateQueueMappings())
+                    .ppEnabledExtensionNames(this.generateEnabledExtensionNames())
+                    .pNext(this.featureBuilder.build().address());
 
             PointerBuffer pDevice = this.stack.mallocPointer(1);
             VkUtils.ok(VK10.vkCreateDevice(this.physicalDevice, deviceInfo, null, pDevice));
@@ -214,28 +214,28 @@ public class DeviceBuilder {
         private VkDeviceQueueCreateInfo.Buffer generateQueueMappings() {
             int[] nextQueueIndices = new int[this.queueFamilyProperties.size()];
 
-            for(QueueRequest request : this.queueRequests) {
+            for (QueueRequest request : this.queueRequests) {
                 int index = nextQueueIndices[request.requestedFamily]++;
                 request.assignedIndex = index % this.queueFamilyProperties.get(request.requestedFamily).queueCount();
             }
 
             int familyCount = 0;
-            for(int i : nextQueueIndices) {
-                if(i != 0) {
+            for (int i : nextQueueIndices) {
+                if (i != 0) {
                     familyCount++;
                 }
             }
 
             VkDeviceQueueCreateInfo.Buffer queueCreateInfos = VkDeviceQueueCreateInfo.callocStack(familyCount, this.stack);
 
-            for(int family = 0; family < nextQueueIndices.length; family++) {
-                if(nextQueueIndices[family] == 0) {
+            for (int family = 0; family < nextQueueIndices.length; family++) {
+                if (nextQueueIndices[family] == 0) {
                     continue;
                 }
 
 
                 FloatBuffer priorities = this.stack.mallocFloat(Math.min(nextQueueIndices[family], this.queueFamilyProperties.get(family).queueCount()));
-                while(priorities.hasRemaining()) {
+                while (priorities.hasRemaining()) {
                     priorities.put(1.0f);
                 }
                 priorities.rewind();
@@ -257,9 +257,9 @@ public class DeviceBuilder {
 
             PointerBuffer pQueue = this.stack.mallocPointer(1);
 
-            for(QueueRequest request : this.queueRequests) {
+            for (QueueRequest request : this.queueRequests) {
                 int f = request.requestedFamily, i = request.assignedIndex;
-                if(requests[f][i] == null) {
+                if (requests[f][i] == null) {
                     VK10.vkGetDeviceQueue(device, f, i, pQueue);
                     requests[f][i] = new VulkanQueue(new VkQueue(pQueue.get(0), device), f);
                 }
@@ -269,12 +269,12 @@ public class DeviceBuilder {
         }
 
         private PointerBuffer generateEnabledExtensionNames() {
-            if(this.enabledExtensions.isEmpty()) {
+            if (this.enabledExtensions.isEmpty()) {
                 return null;
             }
 
             PointerBuffer names = this.stack.mallocPointer(this.enabledExtensions.size());
-            for(String extension : this.enabledExtensions) {
+            for (String extension : this.enabledExtensions) {
                 names.put(this.stack.UTF8(extension));
             }
 
@@ -284,7 +284,7 @@ public class DeviceBuilder {
         @Override
         public boolean isApplicationFeatureSupported(NamedID name) {
             ApplicationFeature.Instance feature = this.features.getOrDefault(name, null);
-            if(feature == null) {
+            if (feature == null) {
                 return false;
             }
 
@@ -339,14 +339,14 @@ public class DeviceBuilder {
         @Override
         public List<Integer> findQueueFamilies(int flags, boolean noTransferLimit) {
             List<Integer> ret = new ArrayList<>();
-            for(int i = 0; i < this.queueFamilyProperties.size(); i++) {
+            for (int i = 0; i < this.queueFamilyProperties.size(); i++) {
                 VkQueueFamilyProperties properties = this.queueFamilyProperties.get(i);
-                if((properties.queueFlags() & flags) == flags) {
-                    if(noTransferLimit) {
+                if ((properties.queueFlags() & flags) == flags) {
+                    if (noTransferLimit) {
                         ret.add(i);
                     } else {
                         VkExtent3D granularity = properties.minImageTransferGranularity();
-                        if(granularity.width() == 1 && granularity.height() == 1 && granularity.depth() == 1) {
+                        if (granularity.width() == 1 && granularity.height() == 1 && granularity.depth() == 1) {
                             ret.add(i);
                         }
                     }
@@ -357,7 +357,7 @@ public class DeviceBuilder {
 
         @Override
         public Future<VulkanQueue> addQueueRequest(int family) {
-            assert(this.isBuilding);
+            assert (this.isBuilding);
 
             QueueRequest request = new QueueRequest(family);
             this.queueRequests.add(request);
@@ -366,16 +366,16 @@ public class DeviceBuilder {
 
         @Override
         public void enableExtension(String extension) {
-            assert(this.isBuilding);
+            assert (this.isBuilding);
 
             this.enabledExtensions.add(extension);
         }
 
         @Override
-        public VkPhysicalDeviceFeatures configureDeviceFeatures() {
-            assert(this.isBuilding);
+        public DeviceFeatureBuilder configureDeviceFeatures() {
+            assert (this.isBuilding);
 
-            return this.enabledFeatures;
+            return this.featureBuilder;
         }
 
         private static class QueueRequest {

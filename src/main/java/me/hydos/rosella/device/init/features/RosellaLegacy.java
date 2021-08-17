@@ -58,7 +58,7 @@ public class RosellaLegacy extends ApplicationFeature {
 
         @Override
         public Object enableFeature(DeviceBuildConfigurator meta) {
-            meta.configureDeviceFeatures()
+            meta.configureDeviceFeatures().getVk10Features()
                     .samplerAnisotropy(true)
                     .depthClamp(true);
 
