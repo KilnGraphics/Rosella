@@ -77,7 +77,7 @@ public class FboRenderObject extends GuiRenderObject {
                 rosella.renderer.swapchain.getSwapChainExtent().height(), //FIXME: this might break on resize?
                 VK_FORMAT_B8G8R8A8_UNORM,
                 false,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         );
         textureManager.setTextureSampler(
                 textureId,
@@ -99,7 +99,7 @@ public class FboRenderObject extends GuiRenderObject {
                 rosella.renderer.swapchain.getSwapChainExtent().height(), //FIXME: this might break on resize?
                 VK_FORMAT_D32_SFLOAT,
                 true,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         );
         textureManager.setTextureSampler(
                 textureId,
@@ -121,7 +121,7 @@ public class FboRenderObject extends GuiRenderObject {
         }
         TextureImage textureImage;
         if (!createDepthTexture) {
-            textureImage = createTextureImage(renderer, common, width, height, imgFormat, extraImageUsage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+            textureImage = createTextureImage(renderer, common, width, height, imgFormat, extraImageUsage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
         } else {
             textureImage = createTextureImage(renderer, common, width, height, imgFormat, extraImageUsage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -149,6 +149,15 @@ public class FboRenderObject extends GuiRenderObject {
                 imgFormat,
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 layout
+        );
+
+        VkUtils.transitionImageLayout(
+                renderer,
+                common.device,
+                image.pointer(),
+                imgFormat,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
         );
 
         return image;

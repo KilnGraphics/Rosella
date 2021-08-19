@@ -96,8 +96,7 @@ public class FboWaterTest {
         waterFboObjectManager.addObject(waterPlane);
 
         FboRenderObject fboRenderObject = FboRenderObject.create(secondFbo, -1f, rosella, camera.viewMatrix, projectionMatrix, guiShader);
-        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
-        mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
+//        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
 
         skybox.modelMatrix.scale(10);
         mainObjectManager.addObject(skybox);
@@ -106,6 +105,7 @@ public class FboWaterTest {
 //            mainObjectManager.addObject(subModel);
             waterFboObjectManager.addObject(subModel);
         }
+        mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
 
         fboOverlay = new GuiRenderObject(
                 fboOverlayTexture,
@@ -219,11 +219,11 @@ public class FboWaterTest {
     }
 
     static {
-//        try {
-//            System.loadLibrary("renderdoc");
-//        } catch (UnsatisfiedLinkError e) {
-//            System.out.println("Failed to load renderdoc.");
-//        }
+        try {
+            System.loadLibrary("renderdoc");
+        } catch (UnsatisfiedLinkError e) {
+            System.out.println("Failed to load renderdoc.");
+        }
 
         window = new GlfwWindow(WIDTH, HEIGHT, "FrameBufferObject Water Test", false);
         rosella = new Rosella(window, "FBO_WATER_TEST", true);
