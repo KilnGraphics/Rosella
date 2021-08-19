@@ -83,7 +83,7 @@ public class FrameBufferObject {
                     .height(swapchain.getSwapChainExtent().height())
                     .layerCount(1)
                     .pViewFormats(stack.ints(VK_FORMAT_B8G8R8A8_UNORM))  //FIXME: get the format from the renderpass
-                    .usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                    .usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
             attachmentImageInfos.get(1)
                     .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO)
@@ -91,7 +91,7 @@ public class FrameBufferObject {
                     .height(swapchain.getSwapChainExtent().height())
                     .layerCount(1)
                     .pViewFormats(stack.ints(VK_FORMAT_D32_SFLOAT)) //FIXME: get the format from the renderpass
-                    .usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+                    .usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
             VkFramebufferAttachmentsCreateInfo.Buffer attachmentCreateInfo = VkFramebufferAttachmentsCreateInfo.callocStack(1, stack)
                     .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO)

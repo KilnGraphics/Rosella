@@ -165,4 +165,8 @@ public class TextureManager {
             }
         }
     }
+
+    public void createTextureRaw(int textureId, Texture texture) {
+        textureMap.put(textureId, texture);
+    }
 }

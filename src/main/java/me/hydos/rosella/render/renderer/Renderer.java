@@ -314,7 +314,7 @@ public class Renderer {
             }
 
             VkCommandBufferBeginInfo beginInfo = VkUtils.createBeginInfo();
-            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass, objectManager.renderObjects, frameBufferObject);
+            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass, frameBufferObject, common.fboManager);
             VkRect2D renderArea = VkUtils.createRenderArea(0, 0, swapchain); // TODO: when scissoring, make sure this is correct
             VkClearValue.Buffer clearValues = VkUtils.createClearValues(clearColor.rAsFloat(), clearColor.gAsFloat(), clearColor.bAsFloat(), clearDepth, clearStencil);
 

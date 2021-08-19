@@ -103,8 +103,8 @@ public class FboWaterTest {
         mainObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-            mainObjectManager.addObject(subModel);
-//            waterFboObjectManager.addObject(subModel);
+//            mainObjectManager.addObject(subModel);
+            waterFboObjectManager.addObject(subModel);
         }
 
         fboOverlay = new GuiRenderObject(

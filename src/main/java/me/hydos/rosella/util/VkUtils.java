@@ -1,10 +1,12 @@
 package me.hydos.rosella.util;
 
+import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.QueueFamilyIndices;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.device.VulkanQueues;
 import me.hydos.rosella.memory.BufferInfo;
 import me.hydos.rosella.memory.Memory;
+import me.hydos.rosella.render.fbo.FboManager;
 import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
@@ -95,20 +97,26 @@ public class VkUtils {
                 .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
     }
 
-    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, List<Renderable> renderObjects, FrameBufferObject fbo) {
+    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, FrameBufferObject fbo, FboManager fboManager) {
         VkRenderPassBeginInfo vkRenderPassBeginInfo = VkRenderPassBeginInfo.callocStack()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .renderPass(renderPass.getRawRenderPass());
 
         if (!fbo.isSwapchainBased) { // FIXME: this is hardcoded. ideally the fbo that will be used should be specified in the FboRenderObject.
-            for (Renderable renderObject : renderObjects) {
+            boolean didWeSetAttachments = false; // This is a failsafe. If this is false by the end of the below for loop, we did something critically wrong and the driver will crash
+            for (Renderable renderObject : fboManager.getPresentingFbo().objectManager.renderObjects) {
                 if (renderObject instanceof FboRenderObject fboRenderObject) {
                     // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
                     VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
                             .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
                             .pAttachments(MemoryStack.stackGet().longs(fboRenderObject.colourTexture.getTextureImage().getView(), fboRenderObject.depthTexture.getTextureImage().getView()));
                     vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
+                    didWeSetAttachments = true;
                 }
+            }
+            if(!didWeSetAttachments) {
+                System.err.println("The current fbo has no FboRenderObject to render to! (" + fbo  + ")");
+                System.exit(Rosella.FBO_ERROR_CODE);
             }
         }
         return vkRenderPassBeginInfo;
@@ -126,6 +134,12 @@ public class VkUtils {
 
     public static long createImageView(VulkanDevice device, long image, int format, int aspectFlags) {
         try (MemoryStack stack = stackPush()) {
+//            VkComponentMapping componentMapping = VkComponentMapping.callocStack(stack)
+//                    .r(VK_COMPONENT_SWIZZLE_IDENTITY)
+//                    .g(VK_COMPONENT_SWIZZLE_IDENTITY)
+//                    .b(VK_COMPONENT_SWIZZLE_IDENTITY)
+//                    .a(VK_COMPONENT_SWIZZLE_IDENTITY);
+
             VkImageViewCreateInfo viewInfo = VkImageViewCreateInfo.callocStack(stack)
                     .sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
                     .image(image)
@@ -349,6 +363,14 @@ public class VkUtils {
                 sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
                 destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 
+            } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+                barrier.srcAccessMask(0)
+                        .dstAccessMask(VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+
+                sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            } else if(oldLayout == newLayout) {
+                return; // wtf
             } else {
                 throw new IllegalArgumentException("Unsupported layout transition");
             }
