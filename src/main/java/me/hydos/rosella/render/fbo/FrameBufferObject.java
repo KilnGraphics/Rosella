@@ -6,7 +6,6 @@ import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
-import me.hydos.rosella.render.texture.TextureImage;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
@@ -139,12 +138,14 @@ public class FrameBufferObject {
             );
         }
 
-        for (Long imageView : imageViews) {
-            vkDestroyImageView(
-                    common.device.getRawDevice(),
-                    imageView,
-                    null
-            );
+        if (isSwapchainBased) {
+            for (Long imageView : imageViews) {
+                vkDestroyImageView(
+                        common.device.getRawDevice(),
+                        imageView,
+                        null
+                );
+            }
         }
     }
 
