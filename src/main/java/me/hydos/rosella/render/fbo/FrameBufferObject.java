@@ -30,7 +30,6 @@ public class FrameBufferObject {
     public final DepthBuffer depthBuffer = new DepthBuffer();
     public boolean isSwapchainBased;
     public List<Long> imageViews;
-    public List<TextureImage> images;
     public List<Long> frameBuffers;
     public VkCommandBuffer[] commandBuffers;
     public SimpleObjectManager objectManager;
@@ -82,16 +81,16 @@ public class FrameBufferObject {
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
                     .layerCount(1)
-                    .pViewFormats(stack.ints(VK_FORMAT_B8G8R8A8_UNORM))  //FIXME: get the format from the renderpass
-                    .usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                    .pViewFormats(stack.ints(swapchain.getSwapChainImageFormat()))
+                    .usage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
             attachmentImageInfos.get(1)
                     .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO)
                     .width(swapchain.getSwapChainExtent().width())
                     .height(swapchain.getSwapChainExtent().height())
                     .layerCount(1)
-                    .pViewFormats(stack.ints(VK_FORMAT_D32_SFLOAT)) //FIXME: get the format from the renderpass
-                    .usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                    .pViewFormats(stack.ints(DepthBuffer.findDepthFormat(common.device)))
+                    .usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
             VkFramebufferAttachmentsCreateInfo.Buffer attachmentCreateInfo = VkFramebufferAttachmentsCreateInfo.callocStack(1, stack)
                     .sType(VK12.VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO)

@@ -137,7 +137,7 @@ public class FboRenderObject extends GuiRenderObject {
                 height,
                 imgFormat,
                 VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT | extraUsage,
+                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | extraUsage,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                 Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
         );

@@ -163,7 +163,7 @@ public class Renderer {
                     .pWaitSemaphores(thisFrame.pImageAvailableSemaphore())
                     .pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT))
                     .pSignalSemaphores(thisFrame.pRenderFinishedSemaphore())
-                    .pCommandBuffers(stack.pointers(common.fboManager.getPresentingFbo().commandBuffers[imageIndex]));
+                    .pCommandBuffers(common.fboManager.setRenderingCommandBuffers(imageIndex));
 
             ok(vkResetFences(rosella.common.device.getRawDevice(), thisFrame.pFence()));
             ok(queues.graphicsQueue.vkQueueSubmit(submitInfo, thisFrame.fence()));

@@ -4,6 +4,9 @@ import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.vkobjects.VkCommon;
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VkCommandBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,5 +67,20 @@ public class FboManager {
 
     public FrameBufferObject getPresentingFbo() {
         return mainFbo;
+    }
+
+    public PointerBuffer setRenderingCommandBuffers(int imageIndex) {
+        VkCommandBuffer[] commandBuffers = new VkCommandBuffer[fbos.size()]; // FIXME: TODO: URGENT: cache this. this code is so hot its hotter than ur mum. (Owned)
+        for (int i = 0; i < fbos.size(); i++) { //FIXME: life is pain
+            FrameBufferObject fbo = fbos.get(i);
+            if (fbo.isSwapchainBased) {
+                commandBuffers[i] = fbo.commandBuffers[imageIndex];
+            } else {
+                //FIXME: i only make 1 fbo for fbo's which are not being presented. i fucking hate myself
+                commandBuffers[i] = fbo.commandBuffers[0];
+            }
+        }
+        MemoryStack stack = MemoryStack.stackGet();
+        return stack.pointers(commandBuffers);
     }
 }

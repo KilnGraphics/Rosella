@@ -96,13 +96,12 @@ public class FboWaterTest {
         waterFboObjectManager.addObject(waterPlane);
 
         FboRenderObject fboRenderObject = FboRenderObject.create(secondFbo, -1f, rosella, camera.viewMatrix, projectionMatrix, guiShader);
-//        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
+        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
 
         skybox.modelMatrix.scale(10);
         mainObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
-//            mainObjectManager.addObject(subModel);
             waterFboObjectManager.addObject(subModel);
         }
         mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
