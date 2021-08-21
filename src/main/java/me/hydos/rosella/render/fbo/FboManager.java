@@ -16,8 +16,8 @@ import java.util.List;
  */
 public class FboManager {
 
-    private FrameBufferObject mainFbo; //FIXME: this is useless because we hardcode it in the swapchain. ill get to it soon
-    public FrameBufferObject activeFbo; // FIXME: same as above
+    private FrameBufferObject mainFbo;
+    public FrameBufferObject activeFbo; // FIXME: rework it so rosella's objectManager field/method returns the objectManager of this. should make scene creation look alot cleaner
     public List<FrameBufferObject> fbos = new ArrayList<>();
     VkCommandBuffer[] activeCommandBuffers = new VkCommandBuffer[1];
 
