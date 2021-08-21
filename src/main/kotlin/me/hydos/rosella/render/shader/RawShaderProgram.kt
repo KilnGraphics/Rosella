@@ -8,12 +8,12 @@ import me.hydos.rosella.memory.Memory
 import me.hydos.rosella.render.descriptorsets.DescriptorSets
 import me.hydos.rosella.render.renderer.Renderer
 import me.hydos.rosella.render.resource.Resource
-import me.hydos.rosella.render.shader.ubo.Ubo
 import me.hydos.rosella.render.swapchain.Swapchain
 import me.hydos.rosella.render.texture.Texture
 import me.hydos.rosella.render.texture.TextureManager
 import me.hydos.rosella.render.texture.TextureMap
 import me.hydos.rosella.scene.`object`.impl.SimpleObjectManager
+import me.hydos.rosella.ubo.Ubo
 import me.hydos.rosella.util.VkUtils.ok
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.vulkan.*
@@ -157,13 +157,13 @@ open class RawShaderProgram(
             val descriptorSets = DescriptorSets(descriptorPool, pDescriptorSets.capacity())
             val bufferInfo = VkDescriptorBufferInfo.callocStack(1, stack)
                 .offset(0)
-                .range(ubo.getSize().toLong())
+                .range(ubo.size.toLong())
 
             val descriptorWrites = VkWriteDescriptorSet.callocStack(poolObjects.size, stack)
 
             for (i in 0 until pDescriptorSets.capacity()) {
                 val descriptorSet = pDescriptorSets[i]
-                bufferInfo.buffer(ubo.getUniformBuffers()[i].buffer())
+                bufferInfo.buffer(ubo.uniformBuffers[i].buffer())
                 poolObjects.forEachIndexed { index, poolObj ->
                     // TODO OPT: maybe group descriptors up by type if that's faster than defining each one by itself
                     val descriptorWrite = descriptorWrites[index]
@@ -193,22 +193,22 @@ open class RawShaderProgram(
                     }
                     descriptorWrite.dstSet(descriptorSet)
                 }
-                vkUpdateDescriptorSets(device.getRawDevice(), descriptorWrites, null)
+                vkUpdateDescriptorSets(device.rawDevice, descriptorWrites, null)
                 descriptorSets.setDescriptorPool(descriptorPool)
                 descriptorSets.add(descriptorSet)
             }
 
-            ubo.setDescriptors(descriptorSets)
+            ubo.descriptors = descriptorSets
         }
     }
 
     fun free() {
         if (descriptorSetLayout != VK_NULL_HANDLE) {
-            vkDestroyDescriptorSetLayout(device.getRawDevice(), descriptorSetLayout, null)
+            vkDestroyDescriptorSetLayout(device.rawDevice, descriptorSetLayout, null)
             descriptorSetLayout = VK_NULL_HANDLE
         }
         if (descriptorPool != VK_NULL_HANDLE) {
-            vkDestroyDescriptorPool(device.getRawDevice(), descriptorPool, null)
+            vkDestroyDescriptorPool(device.rawDevice, descriptorPool, null)
             descriptorPool = VK_NULL_HANDLE
         }
     }

@@ -4,7 +4,6 @@ import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.memory.Memory;
 import me.hydos.rosella.render.descriptorsets.DescriptorSets;
 import me.hydos.rosella.render.shader.ShaderProgram;
-import me.hydos.rosella.render.shader.ubo.Ubo;
 import me.hydos.rosella.render.swapchain.Swapchain;
 import me.hydos.rosella.render.texture.TextureMap;
 import org.apache.logging.log4j.LogManager;
