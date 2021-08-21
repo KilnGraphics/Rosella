@@ -128,6 +128,7 @@ public class Rosella {
         initializationRegistry.registerApplicationFeature(new PortabilitySubset()); // Required to detect triangle fan support
         initializationRegistry.registerApplicationFeature(new TriangleFan());
         initializationRegistry.registerApplicationFeature(new ImagelessFrameBuffers()); // Absolutely Required for Multiple FBO's to work
+        initializationRegistry.registerApplicationFeature(new GlClipDistance()); // Required for water tests to work.
 
         common.device = new DeviceBuilder(this.vulkanInstance, initializationRegistry).build();
 

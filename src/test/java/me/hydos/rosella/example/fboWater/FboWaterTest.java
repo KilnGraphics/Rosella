@@ -147,8 +147,8 @@ public class FboWaterTest {
 
         normalShader = objectManager.addShader(
                 new RawShaderProgram(
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.v.glsl")),
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/shading.f.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/shaders/shadedWaterObject.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/shaders/shadedWaterObject.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
                         1024,

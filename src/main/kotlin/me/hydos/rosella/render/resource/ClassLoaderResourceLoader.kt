@@ -8,6 +8,7 @@ class ClassLoaderResourceLoader(private val loader: ClassLoader) : ResourceLoade
         val url = loader.getResource(id.file)
 
         return if (url == null) {
+            println("Couldn't find url of resource '$id'")
             null
         } else object : Resource {
             override val identifier: Identifier
