@@ -10,8 +10,6 @@ import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormat;
-import me.hydos.rosella.render.vertex.VertexFormats;
-import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.*;
@@ -44,6 +42,7 @@ public class GlbModelLoader {
         List<AITexture> rawTextures = new ArrayList<>();
 
         // Retrieve Materials
+        assert scene != null;
         PointerBuffer pMaterials = scene.mMaterials();
         if (pMaterials != null) {
             for (int i = 0; i < pMaterials.capacity(); i++) {

@@ -81,12 +81,16 @@ public class RenderObject implements Renderable {
 
     @Override
     public void onAddedToScene(Rosella rosella) {
-        instanceInfo = new InstanceInfo(new RenderObjectUbo(rosella.common.device, rosella.common.memory, this, material.pipeline().getShaderProgram()), material);
-        renderInfo = CompletableFuture.completedFuture(new RenderInfo(
-                rosella.bufferManager.createVertexBuffer(new ManagedBuffer<>(vertexBuffer, true)),
-                rosella.bufferManager.createIndexBuffer(new ManagedBuffer<>(indices, true)),
-                indices.capacity() / 4
-        ));
+        if(instanceInfo == null) {
+            instanceInfo = new InstanceInfo(new RenderObjectUbo(rosella.common.device, rosella.common.memory, this, material.pipeline().getShaderProgram()), material);
+        }
+        if(renderInfo == null) {
+            renderInfo = CompletableFuture.completedFuture(new RenderInfo(
+                    rosella.bufferManager.createVertexBuffer(new ManagedBuffer<>(vertexBuffer, true)),
+                    rosella.bufferManager.createIndexBuffer(new ManagedBuffer<>(indices, true)),
+                    indices.capacity() / 4
+            ));
+        }
     }
 
     @Override

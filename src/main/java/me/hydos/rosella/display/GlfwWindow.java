@@ -83,7 +83,8 @@ public class GlfwWindow extends Display {
                 rosella.renderer.render();
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error occurred in automatic loop.", e);
+            e.printStackTrace();
+            System.exit(Rosella.LOOP_FAIL_ERROR_CODE);
         }
     }
 

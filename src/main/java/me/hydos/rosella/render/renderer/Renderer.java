@@ -276,6 +276,7 @@ public class Renderer {
         for (FrameBufferObject fbo : common.fboManager.fbos) {
             rebuildCommandBuffers(renderPass, fbo);
         }
+        common.fboManager.rebuildActiveCommandBuffers();
     }
 
     /**

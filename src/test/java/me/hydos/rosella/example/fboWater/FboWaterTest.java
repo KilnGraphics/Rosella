@@ -86,36 +86,27 @@ public class FboWaterTest {
         SimpleObjectManager mainObjectManager = mainFbo.objectManager;
         SimpleObjectManager waterFboObjectManager = secondFbo.objectManager;
 
-        rosella.renderer.lazilyClearColor(new Color(10, 20, 200, 255));
+        rosella.renderer.lazilyClearColor(new Color(0, 0, 0, 0));
         GlbModelLoader.NodeSelector everything = (name) -> true;
 
         terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D);
         skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
 
         GlbRenderObject waterPlane = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D).get(0);
-        waterFboObjectManager.addObject(waterPlane);
+        mainObjectManager.addObject(waterPlane);
 
         FboRenderObject fboRenderObject = FboRenderObject.create(secondFbo, -1f, rosella, camera.viewMatrix, projectionMatrix, guiShader);
         fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
 
         skybox.modelMatrix.scale(10);
         mainObjectManager.addObject(skybox);
+        waterFboObjectManager.addObject(skybox);
 
         for (GlbRenderObject subModel : terrainScene) {
             waterFboObjectManager.addObject(subModel);
+            mainObjectManager.addObject(subModel);
         }
         mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
-
-        fboOverlay = new GuiRenderObject(
-                fboOverlayTexture,
-                -1f,
-                new Vector3f(),
-                camera.viewMatrix,
-                projectionMatrix
-        );
-
-        fboOverlay.modelMatrix.translate(1.27777f, 0.5f, 0);
-        mainObjectManager.addObject(fboOverlay);
     }
 
     private static void loadMaterials() {

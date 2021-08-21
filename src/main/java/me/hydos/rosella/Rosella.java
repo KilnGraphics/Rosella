@@ -51,6 +51,7 @@ public class Rosella {
     public static final Logger LOGGER = LogManager.getLogger("Rosella", new StringFormatterMessageFactory());
     public static int GENERIC_ERROR_CODE = -10;
     public static int FBO_ERROR_CODE = -11;
+    public static int LOOP_FAIL_ERROR_CODE = -12;
     public static final int VULKAN_VERSION = VK_API_VERSION_1_2;
     public final GlobalBufferManager bufferManager;
     public final VkCommon common = new VkCommon();

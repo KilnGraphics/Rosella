@@ -19,6 +19,7 @@ public class FboManager {
     private FrameBufferObject mainFbo; //FIXME: this is useless because we hardcode it in the swapchain. ill get to it soon
     public FrameBufferObject activeFbo; // FIXME: same as above
     public List<FrameBufferObject> fbos = new ArrayList<>();
+    VkCommandBuffer[] activeCommandBuffers = new VkCommandBuffer[1];
 
     public void recreateDepthResources(Swapchain swapchain, VkCommon common, Renderer renderer) {
         for (FrameBufferObject fbo : fbos) {
@@ -65,22 +66,27 @@ public class FboManager {
         return frameBufferObject;
     }
 
+    public FrameBufferObject removeFbo() {
+        throw new RuntimeException("Not Implemented!");
+    }
+
     public FrameBufferObject getPresentingFbo() {
         return mainFbo;
     }
 
     public PointerBuffer setRenderingCommandBuffers(int imageIndex) {
-        VkCommandBuffer[] commandBuffers = new VkCommandBuffer[fbos.size()]; // FIXME: TODO: URGENT: cache this. this code is so hot its hotter than ur mum. (Owned)
-        for (int i = 0; i < fbos.size(); i++) { //FIXME: life is pain
+        MemoryStack stack = MemoryStack.stackGet();
+        activeCommandBuffers[activeCommandBuffers.length - 1] = getPresentingFbo().commandBuffers[imageIndex];
+        return stack.pointers(activeCommandBuffers);
+    }
+
+    public void rebuildActiveCommandBuffers() {
+        activeCommandBuffers = new VkCommandBuffer[fbos.size()];
+        for (int i = 0; i < fbos.size(); i++) {
             FrameBufferObject fbo = fbos.get(i);
-            if (fbo.isSwapchainBased) {
-                commandBuffers[i] = fbo.commandBuffers[imageIndex];
-            } else {
-                //FIXME: i only make 1 fbo for fbo's which are not being presented. i fucking hate myself
-                commandBuffers[i] = fbo.commandBuffers[0];
+            if (!fbo.isSwapchainBased) {
+                activeCommandBuffers[i - 1] = fbo.commandBuffers[0];
             }
         }
-        MemoryStack stack = MemoryStack.stackGet();
-        return stack.pointers(commandBuffers);
     }
 }
