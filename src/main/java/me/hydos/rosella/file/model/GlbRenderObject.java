@@ -3,6 +3,7 @@ package me.hydos.rosella.file.model;
 import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.scene.object.RenderObject;
+import me.hydos.rosella.ubo.UboDataProvider;
 import org.joml.Matrix4f;
 import org.joml.Vector2fc;
 import org.joml.Vector3fc;
@@ -12,8 +13,8 @@ public class GlbRenderObject extends RenderObject {
 
     public final GlbModelLoader.MeshData meshData;
 
-    protected GlbRenderObject(Material material, GlbModelLoader.MeshData meshData, Matrix4f modelViewMatrix, Matrix4f projectionMatrix) {
-        super(Resource.Empty.INSTANCE, material, projectionMatrix, modelViewMatrix);
+    protected GlbRenderObject(Material material, GlbModelLoader.MeshData meshData, Matrix4f modelViewMatrix, Matrix4f projectionMatrix, UboDataProvider<RenderObject> dataProvider) {
+        super(Resource.Empty.INSTANCE, material, projectionMatrix, modelViewMatrix, dataProvider);
         this.meshData = meshData;
         this.modelMatrix = meshData.modelMatrix;
         int vertexCount = meshData.positions.size();

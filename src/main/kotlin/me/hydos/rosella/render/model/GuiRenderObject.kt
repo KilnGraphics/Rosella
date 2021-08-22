@@ -4,6 +4,7 @@ import me.hydos.rosella.Rosella
 import me.hydos.rosella.render.material.Material
 import me.hydos.rosella.render.resource.Resource
 import me.hydos.rosella.scene.`object`.RenderObject
+import me.hydos.rosella.ubo.UboDataProvider
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.lwjgl.system.MemoryUtil
@@ -13,8 +14,9 @@ open class GuiRenderObject(
     private var z: Float = -1f,
     private var colour: Vector3f = Vector3f(0f, 0f, 0f),
     viewMatrix: Matrix4f,
-    projectionMatrix: Matrix4f
-) : RenderObject(Resource.Empty as Resource?, material, projectionMatrix, viewMatrix) {
+    projectionMatrix: Matrix4f,
+    dataProvider: UboDataProvider<RenderObject>
+) : RenderObject(Resource.Empty as Resource?, material, projectionMatrix, viewMatrix, dataProvider) {
 
     constructor(
         material: Material,
@@ -23,8 +25,9 @@ open class GuiRenderObject(
         scaleX: Float,
         scaleZ: Float,
         viewMatrix: Matrix4f,
-        projectionMatrix: Matrix4f
-    ) : this(material, z, colour, viewMatrix, projectionMatrix) {
+        projectionMatrix: Matrix4f,
+        dataProvider: UboDataProvider<RenderObject>
+    ) : this(material, z, colour, viewMatrix, projectionMatrix, dataProvider) {
         scale(scaleX, scaleZ)
     }
 
@@ -37,8 +40,9 @@ open class GuiRenderObject(
         translateX: Float,
         translateZ: Float,
         viewMatrix: Matrix4f,
-        projectionMatrix: Matrix4f
-    ) : this(material, z, colour, scaleX, scaleZ, viewMatrix, projectionMatrix) {
+        projectionMatrix: Matrix4f,
+        dataProvider: UboDataProvider<RenderObject>
+    ) : this(material, z, colour, scaleX, scaleZ, viewMatrix, projectionMatrix, dataProvider) {
         translate(translateX, translateZ)
     }
 

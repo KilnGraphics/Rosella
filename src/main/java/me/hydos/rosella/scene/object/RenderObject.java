@@ -11,6 +11,7 @@ import me.hydos.rosella.render.model.ModelLoader;
 import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.ubo.BasicUbo;
 import me.hydos.rosella.ubo.BasicUboDataProvider;
+import me.hydos.rosella.ubo.UboDataProvider;
 import org.joml.Matrix4f;
 import org.joml.Vector2fc;
 import org.joml.Vector3f;
@@ -35,12 +36,14 @@ public class RenderObject implements Renderable {
     public final Matrix4f projectionMatrix;
     protected ByteBuffer indices;
     protected ByteBuffer vertexBuffer;
+    private final UboDataProvider<RenderObject> uboDataProvider;
 
-    public RenderObject(Resource model, Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix) {
+    public RenderObject(Resource model, Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix, UboDataProvider<RenderObject> dataProvider) {
         this.material = material;
         this.modelId = model;
         this.projectionMatrix = projectionMatrix;
         this.viewMatrix = viewMatrix;
+        this.uboDataProvider = dataProvider;
         loadModelInfo();
     }
 
@@ -86,7 +89,7 @@ public class RenderObject implements Renderable {
                     rosella.common,
                     material.pipeline().getShaderProgram(),
                     rosella.renderer.swapchain,
-                    new BasicUboDataProvider(),
+                    uboDataProvider,
                     this
             ), material);
         }

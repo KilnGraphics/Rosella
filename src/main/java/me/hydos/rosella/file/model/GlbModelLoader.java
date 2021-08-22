@@ -10,6 +10,9 @@ import me.hydos.rosella.render.resource.Resource;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormat;
+import me.hydos.rosella.scene.object.RenderObject;
+import me.hydos.rosella.ubo.BasicUboDataProvider;
+import me.hydos.rosella.ubo.UboDataProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.*;
@@ -33,10 +36,10 @@ public class GlbModelLoader {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, VertexFormat format, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix) {
-        return createGlbRenderObject(rosella, glbFile, program, format, selector, viewMatrix, projectionMatrix, StateInfo.DEFAULT_3D);
+        return createGlbRenderObject(rosella, glbFile, program, format, selector, viewMatrix, projectionMatrix, StateInfo.DEFAULT_3D, new BasicUboDataProvider());
     }
 
-    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, VertexFormat format, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix, StateInfo stateInfo) {
+    public static List<GlbRenderObject> createGlbRenderObject(Rosella rosella, Resource glbFile, ShaderProgram program, VertexFormat format, NodeSelector selector, Matrix4f viewMatrix, Matrix4f projectionMatrix, StateInfo stateInfo, UboDataProvider<RenderObject> dataProvider) {
         AIScene scene = AssimpHelperKt.loadScene(glbFile, Assimp.aiProcess_FlipUVs);
         List<AssimpMaterial> rawMaterials = new ArrayList<>();
         List<AITexture> rawTextures = new ArrayList<>();
@@ -113,7 +116,7 @@ public class GlbModelLoader {
         List<GlbRenderObject> renderObjects = new ArrayList<>(meshes.size());
         for (MeshData mesh : meshes) {
             Material material = materials.get(mesh.materialIndex);
-            renderObjects.add(new GlbRenderObject(material, mesh, viewMatrix, projectionMatrix));
+            renderObjects.add(new GlbRenderObject(material, mesh, viewMatrix, projectionMatrix, dataProvider));
         }
 
         // Return our hard work

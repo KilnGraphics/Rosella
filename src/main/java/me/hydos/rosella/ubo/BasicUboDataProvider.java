@@ -4,17 +4,20 @@ import me.hydos.rosella.scene.object.RenderObject;
 
 import java.nio.ByteBuffer;
 
-public class BasicUboDataProvider implements UboDataProvider<RenderObject> {
+public class BasicUboDataProvider extends UboDataProvider<RenderObject> {
 
     @Override
     public void update(ByteBuffer data, RenderObject renderObject) {
-        renderObject.modelMatrix.get(data);
-        renderObject.viewMatrix.get((16 * Float.BYTES), data);
-        renderObject.projectionMatrix.get((16 * Float.BYTES) * 2, data);
+        reset();
+        super.writeMatrix4f(renderObject.modelMatrix, data);
+        super.writeMatrix4f(renderObject.viewMatrix, data);
+        super.writeMatrix4f(renderObject.projectionMatrix, data);
     }
 
     @Override
     public int getSize() {
-        return (16 * Float.BYTES) * 3;
+        return (16 * Float.BYTES) + // Model Matrix
+                        (16 * Float.BYTES) + // View Matrix
+                        (16 * Float.BYTES); // Projection Matrix
     }
 }

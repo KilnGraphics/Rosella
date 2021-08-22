@@ -11,6 +11,7 @@ import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
+import me.hydos.rosella.ubo.UboDataProvider;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.jetbrains.annotations.NotNull;
@@ -25,13 +26,13 @@ public class FboRenderObject extends GuiRenderObject {
     public final Texture colourTexture;
     public final Texture depthTexture;
 
-    private FboRenderObject(@NotNull Material material, float z, @NotNull Vector3f colour, @NotNull Matrix4f viewMatrix, @NotNull Matrix4f projectionMatrix, Texture colourTexture, Texture depthTexture) {
-        super(material, z, colour, viewMatrix, projectionMatrix);
+    private FboRenderObject(@NotNull Material material, float z, @NotNull Vector3f colour, @NotNull Matrix4f viewMatrix, @NotNull Matrix4f projectionMatrix, Texture colourTexture, Texture depthTexture, UboDataProvider<RenderObject> dataProvider) {
+        super(material, z, colour, viewMatrix, projectionMatrix, dataProvider);
         this.colourTexture = colourTexture;
         this.depthTexture = depthTexture;
     }
 
-    public static FboRenderObject create(FrameBufferObject frameBufferObject, float z, Rosella rosella, Matrix4f viewMatrix, Matrix4f projectionMatrix, ShaderProgram shaderProgram) {
+    public static FboRenderObject create(FrameBufferObject frameBufferObject, float z, Rosella rosella, Matrix4f viewMatrix, Matrix4f projectionMatrix, ShaderProgram shaderProgram, UboDataProvider<RenderObject> dataProvider) {
         if (frameBufferObject.isSwapchainBased) {
             throw new RuntimeException("Cannot display main fbo to another fbo!");
         }
@@ -62,7 +63,7 @@ public class FboRenderObject extends GuiRenderObject {
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         );
 
-        return new FboRenderObject(fboMaterial, z, new Vector3f(), viewMatrix, projectionMatrix, colourTexture, depthTexture);
+        return new FboRenderObject(fboMaterial, z, new Vector3f(), viewMatrix, projectionMatrix, colourTexture, depthTexture, dataProvider);
     }
 
     public static Texture createColourTexture(Rosella rosella) {
