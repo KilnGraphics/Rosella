@@ -6,6 +6,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec4 clippingPlane;
+    float time;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -26,7 +27,7 @@ void main() {
     fragTexCoord = inTexCoord;
 
     // CONSTANTS
-    vec3 lightPosition = vec3(100.0, 100.0, 100.0);
+    vec3 lightPosition = vec3(100.0 + ubo.time, 100.0, 100.0 + ubo.time);
 
     surfaceNormal = (ubo.model * vec4(inNormal, 0.0)).xyz;
     toLightVector = lightPosition - worldPosition.xyz;

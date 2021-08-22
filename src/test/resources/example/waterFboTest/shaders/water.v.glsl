@@ -5,6 +5,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
+    vec3 cameraPos;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -12,10 +13,12 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inTexCoord;
 
 layout(location = 0) out vec4 clipSpace;
+layout(location = 1) out vec3 toCameraVector;
 
 void main() {
     vec4 worldPosition = ubo.model * vec4(inPosition, 1.0);
 
     clipSpace = ubo.proj * ubo.view * worldPosition;
+    toCameraVector = ubo.cameraPos - worldPosition.xyz;
     gl_Position = clipSpace;
 }

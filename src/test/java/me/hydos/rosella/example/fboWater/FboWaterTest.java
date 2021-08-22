@@ -2,7 +2,9 @@ package me.hydos.rosella.example.fboWater;
 
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
+import me.hydos.rosella.example.fboWater.ubo.CameraPositionUboDataProvider;
 import me.hydos.rosella.example.fboWater.ubo.ClipPlaneUboDataProvider;
+import me.hydos.rosella.example.fboWater.ubo.ClipTimeUboDataProvider;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.material.Material;
@@ -16,7 +18,6 @@ import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.scene.object.GlbRenderObject;
-import me.hydos.rosella.scene.object.TexturedGuiRenderObject;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.test_utils.NoclipCamera;
 import me.hydos.rosella.ubo.BasicUboDataProvider;
@@ -104,7 +105,7 @@ public class FboWaterTest {
                 .projectionMatrix(projectionMatrix)
                 .stateInfo(StateInfo.DEFAULT_3D)
                 .shader(waterShader)
-                .uboDataProvider(new BasicUboDataProvider())
+                .uboDataProvider(new CameraPositionUboDataProvider(camera))
                 .build(rosella)
                 .get(0);
 
@@ -117,7 +118,7 @@ public class FboWaterTest {
                     .projectionMatrix(projectionMatrix)
                     .stateInfo(StateInfo.NO_CULL_3D)
                     .shader(normalShader)
-                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, 1, 0, -0)))
+                    .uboDataProvider(new ClipTimeUboDataProvider(new Vector4f(0, 1, 0, -0)))
                     .build(rosella);
             scene.addObjects(terrainScene);
         });
@@ -131,7 +132,7 @@ public class FboWaterTest {
                     .projectionMatrix(projectionMatrix)
                     .stateInfo(StateInfo.NO_CULL_3D)
                     .shader(normalShader)
-                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, -1, 0, 0)))
+                    .uboDataProvider(new ClipTimeUboDataProvider(new Vector4f(0, -1, 0, 0)))
                     .build(rosella);
             scene.addObjects(terrainScene);
         });
@@ -145,7 +146,7 @@ public class FboWaterTest {
                     .projectionMatrix(projectionMatrix)
                     .stateInfo(StateInfo.NO_CULL_3D)
                     .shader(normalShader)
-                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, -1, 0, 1000))) // A bit of a hack but its alright for now I guess
+                    .uboDataProvider(new ClipTimeUboDataProvider(new Vector4f(0, -1, 0, 1000))) // A bit of a hack but its alright for now I guess
                     .build(rosella);
             scene.addObjects(terrainScene);
             scene.addObject(waterQuad);

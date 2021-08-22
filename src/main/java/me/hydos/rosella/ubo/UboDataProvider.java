@@ -56,7 +56,7 @@ public abstract class UboDataProvider<T> {
      */
     protected void writeVector3f(Vector3f vector3f, ByteBuffer data) {
         vector3f.get(position, data);
-        position += Float.BYTES * 3;
+        position += Float.BYTES * 4; // FIXME: std140 moment
     }
 
     /**
@@ -67,6 +67,16 @@ public abstract class UboDataProvider<T> {
     protected void writeVector4f(Vector4f vector4f, ByteBuffer data) {
         vector4f.get(position, data);
         position += Float.BYTES * 4;
+    }
+
+    /**
+     * Writes a float into a {@link ByteBuffer}
+     * @param f the float you want to write
+     * @param data the {@link ByteBuffer} you want to write into.
+     */
+    protected void writeFloat(float f, ByteBuffer data) {
+        data.putFloat(position, f);
+        position += Float.BYTES;
     }
 
     /**
