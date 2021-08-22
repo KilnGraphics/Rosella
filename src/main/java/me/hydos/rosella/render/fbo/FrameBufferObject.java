@@ -261,5 +261,14 @@ public class FrameBufferObject {
 
         return image;
     }
+
+    public void populateScene(ScenePopulator populator) {
+        populator.run(objectManager);
+    }
+
+    public interface ScenePopulator {
+
+        void run(SimpleObjectManager objectManager);
+    }
 }
 

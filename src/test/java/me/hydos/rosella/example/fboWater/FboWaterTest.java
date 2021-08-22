@@ -46,15 +46,14 @@ public class FboWaterTest {
     public static ShaderProgram skyboxShader;
     public static ShaderProgram guiShader;
 
-    public static List<GlbRenderObject> terrainScene;
     public static GlbRenderObject skybox;
     public static GlbRenderObject waterQuad;
-    public static TexturedGuiRenderObject fboOverlay;
 
     public static Material fboOverlayTexture;
 
     public static FrameBufferObject mainFbo;
-    public static FrameBufferObject secondFbo;
+    public static FrameBufferObject reflectionFbo;
+    public static FrameBufferObject refractionFbo;
 
     public static NoclipCamera camera = new NoclipCamera();
 
@@ -66,7 +65,8 @@ public class FboWaterTest {
         }
 
         mainFbo = rosella.common.fboManager.getActiveFbo();
-        secondFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
+        reflectionFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
+        refractionFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
 
         loadShaders();
         loadMaterials();
@@ -83,23 +83,7 @@ public class FboWaterTest {
     }
 
     private static void setupMainMenuScene() {
-        SimpleObjectManager mainObjectManager = mainFbo.objectManager;
-        SimpleObjectManager waterFboObjectManager = secondFbo.objectManager;
-
         rosella.renderer.lazilyClearColor(new Color(0, 0, 0, 0));
-
-        terrainScene = new GlbRenderObject.Builder()
-                .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
-                .viewMatrix(camera.viewMatrix)
-                .projectionMatrix(projectionMatrix)
-                .stateInfo(StateInfo.NO_CULL_3D)
-                .shader(normalShader)
-                .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, 1, 0, 15)))
-                .build(rosella);
-        for (GlbRenderObject subModel : terrainScene) {
-            waterFboObjectManager.addObject(subModel);
-            mainObjectManager.addObject(subModel);
-        }
 
         skybox = new GlbRenderObject.Builder()
                 .file(Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")))
@@ -111,8 +95,6 @@ public class FboWaterTest {
                 .build(rosella)
                 .get(0);
         skybox.modelMatrix.scale(10);
-        mainObjectManager.addObject(skybox);
-        waterFboObjectManager.addObject(skybox);
 
         waterQuad = new GlbRenderObject.Builder()
                 .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")))
@@ -124,16 +106,71 @@ public class FboWaterTest {
                 .build(rosella)
                 .get(0);
 
-        TexturedGuiRenderObject fboRenderObject = new TexturedGuiRenderObject.Builder()
-                .fbo(secondFbo)
-                .viewMatrix(camera.viewMatrix)
-                .projectionMatrix(projectionMatrix)
-                .z(1f)
-                .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
-                .uboDataProvider(new BasicUboDataProvider())
-                .translate(1.27777f, 0.5f)
-                .build();
-        mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
+        reflectionFbo.populateScene((scene) -> {
+            // Terrain
+            scene.addObject(skybox);
+            List<GlbRenderObject> terrainScene = new GlbRenderObject.Builder()
+                    .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
+                    .viewMatrix(camera.viewMatrix)
+                    .projectionMatrix(projectionMatrix)
+                    .stateInfo(StateInfo.NO_CULL_3D)
+                    .shader(normalShader)
+                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, 1, 0, -0)))
+                    .build(rosella);
+            scene.addObjects(terrainScene);
+        });
+
+        refractionFbo.populateScene((scene) -> {
+            // Terrain
+            scene.addObject(skybox);
+            List<GlbRenderObject> terrainScene = new GlbRenderObject.Builder()
+                    .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
+                    .viewMatrix(camera.viewMatrix)
+                    .projectionMatrix(projectionMatrix)
+                    .stateInfo(StateInfo.NO_CULL_3D)
+                    .shader(normalShader)
+                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, -1, 0, 0)))
+                    .build(rosella);
+            scene.addObjects(terrainScene);
+        });
+
+        mainFbo.populateScene((scene) -> {
+            // Terrain
+            scene.addObject(skybox);
+            List<GlbRenderObject> terrainScene = new GlbRenderObject.Builder()
+                    .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
+                    .viewMatrix(camera.viewMatrix)
+                    .projectionMatrix(projectionMatrix)
+                    .stateInfo(StateInfo.NO_CULL_3D)
+                    .shader(normalShader)
+                    .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, -1, 0, 1000))) // A bit of a hack but its alright for now I guess
+                    .build(rosella);
+            scene.addObjects(terrainScene);
+            scene.addObject(waterQuad);
+
+            // Gui
+            TexturedGuiRenderObject reflectionGuiObject = new TexturedGuiRenderObject.Builder()
+                    .fbo(reflectionFbo)
+                    .viewMatrix(camera.viewMatrix)
+                    .projectionMatrix(projectionMatrix)
+                    .z(1f)
+                    .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
+                    .uboDataProvider(new BasicUboDataProvider())
+                    .translate(1.27777f, 0.5f)
+                    .build();
+            scene.addObject(reflectionGuiObject);
+
+            TexturedGuiRenderObject refractionGuiObject = new TexturedGuiRenderObject.Builder()
+                    .fbo(refractionFbo)
+                    .viewMatrix(camera.viewMatrix)
+                    .projectionMatrix(projectionMatrix)
+                    .z(1f)
+                    .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
+                    .uboDataProvider(new BasicUboDataProvider())
+                    .translate(-1.27777f, 0.5f)
+                    .build();
+            scene.addObject(refractionGuiObject);
+        });
     }
 
     private static void loadMaterials() {
