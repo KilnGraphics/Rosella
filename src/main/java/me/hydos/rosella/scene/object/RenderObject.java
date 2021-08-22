@@ -87,7 +87,7 @@ public abstract class RenderObject implements Renderable {
                                     material.pipeline().getShaderProgram(),
                                     Topology.TRIANGLES,
                                     VertexFormats.POSITION_COLOR3f_UV0,
-                                    StateInfo.DEFAULT_GUI
+                                    StateInfo.NO_CULL_3D
                             )
                     ), builder.build()
             );
