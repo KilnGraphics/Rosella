@@ -33,7 +33,7 @@ public class GlbRenderObject extends RenderObject {
 
     public final Builder.MeshData meshData;
 
-    private GlbRenderObject(Material material, Builder.MeshData meshData, Matrix4f viewMatrix, Matrix4f projectionMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, FrameBufferObject fbo) {
+    private GlbRenderObject(Material material, Builder.MeshData meshData, Matrix4f viewMatrix, Matrix4f projectionMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, FrameBufferObject[] fbo) {
         super(material, projectionMatrix, viewMatrix, modelMatrix, dataProvider, fbo);
         this.meshData = meshData;
         this.modelMatrix = meshData.modelMatrix;

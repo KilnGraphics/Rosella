@@ -10,7 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 
 public class TexturedGuiRenderObject extends RenderObject {
 
-    protected TexturedGuiRenderObject(Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, FrameBufferObject fbo) {
+    protected TexturedGuiRenderObject(Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, FrameBufferObject[] fbo) {
         super(material, projectionMatrix, viewMatrix, modelMatrix, dataProvider, fbo);
         Vector3f colour = new Vector3f(0, 0, 0);
         int size = material.pipeline().getVertexFormat().getSize();

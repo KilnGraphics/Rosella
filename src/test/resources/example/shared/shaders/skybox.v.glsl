@@ -21,9 +21,6 @@ void main() {
     viewMatrix[3][1] = 0;
     viewMatrix[3][2] = 0;
 
-    // this is a comment
-
-
     vec4 worldPosition = ubo.model * vec4(inPosition, 1.0);
 
     gl_Position = ubo.proj * viewMatrix * worldPosition;

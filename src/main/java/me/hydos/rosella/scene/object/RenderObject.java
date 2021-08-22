@@ -12,7 +12,6 @@ import me.hydos.rosella.render.material.Material;
 import me.hydos.rosella.render.pipeline.Pipeline;
 import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.texture.ImmutableTextureMap;
-import me.hydos.rosella.render.texture.Texture;
 import me.hydos.rosella.render.vertex.VertexFormats;
 import me.hydos.rosella.ubo.BasicUbo;
 import me.hydos.rosella.ubo.UboDataProvider;
@@ -37,31 +36,50 @@ public abstract class RenderObject implements Renderable {
     public Matrix4f modelMatrix;
     public final Matrix4f viewMatrix;
     public final Matrix4f projectionMatrix;
-    public FrameBufferObject fbo;
+    public FrameBufferObject[] fbos;
     protected ByteBuffer indices;
     protected ByteBuffer vertexBuffer;
     private final UboDataProvider<RenderObject> uboDataProvider;
 
-    protected RenderObject(Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, @Nullable FrameBufferObject fbo) {
+    protected RenderObject(Material material, Matrix4f projectionMatrix, Matrix4f viewMatrix, Matrix4f modelMatrix, UboDataProvider<RenderObject> dataProvider, @Nullable FrameBufferObject[] fbos) {
         this.material = material;
         this.projectionMatrix = projectionMatrix;
         this.viewMatrix = viewMatrix;
         this.modelMatrix = modelMatrix;
         this.uboDataProvider = dataProvider;
-        this.fbo = fbo;
+        this.fbos = fbos;
     }
 
     @Override
     public void onAddedToScene(Rosella rosella) {
-        if(fbo != null) {
-            if (this.fbo.colourTexture == null) {
-                this.fbo.createColourTexture(rosella);
-                this.fbo.createDepthTexture(rosella);
+        if (fbos != null) {
+            int i = 0;
+            ImmutableTextureMap.Builder builder = ImmutableTextureMap.builder();
+            for (FrameBufferObject fbo : fbos) {
+                if (fbo.colourTexture == null) {
+                    fbo.createColourTexture(rosella);
+                    fbo.createDepthTexture(rosella);
+                }
+
+                // Pain
+                if (fbo.isSwapchainBased) {
+                    throw new RuntimeException("Cannot display main fbo to another fbo!");
+                }
+
+                // Explicitly transitioning the depth image
+                VkUtils.transitionImageLayout(
+                        rosella.renderer,
+                        rosella.common.device,
+                        fbo.depthTexture.getTextureImage().pointer(),
+                        VK_FORMAT_D32_SFLOAT,
+                        VK_IMAGE_LAYOUT_UNDEFINED,
+                        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                );
+
+                builder.entry("texSampler_" + i, fbo.colourTexture);
+                i++;
             }
-            // Pain
-            if (this.fbo.isSwapchainBased) {
-                throw new RuntimeException("Cannot display main fbo to another fbo!");
-            }
+
             this.material = new Material(
                     rosella.common.pipelineManager.registerPipeline(
                             new Pipeline(
@@ -71,23 +89,9 @@ public abstract class RenderObject implements Renderable {
                                     VertexFormats.POSITION_COLOR3f_UV0,
                                     StateInfo.DEFAULT_GUI
                             )
-                    ),
-                    ImmutableTextureMap.builder()
-                            .entry("texSampler", this.fbo.colourTexture)
-                            .build()
-            );
-
-            // Explicitly transitioning the depth image
-            VkUtils.transitionImageLayout(
-                    rosella.renderer,
-                    rosella.common.device,
-                    this.fbo.depthTexture.getTextureImage().pointer(),
-                    VK_FORMAT_D32_SFLOAT,
-                    VK_IMAGE_LAYOUT_UNDEFINED,
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    ), builder.build()
             );
         }
-
 
         if (instanceInfo == null) {
             instanceInfo = new InstanceInfo(new BasicUbo<>(
@@ -147,7 +151,7 @@ public abstract class RenderObject implements Renderable {
         protected Matrix4f projectionMatrix;
         protected Material material;
         protected UboDataProvider<RenderObject> uboDataProvider;
-        protected FrameBufferObject fbo;
+        protected FrameBufferObject[] fbo;
 
         public T material(Material material) {
             this.material = material;
@@ -155,6 +159,12 @@ public abstract class RenderObject implements Renderable {
         }
 
         public T fbo(FrameBufferObject frameBufferObject) {
+            this.fbo = new FrameBufferObject[1];
+            this.fbo[0] = frameBufferObject;
+            return (T) this;
+        }
+
+        public T fbos(FrameBufferObject... frameBufferObject) {
             this.fbo = frameBufferObject;
             return (T) this;
         }
@@ -176,6 +186,11 @@ public abstract class RenderObject implements Renderable {
 
         public T translate(float x, float y, float z) {
             modelMatrix.translate(x, y, z);
+            return (T) this;
+        }
+
+        public T rotate(float x, float y, float z) {
+            modelMatrix.rotateAffineXYZ((float) Math.toRadians(x), (float) Math.toRadians(y), (float) Math.toRadians(z));
             return (T) this;
         }
 

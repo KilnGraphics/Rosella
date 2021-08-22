@@ -213,8 +213,8 @@ public class GenericSourceTest {
 
         basicShader = objectManager.addShader(
                 new RawShaderProgram(
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.v.glsl")),
-                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/base.f.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/water.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("rosella", "shaders/water.f.glsl")),
                         rosella.common.device,
                         rosella.common.memory,
                         10240,

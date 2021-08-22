@@ -42,6 +42,7 @@ public class FboWaterTest {
     public static final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(FOV), (float) WIDTH / (float) HEIGHT, 0.1f, 4000f, true);
 
     public static ShaderProgram basicShader;
+    public static ShaderProgram waterShader;
     public static ShaderProgram normalShader;
     public static ShaderProgram skyboxShader;
     public static ShaderProgram guiShader;
@@ -98,10 +99,11 @@ public class FboWaterTest {
 
         waterQuad = new GlbRenderObject.Builder()
                 .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")))
+                .fbos(reflectionFbo, refractionFbo)
                 .viewMatrix(camera.viewMatrix)
                 .projectionMatrix(projectionMatrix)
-                .stateInfo(StateInfo.NO_CULL_3D)
-                .shader(normalShader)
+                .stateInfo(StateInfo.DEFAULT_3D)
+                .shader(waterShader)
                 .uboDataProvider(new BasicUboDataProvider())
                 .build(rosella)
                 .get(0);
@@ -147,29 +149,6 @@ public class FboWaterTest {
                     .build(rosella);
             scene.addObjects(terrainScene);
             scene.addObject(waterQuad);
-
-            // Gui
-            TexturedGuiRenderObject reflectionGuiObject = new TexturedGuiRenderObject.Builder()
-                    .fbo(reflectionFbo)
-                    .viewMatrix(camera.viewMatrix)
-                    .projectionMatrix(projectionMatrix)
-                    .z(1f)
-                    .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
-                    .uboDataProvider(new BasicUboDataProvider())
-                    .translate(1.27777f, 0.5f)
-                    .build();
-            scene.addObject(reflectionGuiObject);
-
-            TexturedGuiRenderObject refractionGuiObject = new TexturedGuiRenderObject.Builder()
-                    .fbo(refractionFbo)
-                    .viewMatrix(camera.viewMatrix)
-                    .projectionMatrix(projectionMatrix)
-                    .z(1f)
-                    .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
-                    .uboDataProvider(new BasicUboDataProvider())
-                    .translate(-1.27777f, 0.5f)
-                    .build();
-            scene.addObject(refractionGuiObject);
         });
     }
 
@@ -218,6 +197,19 @@ public class FboWaterTest {
                         1024,
                         RawShaderProgram.PoolUboInfo.INSTANCE,
                         new RawShaderProgram.PoolSamplerInfo(-1, "texSampler")
+                )
+        );
+
+        waterShader = objectManager.addShader(
+                new RawShaderProgram(
+                        Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/shaders/water.v.glsl")),
+                        Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/shaders/water.f.glsl")),
+                        rosella.common.device,
+                        rosella.common.memory,
+                        1024,
+                        RawShaderProgram.PoolUboInfo.INSTANCE,
+                        new RawShaderProgram.PoolSamplerInfo(1, "texSampler_0"),
+                        new RawShaderProgram.PoolSamplerInfo(2, "texSampler_1")
                 )
         );
 

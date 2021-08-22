@@ -95,12 +95,12 @@ public class NoclipCamera {
 
         float distance = 2 * position.y;
         position.y -= distance;
-        rotation.y = -rotation.y;
+        rotation.x = -rotation.x;
         reflectionViewMatrix.identity();
         reflectionViewMatrix.rotateXYZ(rotation);
         reflectionViewMatrix.translate(position.x, position.y, position.z);
         position.y += distance;
-        rotation.y = -rotation.y;
+        rotation.x = -rotation.x;
 
         refractionViewMatrix.identity();
         refractionViewMatrix.rotateXYZ(rotation);
