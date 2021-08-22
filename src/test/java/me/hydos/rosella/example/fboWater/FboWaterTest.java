@@ -111,7 +111,7 @@ public class FboWaterTest {
             scene.addObject(skybox);
             List<GlbRenderObject> terrainScene = new GlbRenderObject.Builder()
                     .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
-                    .viewMatrix(camera.viewMatrix)
+                    .viewMatrix(camera.reflectionViewMatrix)
                     .projectionMatrix(projectionMatrix)
                     .stateInfo(StateInfo.NO_CULL_3D)
                     .shader(normalShader)
@@ -125,7 +125,7 @@ public class FboWaterTest {
             scene.addObject(skybox);
             List<GlbRenderObject> terrainScene = new GlbRenderObject.Builder()
                     .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
-                    .viewMatrix(camera.viewMatrix)
+                    .viewMatrix(camera.refractionViewMatrix)
                     .projectionMatrix(projectionMatrix)
                     .stateInfo(StateInfo.NO_CULL_3D)
                     .shader(normalShader)

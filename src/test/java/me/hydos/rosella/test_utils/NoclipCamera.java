@@ -21,6 +21,8 @@ public class NoclipCamera {
     public float deltaTime = 0;
 
     public Matrix4f viewMatrix = new Matrix4f();
+    public Matrix4f reflectionViewMatrix = new Matrix4f();
+    public Matrix4f refractionViewMatrix = new Matrix4f();
     public Vector3f position = new Vector3f();
     public Vector3f rotation = new Vector3f();
     public Vector3f posMotion = new Vector3f();
@@ -90,6 +92,19 @@ public class NoclipCamera {
         viewMatrix.identity();
         viewMatrix.rotateXYZ(rotation);
         viewMatrix.translate(position.x, position.y, position.z);
+
+        float distance = 2 * position.y;
+        position.y -= distance;
+        rotation.y = -rotation.y;
+        reflectionViewMatrix.identity();
+        reflectionViewMatrix.rotateXYZ(rotation);
+        reflectionViewMatrix.translate(position.x, position.y, position.z);
+        position.y += distance;
+        rotation.y = -rotation.y;
+
+        refractionViewMatrix.identity();
+        refractionViewMatrix.rotateXYZ(rotation);
+        refractionViewMatrix.translate(position.x, position.y, position.z);
     }
 
     public void updateTime() {
