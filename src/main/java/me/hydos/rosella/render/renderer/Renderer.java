@@ -307,7 +307,7 @@ public class Renderer {
             );
 
             for (int i = 0; i < commandBuffersCount; i++) {
-               frameBufferObject.commandBuffers[i] =
+                frameBufferObject.commandBuffers[i] =
                         new VkCommandBuffer(
                                 pCommandBuffers.get(i),
                                 common.device.getRawDevice()
@@ -315,7 +315,7 @@ public class Renderer {
             }
 
             VkCommandBufferBeginInfo beginInfo = VkUtils.createBeginInfo();
-            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass, frameBufferObject, common.fboManager);
+            VkRenderPassBeginInfo renderPassInfo = VkUtils.createRenderPassInfo(renderPass, frameBufferObject, common.fboManager, rosella);
             VkRect2D renderArea = VkUtils.createRenderArea(0, 0, swapchain); // TODO: when scissoring, make sure this is correct
             VkClearValue.Buffer clearValues = VkUtils.createClearValues(clearColor.rAsFloat(), clearColor.gAsFloat(), clearColor.bAsFloat(), clearDepth, clearStencil);
 

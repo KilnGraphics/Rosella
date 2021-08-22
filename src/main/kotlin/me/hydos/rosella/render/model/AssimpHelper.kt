@@ -8,6 +8,7 @@ import org.lwjgl.assimp.AIScene
 import org.lwjgl.assimp.Assimp.*
 import org.lwjgl.system.MemoryUtil
 
+@Deprecated("Kotlin")
 fun loadScene(resource: Resource, flags: Int): AIScene? {
     val identifier = resource.identifier
 

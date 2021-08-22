@@ -3,12 +3,9 @@ package me.hydos.rosella.example.fboWater;
 import me.hydos.rosella.Rosella;
 import me.hydos.rosella.display.GlfwWindow;
 import me.hydos.rosella.example.fboWater.ubo.ClipPlaneUboDataProvider;
-import me.hydos.rosella.file.model.GlbModelLoader;
-import me.hydos.rosella.file.model.GlbRenderObject;
 import me.hydos.rosella.render.Topology;
 import me.hydos.rosella.render.fbo.FrameBufferObject;
 import me.hydos.rosella.render.material.Material;
-import me.hydos.rosella.render.model.GuiRenderObject;
 import me.hydos.rosella.render.pipeline.Pipeline;
 import me.hydos.rosella.render.pipeline.state.StateInfo;
 import me.hydos.rosella.render.resource.Global;
@@ -18,13 +15,13 @@ import me.hydos.rosella.render.shader.RawShaderProgram;
 import me.hydos.rosella.render.shader.ShaderProgram;
 import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.render.vertex.VertexFormats;
-import me.hydos.rosella.scene.object.FboRenderObject;
+import me.hydos.rosella.scene.object.GlbRenderObject;
+import me.hydos.rosella.scene.object.TexturedGuiRenderObject;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.test_utils.NoclipCamera;
 import me.hydos.rosella.ubo.BasicUboDataProvider;
 import me.hydos.rosella.util.Color;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.vulkan.VK10;
@@ -52,7 +49,7 @@ public class FboWaterTest {
     public static List<GlbRenderObject> terrainScene;
     public static GlbRenderObject skybox;
     public static GlbRenderObject waterQuad;
-    public static GuiRenderObject fboOverlay;
+    public static TexturedGuiRenderObject fboOverlay;
 
     public static Material fboOverlayTexture;
 
@@ -90,25 +87,52 @@ public class FboWaterTest {
         SimpleObjectManager waterFboObjectManager = secondFbo.objectManager;
 
         rosella.renderer.lazilyClearColor(new Color(0, 0, 0, 0));
-        GlbModelLoader.NodeSelector everything = (name) -> true;
 
-        terrainScene = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D, new ClipPlaneUboDataProvider(new Vector4f(0, 1, 0, 15)));
-        skybox = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")), skyboxShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D, new BasicUboDataProvider()).get(0);
-
-        GlbRenderObject waterPlane = GlbModelLoader.createGlbRenderObject(rosella, Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")), normalShader, VertexFormats.POSITION_NORMAL_UV0, everything, camera.viewMatrix, projectionMatrix, StateInfo.NO_CULL_3D, new BasicUboDataProvider()).get(0);
-        mainObjectManager.addObject(waterPlane);
-
-        FboRenderObject fboRenderObject = FboRenderObject.create(secondFbo, -1f, rosella, camera.viewMatrix, projectionMatrix, guiShader, new BasicUboDataProvider());
-        fboRenderObject.modelMatrix.translate(1.27777f, 0.5f, 0);
-
-        skybox.modelMatrix.scale(10);
-        mainObjectManager.addObject(skybox);
-        waterFboObjectManager.addObject(skybox);
-
+        terrainScene = new GlbRenderObject.Builder()
+                .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/scene.glb")))
+                .viewMatrix(camera.viewMatrix)
+                .projectionMatrix(projectionMatrix)
+                .stateInfo(StateInfo.NO_CULL_3D)
+                .shader(normalShader)
+                .uboDataProvider(new ClipPlaneUboDataProvider(new Vector4f(0, 1, 0, 15)))
+                .build(rosella);
         for (GlbRenderObject subModel : terrainScene) {
             waterFboObjectManager.addObject(subModel);
             mainObjectManager.addObject(subModel);
         }
+
+        skybox = new GlbRenderObject.Builder()
+                .file(Global.INSTANCE.ensureResource(new Identifier("example", "shared/skybox.glb")))
+                .viewMatrix(camera.viewMatrix)
+                .projectionMatrix(projectionMatrix)
+                .stateInfo(StateInfo.NO_CULL_3D)
+                .shader(skyboxShader)
+                .uboDataProvider(new BasicUboDataProvider())
+                .build(rosella)
+                .get(0);
+        skybox.modelMatrix.scale(10);
+        mainObjectManager.addObject(skybox);
+        waterFboObjectManager.addObject(skybox);
+
+        waterQuad = new GlbRenderObject.Builder()
+                .file(Global.INSTANCE.ensureResource(new Identifier("example", "waterFboTest/waterQuad.glb")))
+                .viewMatrix(camera.viewMatrix)
+                .projectionMatrix(projectionMatrix)
+                .stateInfo(StateInfo.NO_CULL_3D)
+                .shader(normalShader)
+                .uboDataProvider(new BasicUboDataProvider())
+                .build(rosella)
+                .get(0);
+
+        TexturedGuiRenderObject fboRenderObject = new TexturedGuiRenderObject.Builder()
+                .fbo(secondFbo)
+                .viewMatrix(camera.viewMatrix)
+                .projectionMatrix(projectionMatrix)
+                .z(1f)
+                .material(fboOverlayTexture) //TODO: this material gets replaced and is just a place holder until then. ideally this should be set to an "empty" material if fbo is set inside the builder
+                .uboDataProvider(new BasicUboDataProvider())
+                .translate(1.27777f, 0.5f)
+                .build();
         mainObjectManager.addObject(fboRenderObject); // Render 2nd fbo onto a quad on the 1st fbo
     }
 

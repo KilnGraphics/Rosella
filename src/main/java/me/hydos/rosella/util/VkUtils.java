@@ -16,7 +16,7 @@ import me.hydos.rosella.render.texture.ImageRegion;
 import me.hydos.rosella.render.texture.Texture;
 import me.hydos.rosella.render.texture.TextureImage;
 import me.hydos.rosella.render.texture.UploadableImage;
-import me.hydos.rosella.scene.object.FboRenderObject;
+import me.hydos.rosella.scene.object.RenderObject;
 import me.hydos.rosella.scene.object.Renderable;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.PointerBuffer;
@@ -27,7 +27,6 @@ import org.lwjgl.vulkan.*;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Map.entry;
@@ -97,27 +96,20 @@ public class VkUtils {
                 .sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
     }
 
-    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, FrameBufferObject fbo, FboManager fboManager) {
+    public static VkRenderPassBeginInfo createRenderPassInfo(RenderPass renderPass, FrameBufferObject fbo, FboManager fboManager, Rosella rosella) {
         VkRenderPassBeginInfo vkRenderPassBeginInfo = VkRenderPassBeginInfo.callocStack()
                 .sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
                 .renderPass(renderPass.getRawRenderPass());
 
-        if (!fbo.isSwapchainBased) { // FIXME: this is hardcoded. ideally the fbo that will be used should be specified in the FboRenderObject.
-            boolean didWeSetAttachments = false; // This is a failsafe. If this is false by the end of the below for loop, we did something critically wrong and the driver will crash
-            for (Renderable renderObject : fboManager.getPresentingFbo().objectManager.renderObjects) {
-                if (renderObject instanceof FboRenderObject fboRenderObject) {
-                    // TODO EXPERIMENTAL: This May break and is code completely written in Rosella. We have no way to validate if this is correct
-                    VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
-                            .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
-                            .pAttachments(MemoryStack.stackGet().longs(fboRenderObject.colourTexture.getTextureImage().getView(), fboRenderObject.depthTexture.getTextureImage().getView()));
-                    vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
-                    didWeSetAttachments = true;
-                }
+        if (!fbo.isSwapchainBased) {
+            if (fbo.colourTexture == null) { // The wonders of Imageless Framebuffers
+                fbo.createColourTexture(rosella);
+                fbo.createDepthTexture(rosella);
             }
-            if(!didWeSetAttachments) {
-                System.err.println("The current fbo has no FboRenderObject to render to! (" + fbo  + ")");
-                System.exit(Rosella.FBO_ERROR_CODE);
-            }
+            VkRenderPassAttachmentBeginInfo.Buffer attachmentBeginInfo = VkRenderPassAttachmentBeginInfo.callocStack(1)
+                    .sType(VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO)
+                    .pAttachments(MemoryStack.stackGet().longs(fbo.colourTexture.getTextureImage().getView(), fbo.depthTexture.getTextureImage().getView()));
+            vkRenderPassBeginInfo.pNext(attachmentBeginInfo.address());
         }
         return vkRenderPassBeginInfo;
     }
@@ -375,7 +367,7 @@ public class VkUtils {
 
                 sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            }  else if(oldLayout == newLayout) {
+            } else if (oldLayout == newLayout) {
                 return; // wtf
             } else {
                 throw new IllegalArgumentException("Unsupported layout transition");

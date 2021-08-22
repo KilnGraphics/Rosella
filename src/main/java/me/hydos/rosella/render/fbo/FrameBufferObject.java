@@ -1,15 +1,18 @@
 package me.hydos.rosella.render.fbo;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import me.hydos.rosella.Rosella;
 import me.hydos.rosella.device.VulkanDevice;
 import me.hydos.rosella.render.renderer.Renderer;
 import me.hydos.rosella.render.swapchain.DepthBuffer;
 import me.hydos.rosella.render.swapchain.RenderPass;
 import me.hydos.rosella.render.swapchain.Swapchain;
+import me.hydos.rosella.render.texture.*;
 import me.hydos.rosella.scene.object.impl.SimpleObjectManager;
 import me.hydos.rosella.util.VkUtils;
 import me.hydos.rosella.vkobjects.VkCommon;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.vma.Vma;
 import org.lwjgl.vulkan.*;
 
 import java.nio.LongBuffer;
@@ -32,6 +35,9 @@ public class FrameBufferObject {
     public List<Long> frameBuffers;
     public VkCommandBuffer[] commandBuffers;
     public SimpleObjectManager objectManager;
+
+    public Texture colourTexture;
+    public Texture depthTexture;
 
     public FrameBufferObject(boolean useSwapchainImages, Swapchain swapchain, VkCommon common, RenderPass renderPass, Renderer renderer, SimpleObjectManager objectManager) {
         this.objectManager = objectManager.duplicate();
@@ -156,6 +162,104 @@ public class FrameBufferObject {
             }
             commandBuffers = null;
         }
+    }
+
+    public void createColourTexture(Rosella rosella) {
+        TextureManager textureManager = rosella.common.textureManager;
+
+        int textureId = textureManager.generateTextureId();
+        createTexture(
+                rosella.common,
+                rosella.renderer,
+                textureId,
+                rosella.renderer.swapchain.getSwapChainExtent().width(),
+                rosella.renderer.swapchain.getSwapChainExtent().height(), //FIXME: this might break on resize?
+                VK_FORMAT_B8G8R8A8_UNORM,
+                false,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        );
+        textureManager.setTextureSampler(
+                textureId,
+                "texSampler",
+                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT)
+        );
+        this.colourTexture = textureManager.getTexture(textureId);
+    }
+
+    public void createDepthTexture(Rosella rosella) {
+        TextureManager textureManager = rosella.common.textureManager;
+
+        int textureId = textureManager.generateTextureId();
+        createTexture(
+                rosella.common,
+                rosella.renderer,
+                textureId,
+                rosella.renderer.swapchain.getSwapChainExtent().width(),
+                rosella.renderer.swapchain.getSwapChainExtent().height(), //FIXME: this might break on resize?
+                VK_FORMAT_D32_SFLOAT,
+                true,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        );
+        textureManager.setTextureSampler(
+                textureId,
+                "texSampler",
+                new SamplerCreateInfo(TextureFilter.NEAREST, WrapMode.REPEAT)
+        );
+        this.depthTexture = textureManager.getTexture(textureId);
+    }
+
+    public static void createTexture(VkCommon common, Renderer renderer, int textureId, int width, int height, int imgFormat, boolean createDepthTexture, int extraImageUsage) {
+        Texture currentTexture = common.textureManager.getTexture(textureId);
+        if (currentTexture != null) {
+            if (currentTexture.getImageFormat() != imgFormat || currentTexture.getWidth() != width || currentTexture.getHeight() != height) {
+                currentTexture.getTextureImage().free(common.device, common.memory);
+            } else {
+                // we can use the old texture if it satisfies the requirements
+                return;
+            }
+        }
+        TextureImage textureImage;
+        if (!createDepthTexture) {
+            textureImage = createTextureImage(renderer, common, width, height, imgFormat, extraImageUsage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            textureImage.setView(VkUtils.createTextureImageView(common.device, imgFormat, textureImage.pointer()));
+        } else {
+            textureImage = createTextureImage(renderer, common, width, height, imgFormat, extraImageUsage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            textureImage.setView(VkUtils.createDepthTextureImageView(common.device, imgFormat, textureImage.pointer()));
+        }
+        common.textureManager.createTextureRaw(textureId, new Texture(imgFormat, width, height, textureImage, null));
+    }
+
+    public static TextureImage createTextureImage(Renderer renderer, VkCommon common, int width, int height, int imgFormat, int extraUsage, int layout) {
+        TextureImage image = VkUtils.createImage(
+                common.memory,
+                width,
+                height,
+                imgFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | extraUsage,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                Vma.VMA_MEMORY_USAGE_UNKNOWN // FIXME
+        );
+
+        VkUtils.transitionImageLayout(
+                renderer,
+                common.device,
+                image.pointer(),
+                imgFormat,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                layout
+        );
+
+        VkUtils.transitionImageLayout(
+                renderer,
+                common.device,
+                image.pointer(),
+                imgFormat,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+        );
+
+        return image;
     }
 }
 
