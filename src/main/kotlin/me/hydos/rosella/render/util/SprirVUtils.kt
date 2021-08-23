@@ -11,7 +11,7 @@ import java.nio.ByteBuffer
 
 var compiler: Long = 0
 
-fun compileShaderFile(shader: Resource, shaderType: ShaderType): SpirV {
+fun compileSprirV(shader: Resource, shaderType: ShaderType): SpirV {
     val source = shader.openStream().readBytes().decodeToString()
     return compileShader(shader.identifier.file, source, shaderType)
 }

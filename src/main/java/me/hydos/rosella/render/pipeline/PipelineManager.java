@@ -57,8 +57,9 @@ public class PipelineManager {
         long graphicsPipeline;
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            long vertShaderModule = pipeline.getShaderProgram().getVertShaderModule();
-            long fragShaderModule = pipeline.getShaderProgram().getFragShaderModule();
+            pipeline.getShaderProgram().compileShaders();
+            long vertShaderModule = pipeline.getShaderProgram().getVertexShader();
+            long fragShaderModule = pipeline.getShaderProgram().getFragmentShader();
 
             ByteBuffer entryPoint = stack.UTF8("main");
             VkPipelineShaderStageCreateInfo.Buffer shaderStages = VkPipelineShaderStageCreateInfo.callocStack(2, stack);
@@ -108,7 +109,7 @@ public class PipelineManager {
 
             VkPipelineLayoutCreateInfo pipelineLayoutInfo = VkPipelineLayoutCreateInfo.callocStack(stack)
                     .sType(VK10.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
-                    .pSetLayouts(stack.longs(pipeline.getShaderProgram().getRaw().getDescriptorSetLayout()));
+                    .pSetLayouts(stack.longs(pipeline.getShaderProgram().raw.getDescriptorSetLayout()));
 
             LongBuffer pPipelineLayout = stack.longs(VK10.VK_NULL_HANDLE);
             ok(VK10.vkCreatePipelineLayout(device.getRawDevice(), pipelineLayoutInfo, null, pPipelineLayout));

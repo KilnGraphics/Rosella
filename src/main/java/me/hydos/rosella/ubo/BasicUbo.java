@@ -39,7 +39,7 @@ public class BasicUbo<T> extends Ubo {
         this.common = common;
         this.dataProvider = uboDataProvider;
         this.reference = reference;
-        this.descSets = new DescriptorSets(shader.getRaw().getDescriptorPool());
+        this.descSets = new DescriptorSets(shader.raw.getDescriptorPool());
         this.images = new ArrayList<>(swapchain.getSwapChainImages().size());
         this.data = MemoryUtil.memAlloc(uboDataProvider.getSize());
     }

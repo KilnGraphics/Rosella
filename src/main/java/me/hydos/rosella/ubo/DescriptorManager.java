@@ -47,7 +47,7 @@ public class DescriptorManager {
         if (maxObjects <= activeDescriptorCount) {
             throw new RuntimeException("Too many Descriptor Sets are being used at once (max is " + activeDescriptorCount + ")");
         }
-        program.getRaw().createDescriptorSets(swapchain, LOGGER, textures, ubo);
+        program.raw.createDescriptorSets(swapchain, LOGGER, textures, ubo);
     }
 
     public void freeDescriptorSets(DescriptorSets set) {
