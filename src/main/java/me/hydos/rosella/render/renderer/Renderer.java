@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.function.LongConsumer;
 
 import static me.hydos.rosella.util.VkUtils.ok;
 import static org.lwjgl.vulkan.VK10.*;
@@ -228,7 +229,7 @@ public class Renderer {
         }
 
         vkDestroyRenderPass(rosella.common.device.getRawDevice(), mainRenderPass.getRawRenderPass(), null);
-        swapchain.getSwapChainImageViews().forEach(imageView ->
+        swapchain.getSwapChainImageViews().forEach((LongConsumer) imageView ->
                 vkDestroyImageView(
                         rosella.common.device.getRawDevice(),
                         imageView,

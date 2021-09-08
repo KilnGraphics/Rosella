@@ -52,8 +52,7 @@ dependencies {
     api("org.lwjgl", "lwjgl-xxhash")
 
     api("org.joml", "joml", "1.10.1")
-    api("it.unimi.dsi", "fastutil", "8.5.4")
-    api("com.google.code.gson", "gson", "2.8.7")
+    api("it.unimi.dsi", "fastutil", "8.2.1")
     api("org.apache.logging.log4j", "log4j-core", "2.14.1")
 
     runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
