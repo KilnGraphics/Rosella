@@ -15,14 +15,14 @@ class TextureSampler(private val createInfo: SamplerCreateInfo, device: VulkanDe
 
     init {
         MemoryStack.stackPush().use { stack ->
-            val samplerInfo = VkSamplerCreateInfo.callocStack(stack)
+            val samplerInfo = VkSamplerCreateInfo.calloc(stack)
                 .sType(VK10.VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO)
                 .magFilter(createInfo.filter.vkType)
                 .minFilter(createInfo.filter.vkType)
                 .addressModeU(createInfo.wrap.vkType)
                 .addressModeV(createInfo.wrap.vkType)
                 .addressModeW(createInfo.wrap.vkType)
-                .anisotropyEnable(true)
+                .anisotropyEnable(createInfo.filter == TextureFilter.LINEAR)
                 .maxAnisotropy(16.0f)
                 .borderColor(VK10.VK_BORDER_COLOR_INT_OPAQUE_BLACK)
                 .unnormalizedCoordinates(false)
