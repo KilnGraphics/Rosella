@@ -27,7 +27,6 @@ public class NamedID implements Comparable<NamedID> {
             ByteBuffer newBuffer = stack.malloc(stringBytes.length);
             newBuffer.put(0, stringBytes, 0, stringBytes.length);
             this.id = HashUtil.hash64(newBuffer);
-            System.out.println(name + " -> " + id);
         }
     }
 
