@@ -154,16 +154,16 @@ public class SerializedGraphBuilder {
                 this.lastBarrier = new MemoryBarrierOp(this.queueFamily);
                 this.lastBarrierSequenceNumber = sequenceNumber - 1;
 
-                if(this.prevOp.getNext() == null) {
-                    // This is the last operation so we will not need any new barriers afterwards
-                    this.lastBarrierSequenceNumber = Integer.MAX_VALUE;
-                }
-
                 if(this.prevOp == null) {
                     this.lastBarrier.insertAfter(this.ops);
                     this.ops = this.lastBarrier;
                 } else {
                     this.prevOp.insertAfter(this.lastBarrier);
+
+                    if(this.prevOp.getNext() == null) {
+                        // This is the last operation so we will not need any new barriers afterwards
+                        this.lastBarrierSequenceNumber = Integer.MAX_VALUE;
+                    }
                 }
             }
 
@@ -282,7 +282,9 @@ public class SerializedGraphBuilder {
         protected void complete() {
             boolean transfer = this.finalQueue != this.currentOwner.queueFamily;
 
-            this.currentBarrier.addBufferBarrier(this.buffer, this.lastAccessMask, this.lastStageMask, this.currentAccessMask, this.currentStageMask);
+            if(this.currentBarrier != null) {
+                this.currentBarrier.addBufferBarrier(this.buffer, this.lastAccessMask, this.lastStageMask, this.currentAccessMask, this.currentStageMask);
+            }
 
             if(transfer) {
                 this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferReleaseBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, this.finalQueue);
