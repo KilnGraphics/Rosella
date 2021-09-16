@@ -1,4 +1,4 @@
-package graphics.kiln.rosella.render_graph.ops;
+package graphics.kiln.rosella.render.graph.ops;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

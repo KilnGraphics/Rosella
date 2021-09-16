@@ -1,7 +1,7 @@
-package graphics.kiln.rosella.render_graph.ops;
+package graphics.kiln.rosella.render.graph.ops;
 
-import graphics.kiln.rosella.render_graph.resources.BufferReference;
-import graphics.kiln.rosella.render_graph.resources.ImageReference;
+import graphics.kiln.rosella.render.graph.resources.BufferReference;
+import graphics.kiln.rosella.render.graph.resources.ImageReference;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.lwjgl.vulkan.VK10;
 

@@ -1,11 +1,12 @@
-package graphics.kiln.rosella.render_graph.serialization;
+package graphics.kiln.rosella.render.graph.serialization;
 
-import graphics.kiln.rosella.render_graph.ops.AbstractOp;
-import graphics.kiln.rosella.render_graph.ops.MemoryBarrierOp;
-import graphics.kiln.rosella.render_graph.ops.UsageRegistry;
-import graphics.kiln.rosella.render_graph.resources.BufferRange;
-import graphics.kiln.rosella.render_graph.resources.BufferReference;
-import graphics.kiln.rosella.render_graph.resources.ImageReference;
+import graphics.kiln.rosella.render.graph.ops.AbstractOp;
+import graphics.kiln.rosella.render.graph.ops.MemoryBarrierOp;
+import graphics.kiln.rosella.render.graph.ops.UsageRegistry;
+import graphics.kiln.rosella.render.graph.resources.BufferRange;
+import graphics.kiln.rosella.render.graph.resources.BufferReference;
+import graphics.kiln.rosella.render.graph.resources.ImageReference;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
@@ -16,13 +17,18 @@ import org.lwjgl.vulkan.VK10;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SerializedGraphBuilder {
 
     private final ObjectArrayList<SerializationMeta> serializations = new ObjectArrayList<>();
+    private final AtomicLong nextSerializationID = new AtomicLong(0);
 
     private final Map<Long, BufferMeta> buffers = new Long2ObjectAVLTreeMap<>();
     private final Map<Long, ImageMeta> images = new Long2ObjectAVLTreeMap<>();
+
+    private final AtomicInteger nextSemaphoreID = new AtomicInteger(0);
 
     private int sequenceNumber = 1;
 
@@ -56,7 +62,13 @@ public class SerializedGraphBuilder {
         addSerialization(new SerializationMeta(queueFamily, ops));
     }
 
-    public void build() {
+    public SerializedGraph build() {
+        List<Serialization> builtSerializations = new ObjectArrayList<>();
+        for(SerializationMeta meta : this.serializations) {
+            builtSerializations.add(meta.convertToSerialization());
+        }
+
+        return new SerializedGraph(builtSerializations, this.nextSemaphoreID.get());
     }
 
     private void addSerialization(SerializationMeta meta) {
@@ -64,7 +76,17 @@ public class SerializedGraphBuilder {
         meta.process();
     }
 
+    private int addSemaphore() {
+        return this.nextSemaphoreID.getAndIncrement();
+    }
+
     private class SerializationMeta implements UsageRegistry {
+        private final long idMask;
+
+        private long dependencyMask;
+        private final List<Integer> waitSemaphores = new IntArrayList();
+        private final List<Integer> signalSemaphores = new IntArrayList();
+
         private final int queueFamily;
         private AbstractOp ops;
 
@@ -74,6 +96,9 @@ public class SerializedGraphBuilder {
         private int lastBarrierSequenceNumber = -1;
 
         private SerializationMeta(int queueFamily, AbstractOp ops) {
+            this.idMask = 1L << nextSerializationID.getAndIncrement();
+            this.dependencyMask = this.idMask;
+
             this.queueFamily = queueFamily;
             this.ops = ops;
         }
@@ -88,6 +113,21 @@ public class SerializedGraphBuilder {
                 this.prevOp = current;
                 current = current.getNext();
                 sequenceNumber++;
+            }
+        }
+
+        private Serialization convertToSerialization() {
+            return new Serialization(this.ops, this.waitSemaphores, this.signalSemaphores);
+        }
+
+        protected void insertDependency(SerializationMeta other) {
+            assert(other != this);
+
+            if((this.dependencyMask & other.idMask) == 0) {
+                this.dependencyMask |= other.dependencyMask;
+                int semaphore = addSemaphore();
+                other.signalSemaphores.add(semaphore);
+                this.waitSemaphores.add(semaphore);
             }
         }
 
@@ -140,6 +180,9 @@ public class SerializedGraphBuilder {
         protected void registerUsage(SerializationMeta meta) {
             if(this.firstAccess == null) {
                 this.firstAccess = meta;
+            }
+            if(this.lastAccess != null && this.lastAccess != meta) {
+                meta.insertDependency(this.lastAccess);
             }
             this.lastAccess = meta;
         }
