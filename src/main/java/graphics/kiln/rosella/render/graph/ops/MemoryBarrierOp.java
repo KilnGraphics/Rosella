@@ -9,6 +9,8 @@ import java.util.List;
 
 public class MemoryBarrierOp extends AbstractOp {
 
+    public final String TYPE_NAME = "MemoryBarrier";
+
     protected final int queueFamily;
 
     protected final List<Barrier> barriers = new ObjectArrayList<>();
@@ -72,6 +74,11 @@ public class MemoryBarrierOp extends AbstractOp {
     @Override
     public void record() {
 
+    }
+
+    @Override
+    protected String getJsonType() {
+        return TYPE_NAME;
     }
 
     protected record Barrier(int srcAccessMask, int srcStageMask, int dstAccessMask, int dstStageMask) {

@@ -1,5 +1,6 @@
 package graphics.kiln.rosella.render.graph.ops;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +32,14 @@ public abstract class AbstractOp {
     public abstract void registerResourceUsages(UsageRegistry registry);
 
     public abstract void record();
+
+    public JsonObject convertToJson() {
+        JsonObject result = new JsonObject();
+        result.addProperty("type", getJsonType());
+        return result;
+    }
+
+    protected abstract String getJsonType();
 
     private AbstractOp getLast(@Nullable AbstractOp avoid) {
         AbstractOp current = this;

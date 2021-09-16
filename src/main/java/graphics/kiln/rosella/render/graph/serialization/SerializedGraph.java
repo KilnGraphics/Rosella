@@ -24,6 +24,17 @@ public record SerializedGraph(
         JsonObject result = new JsonObject();
 
         result.add("buffers", generateJsonBuffers());
+        result.add("serializations", generateJsonSerializations());
+
+        return result;
+    }
+
+    private JsonArray generateJsonSerializations() {
+        JsonArray result = new JsonArray();
+
+        for(Serialization serialization : this.serializations) {
+            result.add(serialization.convertToJson());
+        }
 
         return result;
     }
@@ -31,11 +42,23 @@ public record SerializedGraph(
     private JsonArray generateJsonBuffers() {
         JsonArray result = new JsonArray();
 
-
+        for(BufferResource buffer : this.bufferResources.values()) {
+            result.add(buffer.convertToJson());
+        }
 
         return result;
     }
 
-    public record BufferResource(long id, Serialization firstUsed, Serialization lastUsed) {
+    public static record BufferResource(long id, Serialization firstUsed, Serialization lastUsed) {
+
+        JsonObject convertToJson() {
+            JsonObject result = new JsonObject();
+
+            result.addProperty("id", this.id);
+            result.addProperty("firstUsed", this.firstUsed.uuid());
+            result.addProperty("lastUsed", this.lastUsed.uuid());
+
+            return result;
+        }
     }
 }
