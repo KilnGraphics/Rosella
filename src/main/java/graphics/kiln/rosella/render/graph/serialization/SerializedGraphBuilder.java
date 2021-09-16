@@ -3,13 +3,16 @@ package graphics.kiln.rosella.render.graph.serialization;
 import graphics.kiln.rosella.render.graph.ops.AbstractOp;
 import graphics.kiln.rosella.render.graph.ops.MemoryBarrierOp;
 import graphics.kiln.rosella.render.graph.ops.UsageRegistry;
+import graphics.kiln.rosella.render.graph.resources.BufferAllocationRequest;
 import graphics.kiln.rosella.render.graph.resources.BufferRange;
 import graphics.kiln.rosella.render.graph.resources.BufferReference;
 import graphics.kiln.rosella.render.graph.resources.ImageReference;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.vulkan.EXTTransformFeedback;
 import org.lwjgl.vulkan.KHRAccelerationStructure;
 import org.lwjgl.vulkan.NVDeviceGeneratedCommands;
@@ -63,6 +66,13 @@ public class SerializedGraphBuilder {
     }
 
     public SerializedGraph build() {
+        for(BufferMeta buffer : this.buffers.values()) {
+            buffer.registerAllocations();
+        }
+        for(ImageMeta image : this.images.values()) {
+            image.registerAllocations();
+        }
+
         List<Serialization> builtSerializations = new ObjectArrayList<>();
         for(SerializationMeta meta : this.serializations) {
             builtSerializations.add(meta.convertToSerialization());
@@ -72,6 +82,8 @@ public class SerializedGraphBuilder {
     }
 
     private void addSerialization(SerializationMeta meta) {
+
+
         this.serializations.add(meta);
         meta.process();
     }
@@ -86,6 +98,9 @@ public class SerializedGraphBuilder {
         private long dependencyMask;
         private final List<Integer> waitSemaphores = new IntArrayList();
         private final List<Integer> signalSemaphores = new IntArrayList();
+
+        private final List<BufferAllocationRequest> bufferAllocations = new ObjectArrayList<>();
+        private final List<Long> resourceFrees = new LongArrayList();
 
         private final int queueFamily;
         private AbstractOp ops;
@@ -117,7 +132,7 @@ public class SerializedGraphBuilder {
         }
 
         private Serialization convertToSerialization() {
-            return new Serialization(this.ops, this.waitSemaphores, this.signalSemaphores);
+            return new Serialization(this.ops, this.waitSemaphores, this.signalSemaphores, this.bufferAllocations);
         }
 
         protected void insertDependency(SerializationMeta other) {
@@ -171,6 +186,14 @@ public class SerializedGraphBuilder {
         public void registerImage(ImageReference image, int accessMask, int stageMask, int initialLayout, int finalLayout) {
 
         }
+
+        protected void addBufferAllocation(BufferAllocationRequest allocation) {
+            this.bufferAllocations.add(allocation);
+        }
+
+        protected void addResourceFree(long id) {
+            this.resourceFrees.add(id);
+        }
     }
 
     protected class ResourceMeta {
@@ -186,10 +209,14 @@ public class SerializedGraphBuilder {
             }
             this.lastAccess = meta;
         }
+
+        protected void registerAllocations() {
+        }
     }
 
     protected class BufferMeta extends ResourceMeta {
         private final BufferReference buffer;
+        private final BufferAllocationRequest allocationRequest;
 
         private MemoryBarrierOp currentBarrier = null;
         private SerializationMeta currentOwner = null;
@@ -203,6 +230,12 @@ public class SerializedGraphBuilder {
 
         public BufferMeta(@NotNull BufferReference buffer) {
             this.buffer = buffer;
+            this.allocationRequest = null;
+        }
+
+        public BufferMeta(@NotNull BufferReference buffer, @Nullable BufferAllocationRequest allocationRequest) {
+            this.buffer = buffer;
+            this.allocationRequest = allocationRequest;
         }
 
         protected void registerUsage(SerializationMeta meta, BufferRange range, int accessMask, int stageMask) {
@@ -248,6 +281,14 @@ public class SerializedGraphBuilder {
             this.currentSequenceNumber = sequenceNumber;
 
             registerUsage(meta);
+        }
+
+        @Override
+        protected void registerAllocations() {
+            if(this.allocationRequest != null) {
+                this.firstAccess.addBufferAllocation(this.allocationRequest);
+                this.lastAccess.addResourceFree(this.buffer.getID());
+            }
         }
     }
 

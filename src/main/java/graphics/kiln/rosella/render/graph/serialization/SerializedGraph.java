@@ -1,5 +1,7 @@
 package graphics.kiln.rosella.render.graph.serialization;
 
+import com.google.gson.JsonObject;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -16,5 +18,11 @@ public class SerializedGraph {
 
     public List<Serialization> getSerializations() {
         return this.serializations;
+    }
+
+    public JsonObject convertToJson() {
+        JsonObject object = new JsonObject();
+
+        return object;
     }
 }
