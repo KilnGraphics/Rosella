@@ -35,21 +35,17 @@ public class SerializedGraphBuilder {
 
     private int sequenceNumber = 1;
 
-    public BufferReference addLocalBuffer(long size, int usageFlags) {
+    public BufferReference addBuffer(int initialQueue, int finalQueue) {
         BufferReference buffer = new BufferReference();
-        buffers.put(buffer.getID(), new BufferMeta(buffer));
+        buffers.put(buffer.getID(), new BufferMeta(buffer, initialQueue, finalQueue));
         return buffer;
     }
 
-    public BufferReference addExternalBuffer(int initialQueue, int finalQueue) {
-        return null;
+    public BufferReference addLocalBuffer() {
+        return addBuffer(-1, -2);
     }
 
-    public ImageReference addLocalImage() {
-        return null;
-    }
-
-    public ImageReference addExternalImage(int initialQueue, int finalQueue) {
+    public ImageReference addImage() {
         return null;
     }
 
@@ -67,10 +63,10 @@ public class SerializedGraphBuilder {
 
     public SerializedGraph build() {
         for(BufferMeta buffer : this.buffers.values()) {
-            buffer.registerAllocations();
+            buffer.complete();
         }
         for(ImageMeta image : this.images.values()) {
-            image.registerAllocations();
+            image.complete();
         }
 
         List<Serialization> builtSerializations = new ObjectArrayList<>();
@@ -78,7 +74,12 @@ public class SerializedGraphBuilder {
             builtSerializations.add(meta.convertToSerialization());
         }
 
-        return new SerializedGraph(builtSerializations, this.nextSemaphoreID.get());
+        Map<Long, SerializedGraph.BufferResource> bufferResources = new Long2ObjectAVLTreeMap<>();
+        for(BufferMeta buffer : this.buffers.values()) {
+            bufferResources.put(buffer.buffer.getID(), buffer.convertToResource());
+        }
+
+        return new SerializedGraph(builtSerializations, bufferResources, this.nextSemaphoreID.get());
     }
 
     private void addSerialization(SerializationMeta meta) {
@@ -95,12 +96,11 @@ public class SerializedGraphBuilder {
     private class SerializationMeta implements UsageRegistry {
         private final long idMask;
 
+        private Serialization generatedSerialization;
+
         private long dependencyMask;
         private final List<Integer> waitSemaphores = new IntArrayList();
         private final List<Integer> signalSemaphores = new IntArrayList();
-
-        private final List<BufferAllocationRequest> bufferAllocations = new ObjectArrayList<>();
-        private final List<Long> resourceFrees = new LongArrayList();
 
         private final int queueFamily;
         private AbstractOp ops;
@@ -132,7 +132,10 @@ public class SerializedGraphBuilder {
         }
 
         private Serialization convertToSerialization() {
-            return new Serialization(this.ops, this.waitSemaphores, this.signalSemaphores, this.bufferAllocations);
+            if(this.generatedSerialization == null) {
+                this.generatedSerialization = new Serialization(this.queueFamily, this.ops, this.waitSemaphores, this.signalSemaphores);
+            }
+            return this.generatedSerialization;
         }
 
         protected void insertDependency(SerializationMeta other) {
@@ -186,14 +189,6 @@ public class SerializedGraphBuilder {
         public void registerImage(ImageReference image, int accessMask, int stageMask, int initialLayout, int finalLayout) {
 
         }
-
-        protected void addBufferAllocation(BufferAllocationRequest allocation) {
-            this.bufferAllocations.add(allocation);
-        }
-
-        protected void addResourceFree(long id) {
-            this.resourceFrees.add(id);
-        }
     }
 
     protected class ResourceMeta {
@@ -210,13 +205,14 @@ public class SerializedGraphBuilder {
             this.lastAccess = meta;
         }
 
-        protected void registerAllocations() {
+        protected void complete() {
         }
     }
 
     protected class BufferMeta extends ResourceMeta {
         private final BufferReference buffer;
-        private final BufferAllocationRequest allocationRequest;
+        private final int initialQueue;
+        private final int finalQueue;
 
         private MemoryBarrierOp currentBarrier = null;
         private SerializationMeta currentOwner = null;
@@ -228,18 +224,17 @@ public class SerializedGraphBuilder {
         private int lastAccessMask = 0;
         private int lastStageMask = 0;
 
-        public BufferMeta(@NotNull BufferReference buffer) {
+        public BufferMeta(@NotNull BufferReference buffer, int initialQueue, int finalQueue) {
             this.buffer = buffer;
-            this.allocationRequest = null;
-        }
-
-        public BufferMeta(@NotNull BufferReference buffer, @Nullable BufferAllocationRequest allocationRequest) {
-            this.buffer = buffer;
-            this.allocationRequest = allocationRequest;
+            this.initialQueue = initialQueue;
+            this.finalQueue = finalQueue;
         }
 
         protected void registerUsage(SerializationMeta meta, BufferRange range, int accessMask, int stageMask) {
             if(this.currentOwner == null) {
+                if(initialQueue != -1 && initialQueue != meta.queueFamily) {
+                    // TODO insert initial transfer
+                }
                 this.currentOwner = meta;
                 this.lastOwner = meta;
             }
@@ -284,11 +279,22 @@ public class SerializedGraphBuilder {
         }
 
         @Override
-        protected void registerAllocations() {
-            if(this.allocationRequest != null) {
-                this.firstAccess.addBufferAllocation(this.allocationRequest);
-                this.lastAccess.addResourceFree(this.buffer.getID());
+        protected void complete() {
+            boolean transfer = this.finalQueue != this.currentOwner.queueFamily;
+
+            this.currentBarrier.addBufferBarrier(this.buffer, this.lastAccessMask, this.lastStageMask, this.currentAccessMask, this.currentStageMask);
+
+            if(transfer) {
+                this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferReleaseBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, this.finalQueue);
+                // TODO add acquire op
+            } else {
+                // TODO make this more fine grained
+                this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, VK10.VK_ACCESS_MEMORY_READ_BIT | VK10.VK_ACCESS_MEMORY_WRITE_BIT, VK10.VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
             }
+        }
+
+        protected SerializedGraph.BufferResource convertToResource() {
+            return new SerializedGraph.BufferResource(this.buffer.getID(), this.firstAccess.generatedSerialization, this.lastAccess.generatedSerialization);
         }
     }
 

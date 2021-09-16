@@ -1,28 +1,41 @@
 package graphics.kiln.rosella.render.graph.serialization;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-public class SerializedGraph {
+public record SerializedGraph(
+        List<Serialization> serializations,
+        Map<Long, BufferResource> bufferResources,
+        int semaphoreCount) {
 
-    private final List<Serialization> serializations;
-
-    private final int semaphoreCount;
-
-    public SerializedGraph(List<Serialization> serializations, int semaphoreCount) {
+    public SerializedGraph(@NotNull List<Serialization> serializations, @NotNull Map<Long, BufferResource> bufferResources, int semaphoreCount) {
         this.serializations = Collections.unmodifiableList(serializations);
         this.semaphoreCount = semaphoreCount;
-    }
 
-    public List<Serialization> getSerializations() {
-        return this.serializations;
+        this.bufferResources = Collections.unmodifiableMap(bufferResources);
     }
 
     public JsonObject convertToJson() {
-        JsonObject object = new JsonObject();
+        JsonObject result = new JsonObject();
 
-        return object;
+        result.add("buffers", generateJsonBuffers());
+
+        return result;
+    }
+
+    private JsonArray generateJsonBuffers() {
+        JsonArray result = new JsonArray();
+
+
+
+        return result;
+    }
+
+    public record BufferResource(long id, Serialization firstUsed, Serialization lastUsed) {
     }
 }
