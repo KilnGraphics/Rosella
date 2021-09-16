@@ -16,11 +16,13 @@ public class GraphTest {
 
         AbstractOp ops = new CopyBufferOp().setSrcBuffer(bufferA).setDstBuffer(bufferB);
         AbstractOp lastOp = ops;
-        lastOp.insertAfter(new CopyBufferOp().setSrcBuffer(bufferB).setDstBuffer(bufferB));
+        lastOp = lastOp.insertAfter(new CopyBufferOp().setSrcBuffer(bufferB).setDstBuffer(bufferB));
 
         builder.addSerialization(0, ops);
 
         ops = new CopyBufferOp().setSrcBuffer(bufferA).setDstBuffer(bufferC);
+        lastOp = ops;
+        lastOp = lastOp.insertAfter(new CopyBufferOp().setSrcBuffer(bufferA).setDstBuffer(bufferB));
 
         builder.addSerialization(1, ops);
 

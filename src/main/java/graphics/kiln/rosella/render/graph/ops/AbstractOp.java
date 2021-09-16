@@ -15,7 +15,7 @@ public abstract class AbstractOp {
         return this.next;
     }
 
-    public void insertAfter(@NotNull AbstractOp next) {
+    public AbstractOp insertAfter(@NotNull AbstractOp next) {
         AbstractOp last = next.getLast(this);
         if(last == null) {
             throw new RuntimeException("Illegal insertion");
@@ -23,6 +23,8 @@ public abstract class AbstractOp {
 
         last.next = this.next;
         this.next = next;
+
+        return last;
     }
 
     public AbstractOp getLast() {
