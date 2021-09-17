@@ -34,14 +34,15 @@ public class BufferAccessHistory {
     }
 
     public boolean requiresBarrierAfter(@NotNull BufferAccessSet set) {
-        return this.postQueueFamily != set.queueFamily || isWriteAccess(this.postAccessMask) || isWriteAccess(set.accessMask);
+        return (this.postQueueFamily != set.queueFamily && this.postQueueFamily != -1) || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(set.accessMask);
     }
 
     public boolean requiresBarrierAfter(@NotNull BufferAccessHistory history) {
+        // TODO handle -1 queue family
         if(history.hasBarrier) {
-            return this.postQueueFamily != history.preQueueFamily || isWriteAccess(this.postAccessMask) || isWriteAccess(history.preAccessMask);
+            return this.postQueueFamily != history.preQueueFamily || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(history.preAccessMask);
         } else {
-            return this.postQueueFamily != history.postQueueFamily || isWriteAccess(this.postAccessMask) || isWriteAccess(history.postAccessMask);
+            return this.postQueueFamily != history.postQueueFamily || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(history.postAccessMask);
         }
     }
 
@@ -55,6 +56,7 @@ public class BufferAccessHistory {
             return this.currentBarrier;
 
         } else {
+            this.postQueueFamily = set.queueFamily;
             this.postAccessMask |= set.accessMask;
             this.postStageMask |= set.stageMask;
             return null;

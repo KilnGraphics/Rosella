@@ -3,10 +3,7 @@ package graphics.kiln.rosella.render.graph.serialization;
 import graphics.kiln.rosella.render.graph.ops.AbstractOp;
 import graphics.kiln.rosella.render.graph.ops.MemoryBarrierOp;
 import graphics.kiln.rosella.render.graph.ops.UsageRegistry;
-import graphics.kiln.rosella.render.graph.resources.BufferAllocationRequest;
-import graphics.kiln.rosella.render.graph.resources.BufferRange;
-import graphics.kiln.rosella.render.graph.resources.BufferReference;
-import graphics.kiln.rosella.render.graph.resources.ImageReference;
+import graphics.kiln.rosella.render.graph.resources.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -176,8 +173,9 @@ public class SerializedGraphBuilder {
         }
 
         @Override
-        public void registerBuffer(BufferReference buffer, int accessMask, int stageMask, BufferRange range) {
-            buffers.get(buffer.getID()).registerUsage(this, range, accessMask, stageMask);
+        public void registerBuffer(BufferReference buffer, BufferAccessSet access) {
+            access.queueFamily = this.queueFamily;
+            buffers.get(buffer.getID()).registerUsage(this, access);
         }
 
         @Override
@@ -214,15 +212,13 @@ public class SerializedGraphBuilder {
         private final int initialQueue;
         private final int finalQueue;
 
-        private MemoryBarrierOp currentBarrier = null;
-        private SerializationMeta currentOwner = null;
-        private int currentSequenceNumber = 0;
-        private int currentAccessMask = 0;
-        private int currentStageMask = 0;
+        private MemoryBarrierOp currentBarrierOp = null;
+        private BufferAccessHistory.BarrierRequirements currentBarrier = null;
 
-        private SerializationMeta lastOwner = null;
-        private int lastAccessMask = 0;
-        private int lastStageMask = 0;
+        private SerializationMeta currentOwner = null;
+        private int currentSequenceNumber = -1;
+
+        private final BufferAccessHistory history = new BufferAccessHistory();
 
         public BufferMeta(@NotNull BufferReference buffer, int initialQueue, int finalQueue) {
             this.buffer = buffer;
@@ -230,69 +226,47 @@ public class SerializedGraphBuilder {
             this.finalQueue = finalQueue;
         }
 
-        protected void registerUsage(SerializationMeta meta, BufferRange range, int accessMask, int stageMask) {
+        protected void registerUsage(SerializationMeta meta, BufferAccessSet access) {
             if(this.currentOwner == null) {
-                if(initialQueue != -1 && initialQueue != meta.queueFamily) {
-                    // TODO insert initial transfer
-                }
                 this.currentOwner = meta;
-                this.lastOwner = meta;
             }
 
-            final boolean transfer = this.currentOwner.queueFamily != meta.queueFamily;
+            BufferAccessHistory.BarrierRequirements newBarrier = this.history.addAfter(access);
+            if(newBarrier != null) {
+                commitCurrentBarrier();
 
-            // A barrier is only required if a transfer is happening or if either the previous or current access is a write but not if this is the first access to the resource
-            if(transfer || isWriteAccess(this.currentAccessMask) || (isWriteAccess(accessMask) && this.currentAccessMask != 0)) {
-
-                if(this.currentBarrier != null) {
-                    if(this.lastOwner.queueFamily != this.currentOwner.queueFamily) {
-                        // Last barrier was a queue transfer
-                        this.currentBarrier.addBufferAcquireBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, this.lastOwner.queueFamily);
-                    } else {
-                        this.currentBarrier.addBufferBarrier(this.buffer, this.lastAccessMask, this.lastStageMask, this.currentAccessMask, this.currentStageMask);
-                    }
+                if(newBarrier.requiresTransfer()) {
+                    newBarrier.recordRelease(this.currentOwner.insertBarrierOp(this.currentSequenceNumber), this.buffer);
                 }
 
-                if(transfer) {
-                    // Need to add an additional barrier for the queue transfer
-                    this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferReleaseBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, meta.queueFamily);
-                    this.lastOwner = this.currentOwner;
-                }
-                this.currentBarrier = meta.insertBarrierOp(this.currentSequenceNumber);
-
-                this.lastAccessMask = this.currentAccessMask;
-                this.lastStageMask = this.currentStageMask;
-
-                this.currentOwner = meta;
-                this.currentAccessMask = accessMask;
-                this.currentStageMask = stageMask;
-
-            } else {
-                // Accumulate accesses
-                this.currentAccessMask |= accessMask;
-                this.currentStageMask |= stageMask;
+                this.currentBarrier = newBarrier;
+                this.currentBarrierOp = meta.insertBarrierOp(this.currentSequenceNumber);
             }
 
+            this.currentOwner = meta;
             this.currentSequenceNumber = sequenceNumber;
 
             registerUsage(meta);
         }
 
+        private void commitCurrentBarrier() {
+            if(this.currentBarrier != null) {
+                this.currentBarrier.commit();
+                if(this.currentBarrier.requiresTransfer()) {
+                    this.currentBarrier.recordAcquire(this.currentBarrierOp, this.buffer);
+                } else {
+                    this.currentBarrier.record(this.currentBarrierOp, this.buffer);
+                }
+                this.currentBarrier = null;
+                this.currentBarrierOp = null;
+            }
+        }
+
         @Override
         protected void complete() {
-            boolean transfer = this.finalQueue != this.currentOwner.queueFamily;
+            commitCurrentBarrier();
 
-            if(this.currentBarrier != null) {
-                this.currentBarrier.addBufferBarrier(this.buffer, this.lastAccessMask, this.lastStageMask, this.currentAccessMask, this.currentStageMask);
-            }
-
-            if(transfer) {
-                this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferReleaseBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, this.finalQueue);
-                // TODO add acquire op
-            } else {
-                // TODO make this more fine grained
-                this.currentOwner.insertBarrierOp(this.currentSequenceNumber).addBufferBarrier(this.buffer, this.currentAccessMask, this.currentStageMask, VK10.VK_ACCESS_MEMORY_READ_BIT | VK10.VK_ACCESS_MEMORY_WRITE_BIT, VK10.VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-            }
+            // TODO add chad barrier
         }
 
         protected SerializedGraph.BufferResource convertToResource() {

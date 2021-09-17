@@ -1,5 +1,6 @@
 package graphics.kiln.rosella.render.graph.ops;
 
+import graphics.kiln.rosella.render.graph.resources.BufferAccessSet;
 import graphics.kiln.rosella.render.graph.resources.BufferRange;
 import graphics.kiln.rosella.render.graph.resources.BufferReference;
 import org.lwjgl.vulkan.VK10;
@@ -31,11 +32,19 @@ public class CopyBufferOp extends AbstractOp {
     public void registerResourceUsages(UsageRegistry registry) {
         assert(this.srcBuffer != null && this.dstBuffer != null);
 
+        BufferAccessSet access = new BufferAccessSet();
+
         if(this.srcBuffer == this.dstBuffer) {
-            registry.registerBuffer(this.srcBuffer, VK10.VK_ACCESS_TRANSFER_READ_BIT | VK10.VK_ACCESS_TRANSFER_WRITE_BIT, VK10.VK_PIPELINE_STAGE_TRANSFER_BIT, new BufferRange(0, VK10.VK_WHOLE_SIZE));
+            access.accessMask = VK10.VK_ACCESS_TRANSFER_READ_BIT | VK10.VK_ACCESS_TRANSFER_WRITE_BIT;
+            access.stageMask = VK10.VK_PIPELINE_STAGE_TRANSFER_BIT;
+            registry.registerBuffer(this.srcBuffer, access);
         } else {
-            registry.registerBuffer(this.srcBuffer, VK10.VK_ACCESS_TRANSFER_READ_BIT, VK10.VK_PIPELINE_STAGE_TRANSFER_BIT, new BufferRange(0, VK10.VK_WHOLE_SIZE));
-            registry.registerBuffer(this.dstBuffer, VK10.VK_ACCESS_TRANSFER_WRITE_BIT, VK10.VK_PIPELINE_STAGE_TRANSFER_BIT, new BufferRange(0, VK10.VK_WHOLE_SIZE));
+            access.accessMask = VK10.VK_ACCESS_TRANSFER_READ_BIT;
+            access.stageMask = VK10.VK_PIPELINE_STAGE_TRANSFER_BIT;
+            registry.registerBuffer(this.srcBuffer, access);
+
+            access.accessMask = VK10.VK_ACCESS_TRANSFER_WRITE_BIT;
+            registry.registerBuffer(this.dstBuffer, access);
         }
     }
 

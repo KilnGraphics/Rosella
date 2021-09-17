@@ -1,6 +1,6 @@
 package graphics.kiln.rosella.render.graph.ops;
 
-import graphics.kiln.rosella.render.graph.resources.BufferRange;
+import graphics.kiln.rosella.render.graph.resources.BufferAccessSet;
 import graphics.kiln.rosella.render.graph.resources.BufferReference;
 import graphics.kiln.rosella.render.graph.resources.ImageReference;
 
@@ -8,7 +8,7 @@ public interface UsageRegistry {
 
     void registerBuffer(BufferReference buffer);
 
-    void registerBuffer(BufferReference buffer, int accessMask, int stageMask, BufferRange range);
+    void registerBuffer(BufferReference buffer, BufferAccessSet access);
 
     void registerImage(ImageReference image);
 
