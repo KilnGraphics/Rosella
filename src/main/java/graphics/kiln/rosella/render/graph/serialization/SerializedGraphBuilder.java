@@ -6,10 +6,9 @@ import graphics.kiln.rosella.render.graph.ops.UsageRegistry;
 import graphics.kiln.rosella.render.graph.resources.*;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.vulkan.EXTTransformFeedback;
 import org.lwjgl.vulkan.KHRAccelerationStructure;
 import org.lwjgl.vulkan.NVDeviceGeneratedCommands;
@@ -17,6 +16,7 @@ import org.lwjgl.vulkan.VK10;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -25,6 +25,7 @@ public class SerializedGraphBuilder {
     private final ObjectArrayList<SerializationMeta> serializations = new ObjectArrayList<>();
     private final AtomicLong nextSerializationID = new AtomicLong(0);
 
+    private final Set<Long> events = new LongOpenHashSet();
     private final Map<Long, BufferMeta> buffers = new Long2ObjectAVLTreeMap<>();
     private final Map<Long, ImageMeta> images = new Long2ObjectAVLTreeMap<>();
 
@@ -44,6 +45,12 @@ public class SerializedGraphBuilder {
 
     public ImageReference addImage() {
         return null;
+    }
+
+    public EventReference addEvent() {
+        EventReference event = new EventReference();
+        this.events.add(event.getID());
+        return event;
     }
 
     public void addSerialization(int queueFamily, AbstractOp ops) {

@@ -4,13 +4,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class ResourceReference {
+public abstract class ObjectReference {
     private static final AtomicLong nextID = new AtomicLong(1);
 
-    public final VulkanResourceType type;
+    public final VulkanObjectType type;
     public final long id;
 
-    protected ResourceReference(@NotNull VulkanResourceType type) {
+    protected ObjectReference(@NotNull VulkanObjectType type) {
         this.type = type;
         this.id = nextID.getAndIncrement();
     }
@@ -19,7 +19,7 @@ public abstract class ResourceReference {
         return this.id;
     }
 
-    public VulkanResourceType getType() {
+    public VulkanObjectType getType() {
         return this.type;
     }
 

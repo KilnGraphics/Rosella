@@ -1,8 +1,8 @@
 package graphics.kiln.rosella.render.graph.resources;
 
-public class ImageReference extends ResourceReference {
+public class ImageReference extends ObjectReference {
 
     public ImageReference() {
-        super(VulkanResourceType.IMAGE);
+        super(VulkanObjectType.IMAGE);
     }
 }
