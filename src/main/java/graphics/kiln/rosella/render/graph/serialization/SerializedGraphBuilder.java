@@ -236,6 +236,7 @@ public class SerializedGraphBuilder {
                 commitCurrentBarrier();
 
                 if(newBarrier.requiresTransfer()) {
+                    // If we do a transfer the last op must've been on a different submission so the currentOwner can be used
                     newBarrier.recordRelease(this.currentOwner.insertBarrierOp(this.currentSequenceNumber), this.buffer);
                 }
 

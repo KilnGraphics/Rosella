@@ -1,5 +1,7 @@
 package graphics.kiln.rosella.render.graph.ops;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import graphics.kiln.rosella.render.graph.resources.BufferReference;
 import graphics.kiln.rosella.render.graph.resources.ImageReference;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -69,6 +71,40 @@ public class MemoryBarrierOp extends AbstractOp {
         for(ImageBarrier barrier : this.imageBarriers) {
             registry.registerImage(barrier.image());
         }
+    }
+
+    @Override
+    public JsonObject convertToJson() {
+        JsonObject result = super.convertToJson();
+
+        JsonArray globalBarriers = new JsonArray();
+        for(Barrier barrier : this.barriers) {
+            JsonObject jsonBarrier = new JsonObject();
+            jsonBarrier.addProperty("srcAccessMask", barrier.srcAccessMask);
+            jsonBarrier.addProperty("srcStageMask", barrier.srcStageMask);
+            jsonBarrier.addProperty("dstAccessMask", barrier.dstAccessMask);
+            jsonBarrier.addProperty("dstStageMask", barrier.dstStageMask);
+            globalBarriers.add(jsonBarrier);
+        }
+        result.add("globalBarriers", globalBarriers);
+
+        JsonArray bufferBarriers = new JsonArray();
+        for(BufferBarrier barrier : this.bufferBarriers) {
+            JsonObject jsonBarrier = new JsonObject();
+            jsonBarrier.addProperty("buffer", barrier.buffer.getID());
+            jsonBarrier.addProperty("offset", barrier.offset);
+            jsonBarrier.addProperty("size", barrier.size);
+            jsonBarrier.addProperty("srcQueue", barrier.srcQueue);
+            jsonBarrier.addProperty("srcAccessMask", barrier.srcAccessMask);
+            jsonBarrier.addProperty("srcStageMask", barrier.srcStageMask);
+            jsonBarrier.addProperty("dstQueue", barrier.dstQueue);
+            jsonBarrier.addProperty("dstAccessMask", barrier.dstAccessMask);
+            jsonBarrier.addProperty("dstStageMask", barrier.dstStageMask);
+            bufferBarriers.add(jsonBarrier);
+        }
+        result.add("bufferBarriers", bufferBarriers);
+
+        return result;
     }
 
     @Override

@@ -34,10 +34,16 @@ public class BufferAccessHistory {
     }
 
     public boolean requiresBarrierAfter(@NotNull BufferAccessSet set) {
-        return (this.postQueueFamily != set.queueFamily && this.postQueueFamily != -1) || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(set.accessMask);
+        if(this.postQueueFamily == -1) {
+            return false;
+        }
+        return (this.postQueueFamily != set.queueFamily) || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(set.accessMask);
     }
 
     public boolean requiresBarrierAfter(@NotNull BufferAccessHistory history) {
+        if(this.postQueueFamily == -1) {
+            return false;
+        }
         // TODO handle -1 queue family
         if(history.hasBarrier) {
             return this.postQueueFamily != history.preQueueFamily || (isWriteAccess(this.postAccessMask) && this.postAccessMask != 0) || isWriteAccess(history.preAccessMask);
@@ -145,15 +151,11 @@ public class BufferAccessHistory {
         }
 
         public boolean requiresTransfer() {
-            if(this.isCommitted) {
-                return this.srcQueueFamily != this.dstQueueFamily;
-            } else {
-                return this.srcQueueFamily != postQueueFamily;
-            }
+            return this.srcQueueFamily != getDstQueueFamily();
         }
 
         public void record(MemoryBarrierOp op, BufferReference buffer) {
-            op.addBufferBarrier(buffer, this.srcAccessMask, this.srcStageMask, this.dstAccessMask, this.dstStageMask);
+            op.addBufferBarrier(buffer, this.srcAccessMask, this.srcStageMask, getDstAccessMask(), getDstStageMask());
         }
 
         public void record(MemoryBarrierOp release, MemoryBarrierOp acquire, BufferReference buffer) {
@@ -162,11 +164,35 @@ public class BufferAccessHistory {
         }
 
         public void recordRelease(MemoryBarrierOp op, BufferReference buffer) {
-            op.addBufferReleaseBarrier(buffer, this.srcAccessMask, this.srcStageMask, this.dstQueueFamily);
+            op.addBufferReleaseBarrier(buffer, this.srcAccessMask, this.srcStageMask, getDstQueueFamily());
         }
 
         public void recordAcquire(MemoryBarrierOp op, BufferReference buffer) {
-            op.addBufferAcquireBarrier(buffer, this.dstAccessMask, this.dstStageMask, this.srcQueueFamily);
+            op.addBufferAcquireBarrier(buffer, getDstAccessMask(), getDstStageMask(), this.srcQueueFamily);
+        }
+
+        private int getDstQueueFamily() {
+            if(this.isCommitted) {
+                return this.dstQueueFamily;
+            } else {
+                return postQueueFamily;
+            }
+        }
+
+        private int getDstAccessMask() {
+            if(this.isCommitted) {
+                return this.dstAccessMask;
+            } else {
+                return postAccessMask;
+            }
+        }
+
+        private int getDstStageMask() {
+            if(this.isCommitted) {
+                return this.dstStageMask;
+            } else {
+                return postStageMask;
+            }
         }
     }
 
