@@ -25,7 +25,9 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
 
     public void insert(@Nullable T newState, @NotNull int[] regionStart, @NotNull int[] regionEnd, @Nullable BiConsumer<Partition, T> transitionFunction) {
         if(this.partitionList == null) {
-            this.partitionList = new Partition(newState, regionStart.clone(), regionEnd.clone());
+            if(newState != null) {
+                this.partitionList = new Partition(newState, regionStart.clone(), regionEnd.clone());
+            }
         } else {
             this.partitionList.insert(null, newState, regionStart.clone(), regionEnd.clone(), transitionFunction);
         }
@@ -44,18 +46,19 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
     public class Partition {
         private Partition next = null;
 
+        @NotNull
         private final T state;
 
         private final int[] start;
         private final int[] end;
 
-        protected Partition(T state, int[] start, int[] end) {
+        protected Partition(@NotNull T state, int[] start, int[] end) {
             this.state = state;
             this.start = start;
             this.end = end;
         }
 
-        protected Partition(T state, int[] start, int[] end, Partition next) {
+        protected Partition(@NotNull T state, int[] start, int[] end, Partition next) {
             this.next = next;
 
             this.state = state;
@@ -92,7 +95,6 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
         }
 
         protected void insert(Partition previous, T otherState, int[] otherStart, int[] otherEnd, BiConsumer<Partition, T> transitionFunction) {
-            final boolean stateCompatible = (this.state == null && otherState == null) || (this.state != null && this.state.equals(otherState));
             Partition insertAfter = this;
 
             if(this.intersects(otherStart, otherEnd)) {
@@ -129,10 +131,10 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
                 previous.next = next;
                 insertAfter = previous;
 
-                if(!stateCompatible && transitionFunction != null) {
+                if(!this.state.equals(otherState) && transitionFunction != null) {
                     transitionFunction.accept(this, otherState);
                 }
-            } else if(stateCompatible){
+            } else if(this.state.equals(otherState)){
                 // Test if merger is possible
                 boolean merge = false;
                 for(int i = 0; i < dimensionCount && !merge; i++) {
@@ -161,7 +163,9 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
             if(insertAfter.next != null) {
                 insertAfter.next.insert(this, otherState, otherStart, otherEnd, transitionFunction);
             } else {
-                insertAfter.next = new Partition(otherState, otherStart, otherEnd);
+                if(otherState != null) {
+                    insertAfter.next = new Partition(otherState, otherStart, otherEnd);
+                }
             }
         }
     }
