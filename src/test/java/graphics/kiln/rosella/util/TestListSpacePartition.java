@@ -67,6 +67,7 @@ public class TestListSpacePartition {
         assertTrue(expectedRegions.isEmpty());
 
         list.clear();
+        called.set(false);
         list.insert(0, new int[]{0, 0}, new int[]{2, 2}, (a, b) -> fail());
         list.insert(0, new int[]{5, 5}, new int[]{100, 100}, (a, b) -> fail());
         list.insert(1, new int[]{1, 1}, new int[]{4, 4}, (old, v) -> {
@@ -78,6 +79,7 @@ public class TestListSpacePartition {
             assertEquals(1, (int) v);
             called.set(true);
         });
+        assertTrue(called.get());
 
         expectedRegions.add(new Region2D(0, 1, 0, 2));
         expectedRegions.add(new Region2D(1, 2, 0, 1));
@@ -91,6 +93,7 @@ public class TestListSpacePartition {
         assertTrue(expectedRegions.isEmpty());
 
         list.clear();
+        called.set(false);
         list.insert(0, new int[]{0, 0}, new int[]{3, 3}, (a, b) -> fail());
         list.insert(1, new int[]{1, 1}, new int[]{2, 2}, (old, v) -> {
             assertEquals(0, (int) old.getState());
@@ -101,12 +104,30 @@ public class TestListSpacePartition {
             assertEquals(1, (int) v);
             called.set(true);
         });
+        assertTrue(called.get());
 
         expectedRegions.add(new Region2D(0, 1, 0, 3));
         expectedRegions.add(new Region2D(2, 3, 0, 3));
         expectedRegions.add(new Region2D(1, 2, 0, 1));
         expectedRegions.add(new Region2D(1, 2, 2, 3));
         expectedRegions.add(new Region2D(1, 2, 1, 2));
+        for (ListSpacePartition<Integer>.Partition next : list) {
+            Region2D region = new Region2D(next.getRegionStart(), next.getRegionEnd());
+            assertTrue(expectedRegions.contains(region));
+            expectedRegions.remove(region);
+        }
+        assertTrue(expectedRegions.isEmpty());
+    }
+
+    @Test
+    public void testMergeInsert() {
+        ListSpacePartition<Integer> list = new ListSpacePartition<>(2);
+
+        list.insert(0, new int[]{0, 0}, new int[]{1, 1}, (a, b) -> fail());
+        list.insert(0, new int[]{1, 0}, new int[]{2, 1}, (a, b) -> fail());
+
+        List<Region2D> expectedRegions = new ObjectArrayList<>();
+        expectedRegions.add(new Region2D(0, 2, 0, 1));
         for (ListSpacePartition<Integer>.Partition next : list) {
             Region2D region = new Region2D(next.getRegionStart(), next.getRegionEnd());
             assertTrue(expectedRegions.contains(region));
