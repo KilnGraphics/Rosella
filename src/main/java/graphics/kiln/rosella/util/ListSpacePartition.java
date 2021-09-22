@@ -68,7 +68,7 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
 
         public boolean intersects(int[] otherStart, int[] otherEnd) {
             for(int i = 0; i < dimensionCount; i++) {
-                if(this.start[i] >= otherEnd[i] || this.end[i] < otherStart[i]) {
+                if(this.start[i] >= otherEnd[i] || this.end[i] <= otherStart[i]) {
                     return false;
                 }
             }
