@@ -3,9 +3,10 @@ package graphics.kiln.rosella.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 import java.util.function.BiConsumer;
 
-public class ListSpacePartition<T> {
+public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Partition> {
 
     private final int dimensionCount;
 
@@ -15,12 +16,25 @@ public class ListSpacePartition<T> {
         this.dimensionCount = dimensionCount;
     }
 
+    public ListSpacePartition(int dimensionCount, Iterator<Partition> source) {
+        this.dimensionCount = dimensionCount;
+        while(source.hasNext()) {
+            this.partitionList = new Partition(source.next(), this.partitionList);
+        }
+    }
+
     public void insert(@Nullable T newState, @NotNull int[] regionStart, @NotNull int[] regionEnd, @Nullable BiConsumer<Partition, T> transitionFunction) {
         if(this.partitionList == null) {
             this.partitionList = new Partition(newState, regionStart, regionEnd);
         } else {
             this.partitionList.insert(null, newState, regionStart, regionEnd, transitionFunction);
         }
+    }
+
+    @Override
+    @NotNull
+    public Iterator<Partition> iterator() {
+        return new PartitionIterator<>(this.partitionList);
     }
 
     public class Partition {
@@ -45,6 +59,13 @@ public class ListSpacePartition<T> {
             this.end = end;
         }
 
+        protected Partition(Partition other, Partition next) {
+            this.next = next;
+            this.state = other.state;
+            this.start = other.start.clone();
+            this.end = other.end.clone();
+        }
+
         public boolean intersects(int[] otherStart, int[] otherEnd) {
             for(int i = 0; i < dimensionCount; i++) {
                 if(this.start[i] >= otherEnd[i] || this.end[i] < otherStart[i]) {
@@ -54,7 +75,17 @@ public class ListSpacePartition<T> {
             return true;
         }
 
+        public int[] getRegionStart() {
+            return this.start;
+        }
+
+        public int[] getRegionEnd() {
+            return this.end;
+        }
+
         protected void insert(Partition previous, T otherState, int[] otherStart, int[] otherEnd, BiConsumer<Partition, T> transitionFunction) {
+            final boolean stateCompatible = (this.state == null && otherState == null) || (this.state != null && this.state.equals(otherState));
+
             if(this.intersects(otherStart, otherEnd)) {
                 for(int i = 0; i < dimensionCount; i++) {
                     if(otherStart[i] > this.start[i]) {
@@ -88,10 +119,10 @@ public class ListSpacePartition<T> {
                 }
                 previous.next = next;
 
-                if(transitionFunction != null) {
+                if(!stateCompatible && transitionFunction != null) {
                     transitionFunction.accept(this, otherState);
                 }
-            } else if((this.state == null && otherState == null) || (this.state != null && this.state.equals(otherState))){
+            } else if(stateCompatible){
                 // Test if merger is possible
                 boolean merge = false;
                 for(int i = 0; i < dimensionCount && !merge; i++) {
@@ -122,6 +153,27 @@ public class ListSpacePartition<T> {
             } else {
                 this.next = new Partition(otherState, otherStart, otherEnd);
             }
+        }
+    }
+
+    private static class PartitionIterator<T> implements Iterator<ListSpacePartition<T>.Partition> {
+
+        private ListSpacePartition<T>.Partition next;
+
+        protected PartitionIterator(ListSpacePartition<T>.Partition initial) {
+            this.next = initial;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.next != null;
+        }
+
+        @Override
+        public ListSpacePartition<T>.Partition next() {
+            ListSpacePartition<T>.Partition result = this.next;
+            this.next = this.next.next;
+            return result;
         }
     }
 }
