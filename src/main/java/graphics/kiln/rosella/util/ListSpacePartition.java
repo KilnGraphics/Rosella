@@ -82,6 +82,7 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
             return true;
         }
 
+        @NotNull
         public T getState() {
             return this.state;
         }
@@ -133,30 +134,6 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
 
                 if(!this.state.equals(otherState) && transitionFunction != null) {
                     transitionFunction.accept(this, otherState);
-                }
-            } else if(this.state.equals(otherState)){
-                // Test if merger is possible
-                boolean merge = false;
-                for(int i = 0; i < dimensionCount && !merge; i++) {
-                    if(otherEnd[i] == this.start[i] || otherStart[i] == this.end[i]) {
-                        merge = true;
-                        for(int j = 0; j < dimensionCount; j++) {
-                            if(i == j) {
-                                continue;
-                            }
-                            if(this.start[j] != otherStart[j] || this.end[j] != otherEnd[j]) {
-                                merge = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if(merge) {
-                    for(int i = 0; i < dimensionCount; i++) {
-                        this.start[i] = Math.min(this.start[i], otherStart[i]);
-                        this.end[i] = Math.max(this.end[i], otherEnd[i]);
-                    }
-                    return;
                 }
             }
 

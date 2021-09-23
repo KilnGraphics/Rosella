@@ -119,23 +119,6 @@ public class TestListSpacePartition {
         assertTrue(expectedRegions.isEmpty());
     }
 
-    @Test
-    public void testMergeInsert() {
-        ListSpacePartition<Integer> list = new ListSpacePartition<>(2);
-
-        list.insert(0, new int[]{0, 0}, new int[]{1, 1}, (a, b) -> fail());
-        list.insert(0, new int[]{1, 0}, new int[]{2, 1}, (a, b) -> fail());
-
-        List<Region2D> expectedRegions = new ObjectArrayList<>();
-        expectedRegions.add(new Region2D(0, 2, 0, 1));
-        for (ListSpacePartition<Integer>.Partition next : list) {
-            Region2D region = new Region2D(next.getRegionStart(), next.getRegionEnd());
-            assertTrue(expectedRegions.contains(region));
-            expectedRegions.remove(region);
-        }
-        assertTrue(expectedRegions.isEmpty());
-    }
-
     private record Region2D(int startX, int endX, int startY, int endY) {
         public Region2D(int[] start, int[] end) {
             this(
