@@ -15,6 +15,7 @@ import org.lwjgl.vulkan.KHRAccelerationStructure;
 import org.lwjgl.vulkan.NVDeviceGeneratedCommands;
 import org.lwjgl.vulkan.VK10;
 
+import javax.swing.plaf.SeparatorUI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SerializedGraphBuilder {
 
     private final ReentrantLock lock = new ReentrantLock();
+    private boolean opsLocked = false;
 
     private final ObjectArrayList<OpMetadata> ops = new ObjectArrayList<>();
     private final Map<Long, BufferMetadata> buffers = new Long2ObjectAVLTreeMap<>();
@@ -33,6 +35,10 @@ public class SerializedGraphBuilder {
     public void addOps(List<AbstractOp> ops, int queue) {
         try {
             this.lock.lock();
+
+            if(this.opsLocked) {
+                throw new RuntimeException("Cannot add new ops to a builder that has had its build function called");
+            }
 
             this.ops.ensureCapacity(this.ops.size() + ops.size());
             for(AbstractOp op : ops) {
@@ -48,8 +54,21 @@ public class SerializedGraphBuilder {
         }
     }
 
-    public void build(AllocationRequirementSet allocationRequirements, ExternalObjectsSet externalObjects) {
+    public void configureInternalBuffer(BufferReference buffer, boolean preserve) {
+    }
 
+    public void configureExternalBuffer(BufferReference buffer) {
+    }
+
+    public void build(AllocationRequirementSet allocationRequirements, ExternalObjectsSet externalObjects) {
+        try {
+            this.lock.lock();
+            this.opsLocked = true;
+
+
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private class OpMetadata implements ObjectRegistry {
@@ -76,8 +95,14 @@ public class SerializedGraphBuilder {
     }
 
     private class ObjectMetadata {
+        protected final long id;
+
         private OpMetadata firstUsed = null;
         private OpMetadata lastUsed = null;
+
+        protected ObjectMetadata(long id) {
+            this.id = id;
+        }
 
         protected void updateUsage(OpMetadata op) {
             if(this.firstUsed == null) {
@@ -89,13 +114,18 @@ public class SerializedGraphBuilder {
 
     private class BufferMetadata extends ObjectMetadata {
 
+        protected boolean internal;
+        protected boolean preserve;
+
         protected BufferMetadata(long id) {
+            super(id);
         }
     }
 
     private class ImageMetadata extends ObjectMetadata {
 
         protected ImageMetadata(long id) {
+            super(id);
         }
     }
 }

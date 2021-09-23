@@ -2,7 +2,7 @@ package graphics.kiln.rosella.render.graph.serialization;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import graphics.kiln.rosella.render.graph.ops.AbstractOp;
+import graphics.kiln.rosella.render.graph.ops.QueueRecordable;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,13 +10,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public record Serialization(long uuid,
                             int queueFamilyIndex,
-                            AbstractOp ops,
+                            List<QueueRecordable> ops,
                             List<Integer> waitSemaphores,
                             List<Integer> signalSemaphores) {
 
     private static final AtomicLong nextUUID = new AtomicLong(0);
 
-    public Serialization(int queueFamilyIndex, AbstractOp ops, List<Integer> waitSemaphores, List<Integer> signalSemaphores) {
+    public Serialization(int queueFamilyIndex, List<QueueRecordable> ops, List<Integer> waitSemaphores, List<Integer> signalSemaphores) {
         this(
                 nextUUID.getAndIncrement(),
                 queueFamilyIndex,
@@ -61,10 +61,8 @@ public record Serialization(long uuid,
     private JsonArray generateJsonOps() {
         JsonArray result = new JsonArray();
 
-        AbstractOp current = this.ops;
-        while(current != null) {
-            result.add(current.convertToJson());
-            //current = current.getNext();
+        for(QueueRecordable op : this.ops) {
+            result.add(op.convertToJson());
         }
 
         return result;
