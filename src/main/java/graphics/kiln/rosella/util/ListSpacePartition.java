@@ -132,7 +132,7 @@ public class ListSpacePartition<T> implements Iterable<ListSpacePartition<T>.Par
                 previous.next = next;
                 insertAfter = previous;
 
-                if(!this.state.equals(otherState) && transitionFunction != null) {
+                if(transitionFunction != null) {
                     transitionFunction.accept(this, otherState);
                 }
             }
