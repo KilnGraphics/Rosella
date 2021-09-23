@@ -9,7 +9,7 @@ import org.lwjgl.vulkan.VK10;
 
 import java.util.List;
 
-public class MemoryBarrierOp extends AbstractOp {
+public class MemoryBarrierOp implements QueueRecordable {
 
     public final String TYPE_NAME = "MemoryBarrier";
 
@@ -64,18 +64,9 @@ public class MemoryBarrierOp extends AbstractOp {
     }
 
     @Override
-    public void registerResourceUsages(UsageRegistry registry) {
-        for(BufferBarrier barrier : this.bufferBarriers) {
-            registry.registerBuffer(barrier.buffer());
-        }
-        for(ImageBarrier barrier : this.imageBarriers) {
-            registry.registerImage(barrier.image());
-        }
-    }
-
-    @Override
     public JsonObject convertToJson() {
-        JsonObject result = super.convertToJson();
+        JsonObject result = new JsonObject();
+        result.addProperty("type", TYPE_NAME);
 
         JsonArray globalBarriers = new JsonArray();
         for(Barrier barrier : this.barriers) {
@@ -110,11 +101,6 @@ public class MemoryBarrierOp extends AbstractOp {
     @Override
     public void record() {
 
-    }
-
-    @Override
-    protected String getJsonType() {
-        return TYPE_NAME;
     }
 
     protected record Barrier(int srcAccessMask, int srcStageMask, int dstAccessMask, int dstStageMask) {

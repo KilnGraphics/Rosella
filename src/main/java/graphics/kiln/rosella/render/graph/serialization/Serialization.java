@@ -64,7 +64,7 @@ public record Serialization(long uuid,
         AbstractOp current = this.ops;
         while(current != null) {
             result.add(current.convertToJson());
-            current = current.getNext();
+            //current = current.getNext();
         }
 
         return result;

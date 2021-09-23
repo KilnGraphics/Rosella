@@ -8,7 +8,7 @@ import graphics.kiln.rosella.render.graph.serialization.SerializedGraphBuilder;
 public class GraphTest {
 
     public static void main(String[] args) {
-        SerializedGraphBuilder builder = new SerializedGraphBuilder();
+        /**SerializedGraphBuilder builder = new SerializedGraphBuilder();
 
         BufferReference bufferA = builder.addBuffer(-1, -1);
         BufferReference bufferB = builder.addBuffer(-1, -1);
@@ -26,6 +26,6 @@ public class GraphTest {
 
         builder.addSerialization(1, ops);
 
-        System.out.println(builder.build().convertToJson());
+        System.out.println(builder.build().convertToJson());**/
     }
 }

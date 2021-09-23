@@ -1,40 +1,58 @@
 package graphics.kiln.rosella.render.graph.ops;
 
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractOp {
+public abstract class AbstractOp implements QueueRecordable {
 
-    private AbstractOp next = null;
+    private boolean locked = false;
+
+    private WaitGroup waitGroup = null;
+    private SignalGroup signalGroup = null;
 
     protected AbstractOp() {
     }
 
-    public AbstractOp getNext() {
-        return this.next;
-    }
-
-    public AbstractOp insertAfter(@NotNull AbstractOp next) {
-        AbstractOp last = next.getLast(this);
-        if(last == null) {
-            throw new RuntimeException("Illegal insertion");
+    public final void lock() {
+        this.locked = true;
+        if(this.waitGroup != null) {
+            this.waitGroup.lock();
         }
-
-        last.next = this.next;
-        this.next = next;
-
-        return last;
+        if(this.signalGroup != null) {
+            this.signalGroup.lock();
+        }
     }
 
-    public AbstractOp getLast() {
-        return this.getLast(null);
+    public final boolean isLocked() {
+        return this.locked;
     }
+
+    public final void setWaitGroup(WaitGroup group) {
+        if(this.locked) {
+            throw new RuntimeException("Cannot modify locked op");
+        }
+        this.waitGroup = group;
+    }
+
+    public final void setSignalGroup(SignalGroup group) {
+        if(this.locked) {
+            throw new RuntimeException("Cannot modify locked op");
+        }
+        this.signalGroup = group;
+    }
+
+    public WaitGroup getWaitGroup() {
+        return this.waitGroup;
+    }
+
+    public SignalGroup getSignalGroup() {
+        return this.signalGroup;
+    }
+
+    public abstract void registerObjects(ObjectRegistry registry);
 
     public abstract void registerResourceUsages(UsageRegistry registry);
 
-    public abstract void record();
-
+    @Override
     public JsonObject convertToJson() {
         JsonObject result = new JsonObject();
         result.addProperty("type", getJsonType());
@@ -42,20 +60,4 @@ public abstract class AbstractOp {
     }
 
     protected abstract String getJsonType();
-
-    private AbstractOp getLast(@Nullable AbstractOp avoid) {
-        AbstractOp current = this;
-        if(current == avoid) {
-            return null;
-        }
-
-        while (current.next != null) {
-            current = current.next;
-            if(current == avoid) {
-                return null;
-            }
-        }
-
-        return current;
-    }
 }
