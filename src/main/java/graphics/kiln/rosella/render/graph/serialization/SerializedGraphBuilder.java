@@ -67,7 +67,7 @@ public class SerializedGraphBuilder {
                 throw new RuntimeException("Cannot configure resources while building");
             }
 
-            this.buffers.computeIfAbsent(buffer.getID(), BufferMetadata::new).configureExternal(true, true);
+            this.buffers.computeIfAbsent(buffer.getID(), BufferMetadata::new).configureExternal(true);
 
         } finally {
             this.lock.unlock();
@@ -75,10 +75,33 @@ public class SerializedGraphBuilder {
     }
 
     public void configureInternalImage(ImageReference image, boolean preserve, @NotNull ImageSpec spec) {
+        try {
+            this.lock.lock();
 
+            if(this.isBuilding) {
+                throw new RuntimeException("Cannot configure resources while building");
+            }
+
+            this.images.computeIfAbsent(image.getID(), ImageMetadata::new).configureInternal(preserve, spec, 0);
+
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void configureExternalImage(ImageReference image, ImageFormat format, int mipLevels, int arrayLayers) {
+        try {
+            this.lock.lock();
+
+            if(this.isBuilding) {
+                throw new RuntimeException("Cannot configure resources while building");
+            }
+
+            this.images.computeIfAbsent(image.getID(), ImageMetadata::new).configureExternal(true, format, mipLevels, arrayLayers);
+
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void build() {
@@ -148,8 +171,7 @@ public class SerializedGraphBuilder {
         private BufferSpec spec;
         private BufferAllocationSpec allocationSpec;
 
-        private boolean preserveBefore = false;
-        private boolean preserveAfter = false;
+        private boolean preserve = false;
 
         private int usageFlags = 0;
 
@@ -164,22 +186,25 @@ public class SerializedGraphBuilder {
 
         protected void configureInternal(boolean preserve, @NotNull BufferSpec spec, int additionalUsageFlags) {
             this.spec = spec;
-            this.preserveBefore = preserve;
-            this.preserveAfter = preserve;
+            this.preserve = preserve;
 
             this.allocationSpec = new BufferAllocationSpec(additionalUsageFlags);
         }
 
-        protected void configureExternal(boolean preserveBefore, boolean preserveAfter) {
+        protected void configureExternal(boolean preserve) {
             this.spec = null;
             this.allocationSpec = null;
 
-            this.preserveBefore = preserveBefore;
-            this.preserveAfter = preserveAfter;
+            this.preserve = preserve;
         }
     }
 
     private class ImageMetadata extends ObjectMetadata {
+
+        private ImageSpec spec;
+        private ImageAllocationSpec allocationSpec;
+
+        private boolean preserve = false;
 
         private int usageFlags = 0;
 
@@ -191,8 +216,25 @@ public class SerializedGraphBuilder {
             super.updateUsage(op);
             this.usageFlags |= usageFlags;
         }
+
+        protected void configureInternal(boolean preserve, @NotNull ImageSpec spec, int additionalUsageFlags) {
+            this.spec = spec;
+            this.preserve = preserve;
+
+            this.allocationSpec = new ImageAllocationSpec(additionalUsageFlags);
+        }
+
+        protected void configureExternal(boolean preserve, ImageFormat format, int mipLayers, int arrayLayers) {
+            this.allocationSpec = null;
+            this.preserve = preserve;
+
+            this.spec = new ImageSpec(format, 0, 0, 0, mipLayers, arrayLayers, null);
+        }
     }
 
     private record BufferAllocationSpec(int additionalUsageFlags) {
+    }
+
+    private record ImageAllocationSpec(int additionalUsageFlags) {
     }
 }
