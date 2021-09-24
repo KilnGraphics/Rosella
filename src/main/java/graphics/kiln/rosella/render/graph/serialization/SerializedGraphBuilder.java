@@ -1,32 +1,22 @@
 package graphics.kiln.rosella.render.graph.serialization;
 
 import graphics.kiln.rosella.render.graph.ops.AbstractOp;
-import graphics.kiln.rosella.render.graph.ops.MemoryBarrierOp;
 import graphics.kiln.rosella.render.graph.ops.ObjectRegistry;
-import graphics.kiln.rosella.render.graph.ops.UsageRegistry;
 import graphics.kiln.rosella.render.graph.resources.*;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import graphics.kiln.rosella.util.ImageFormat;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.vulkan.EXTTransformFeedback;
-import org.lwjgl.vulkan.KHRAccelerationStructure;
-import org.lwjgl.vulkan.NVDeviceGeneratedCommands;
-import org.lwjgl.vulkan.VK10;
 
-import javax.swing.plaf.SeparatorUI;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SerializedGraphBuilder {
 
     private final ReentrantLock lock = new ReentrantLock();
     private boolean opsLocked = false;
+    private boolean isBuilding = false;
 
     private final ObjectArrayList<OpMetadata> ops = new ObjectArrayList<>();
     private final Map<Long, BufferMetadata> buffers = new Long2ObjectAVLTreeMap<>();
@@ -54,13 +44,44 @@ public class SerializedGraphBuilder {
         }
     }
 
-    public void configureInternalBuffer(BufferReference buffer, boolean preserve) {
+    public void configureInternalBuffer(BufferReference buffer, boolean preserve, @NotNull BufferSpec spec) {
+        try {
+            this.lock.lock();
+
+            if(this.isBuilding) {
+                throw new RuntimeException("Cannot configure resources while building");
+            }
+
+            this.buffers.computeIfAbsent(buffer.getID(), BufferMetadata::new).configureInternal(preserve, spec, 0);
+
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void configureExternalBuffer(BufferReference buffer) {
+        try {
+            this.lock.lock();
+
+            if(this.isBuilding) {
+                throw new RuntimeException("Cannot configure resources while building");
+            }
+
+            this.buffers.computeIfAbsent(buffer.getID(), BufferMetadata::new).configureExternal(true, true);
+
+        } finally {
+            this.lock.unlock();
+        }
     }
 
-    public void build(AllocationRequirementSet allocationRequirements, ExternalObjectsSet externalObjects) {
+    public void configureInternalImage(ImageReference image, boolean preserve, @NotNull ImageSpec spec) {
+
+    }
+
+    public void configureExternalImage(ImageReference image, ImageFormat format, int mipLevels, int arrayLayers) {
+    }
+
+    public void build() {
         try {
             this.lock.lock();
             this.opsLocked = true;
@@ -89,8 +110,18 @@ public class SerializedGraphBuilder {
         }
 
         @Override
+        public void registerBuffer(BufferReference buffer, int usageFlags) {
+            buffers.computeIfAbsent(buffer.getID(), BufferMetadata::new).updateUsage(this, usageFlags);
+        }
+
+        @Override
         public void registerImage(ImageReference image) {
             images.computeIfAbsent(image.getID(), ImageMetadata::new).updateUsage(this);
+        }
+
+        @Override
+        public void registerImage(ImageReference image, int usageFlags) {
+            images.computeIfAbsent(image.getID(), ImageMetadata::new).updateUsage(this, usageFlags);
         }
     }
 
@@ -114,18 +145,54 @@ public class SerializedGraphBuilder {
 
     private class BufferMetadata extends ObjectMetadata {
 
-        protected boolean internal;
-        protected boolean preserve;
+        private BufferSpec spec;
+        private BufferAllocationSpec allocationSpec;
+
+        private boolean preserveBefore = false;
+        private boolean preserveAfter = false;
+
+        private int usageFlags = 0;
 
         protected BufferMetadata(long id) {
             super(id);
+        }
+
+        protected void updateUsage(OpMetadata op, int usageFlags) {
+            super.updateUsage(op);
+            this.usageFlags |= usageFlags;
+        }
+
+        protected void configureInternal(boolean preserve, @NotNull BufferSpec spec, int additionalUsageFlags) {
+            this.spec = spec;
+            this.preserveBefore = preserve;
+            this.preserveAfter = preserve;
+
+            this.allocationSpec = new BufferAllocationSpec(additionalUsageFlags);
+        }
+
+        protected void configureExternal(boolean preserveBefore, boolean preserveAfter) {
+            this.spec = null;
+            this.allocationSpec = null;
+
+            this.preserveBefore = preserveBefore;
+            this.preserveAfter = preserveAfter;
         }
     }
 
     private class ImageMetadata extends ObjectMetadata {
 
+        private int usageFlags = 0;
+
         protected ImageMetadata(long id) {
             super(id);
         }
+
+        protected void updateUsage(OpMetadata op, int usageFlags) {
+            super.updateUsage(op);
+            this.usageFlags |= usageFlags;
+        }
+    }
+
+    private record BufferAllocationSpec(int additionalUsageFlags) {
     }
 }

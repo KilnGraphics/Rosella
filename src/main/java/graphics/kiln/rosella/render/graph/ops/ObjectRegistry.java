@@ -7,5 +7,9 @@ public interface ObjectRegistry {
     
     void registerBuffer(BufferReference buffer);
 
+    void registerBuffer(BufferReference buffer, int usageFlags);
+
     void registerImage(ImageReference image);
+
+    void registerImage(ImageReference image, int usageFlags);
 }
