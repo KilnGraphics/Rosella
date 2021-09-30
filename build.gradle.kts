@@ -1,12 +1,13 @@
 plugins {
     java
+    `maven-publish`
     kotlin("jvm") version "1.5.10"
     id("com.github.johnrengelman.shadow") version "7.0.0"
-    `maven-publish`
+
 }
 
-group = "me.hydos"
-version = "1.1-beta"
+group = "kiln.graphics"
+version = "1.1.0"
 
 val lwjglVersion = "3.3.0-SNAPSHOT"
 val lwjglNatives = when (org.gradle.internal.os.OperatingSystem.current()) {
@@ -112,16 +113,22 @@ publishing {
                 packaging = "jar"
 
                 description.set("A Java Vulkan Rendering Engine")
-                url.set("http://github.com/Blaze4D-MC/Rosella")
+                url.set("https://github.com/Blaze4D-MC/Rosella")
 
                 licenses {
                     license {
-                        name.set("MIT")
+                        name.set("Lesser GPL v3.0")
                         url.set("https://mit-license.org/")
                     }
                 }
 
                 developers {
+                    developer {
+                        id.set("hYdos")
+                        name.set("Hayden V")
+                        email.set("haydenv06@gmail.com")
+                    }
+
                     developer {
                         id.set("OroArmor")
                         name.set("Eli Orona")
@@ -130,11 +137,7 @@ publishing {
                     }
 
                     developer {
-                        id.set("hYdos")
-                    }
-
-                    developer {
-                        id.set("ramidzkh")
+                        id.set("CodingRays")
                     }
 
                     developer {
@@ -142,7 +145,7 @@ publishing {
                     }
 
                     developer {
-                        id.set("CodingRays")
+                        id.set("ramidzkh")
                     }
                 }
             }
@@ -157,7 +160,7 @@ publishing {
                 username = System.getenv("MAVEN_USERNAME")
                 password = System.getenv("MAVEN_PASSWORD")
             }
-            name = "oroarmorMaven"
+            name = "hydosMaven"
             isAllowInsecureProtocol = true
         }
     }
