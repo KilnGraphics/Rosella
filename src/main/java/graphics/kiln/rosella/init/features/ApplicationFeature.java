@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * <p>A class that represents some collection of device features or capabilities.</p>
  *
- * <p>Instances of this class can be registered into a {@link me.hydos.rosella.device.init.InitializationRegistry} which will then be
+ * <p>Instances of this class can be registered into a {@link graphics.kiln.rosella.init.InitializationRegistry} which will then be
  * used to select and initialize a device.</p>
  *
  * <p>This happens in 2 stages.</p>
@@ -19,7 +19,7 @@ import java.util.*;
  *     <li>The feature is queried if the device supports the feature.</li>
  *     <li>If support is detected and desired the feature will be called to configure the device.</li>
  * </ol>
- * <p>For these interactions a instance of {@link me.hydos.rosella.device.init.DeviceBuilder.DeviceMeta} is provided which manages
+ * <p>For these interactions a instance of {@link graphics.kiln.rosella.init.DeviceBuilder.DeviceMeta} is provided which manages
  * information for a single physical device.</p>
  *
  * <p>Since multiple devices may be tested concurrently the createInstance function will be called for each device which
