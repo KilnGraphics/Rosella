@@ -50,7 +50,7 @@ public abstract class AbstractOp implements QueueRecordable {
 
     public abstract void registerObjects(ObjectRegistry registry);
 
-    public abstract void registerResourceUsages(UsageRegistry registry);
+    public abstract void registerResourceUsages(AccessRegistryProvider registry);
 
     @Override
     public JsonObject convertToJson() {

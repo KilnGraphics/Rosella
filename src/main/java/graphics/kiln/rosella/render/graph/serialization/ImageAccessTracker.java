@@ -67,6 +67,7 @@ public class ImageAccessTracker {
         State src = srcP.getState();
 
         if(src.queue != dst.queue) {
+            // TODO make visible to all accesses not just writes
             this.tmpBarrier.addImageTransferBarrier(src.queue, dst.queue, src.layout, dst.layout, src.pendingWrites, src.pendingStages, dst.pendingWrites, dst.pendingStages, transitionRange);
         } else {
             this.tmpBarrier.addImageBarrier(src.layout, dst.layout, src.pendingWrites, src.pendingStages, dst.pendingWrites, dst.pendingStages, transitionRange);

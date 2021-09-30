@@ -1,7 +1,6 @@
 package graphics.kiln.rosella.render.graph.ops;
 
 import graphics.kiln.rosella.render.graph.resources.BufferReference;
-import org.lwjgl.vulkan.VK10;
 
 public class CopyBufferOp extends AbstractOp {
     public static final String TYPE_NAME = "CopyBuffer";
@@ -32,7 +31,7 @@ public class CopyBufferOp extends AbstractOp {
     }
 
     @Override
-    public void registerResourceUsages(UsageRegistry registry) {
+    public void registerResourceUsages(AccessRegistryProvider registry) {
     }
 
     @Override

@@ -4,4 +4,8 @@ public class BufferReference extends ObjectReference {
     public BufferReference() {
         super(VulkanObjectType.BUFFER);
     }
+
+    public BufferReference(long id) {
+        super(VulkanObjectType.BUFFER, id);
+    }
 }

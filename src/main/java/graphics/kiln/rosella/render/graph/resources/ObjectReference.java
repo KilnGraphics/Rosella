@@ -14,6 +14,11 @@ public abstract class ObjectReference {
         this.id = IDProvider.getNextID();
     }
 
+    protected ObjectReference(@NotNull VulkanObjectType type, long id) {
+        this.type = type;
+        this.id = id;
+    }
+
     public long getID() {
         return this.id;
     }
