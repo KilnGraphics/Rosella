@@ -372,8 +372,9 @@ public class GlbRenderObject extends RenderObject {
                        The material system performs the type conversion automatically.
                      */
                         case 0x4 -> {
-                            int[] intArray = new int[dataLength];
-                            for (int i1 = 0; i1 < dataLength; i1++) {
+                            int intDataLength = dataLength / 4;
+                            int[] intArray = new int[intDataLength];
+                            for (int i1 = 0; i1 < intDataLength; i1++) {
                                 intArray[i1] = data.getInt();
                             }
                             properties.put(name, AssimpMaterialProperty.of(intArray, name));

@@ -59,12 +59,6 @@ public class FboWaterTest {
     public static NoclipCamera camera = new NoclipCamera();
 
     public static void main(String[] args) {
-        // TODO: Update Assimp when non-broken version is released
-        //  https://github.com/LWJGL/lwjgl3/issues/642
-        if (System.getProperty("os.name").contains("Linux")) {
-            Configuration.ASSIMP_LIBRARY_NAME.set("/home/user/home/user/IdeaProjects/KilnGraphics/Rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
-        }
-
         mainFbo = rosella.common.fboManager.getActiveFbo();
         reflectionFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
         refractionFbo = rosella.common.fboManager.addFbo(new FrameBufferObject(false, rosella.renderer.swapchain, rosella.common, rosella.renderer.mainRenderPass, rosella.renderer, rosella.baseObjectManager));
