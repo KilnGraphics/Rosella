@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "kiln.graphics"
-version = "1.1.0"
+version = "1.1.1"
 
 val lwjglVersion = "3.3.0-SNAPSHOT"
 val lwjglNatives = when (org.gradle.internal.os.OperatingSystem.current()) {
