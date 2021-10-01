@@ -8,3 +8,4 @@ build/
 *.iml
 *.class
 *.kotlin_module
+*.spirv
