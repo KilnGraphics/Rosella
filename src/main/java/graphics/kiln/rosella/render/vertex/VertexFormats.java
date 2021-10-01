@@ -8,14 +8,14 @@ import java.util.Arrays;
 
 public class VertexFormats {
 
-    private static final Hash.Strategy<Object[]> ARRAY_HASH_STRATEGY = new Hash.Strategy<>() {
+    private static final Hash.Strategy<VertexFormatElement[]> ARRAY_HASH_STRATEGY = new Hash.Strategy<>() {
         @Override
-        public int hashCode(Object[] o) {
+        public int hashCode(VertexFormatElement[] o) {
             return Arrays.hashCode(o);
         }
 
         @Override
-        public boolean equals(Object[] a, Object[] b) {
+        public boolean equals(VertexFormatElement[] a, VertexFormatElement[] b) {
             return Arrays.equals(a, b);
         }
     };
