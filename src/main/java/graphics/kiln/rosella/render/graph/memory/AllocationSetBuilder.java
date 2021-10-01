@@ -17,4 +17,6 @@ public interface AllocationSetBuilder {
     void freeImage(@NotNull ImageReference image);
 
     AllocationSet build();
+
+    void abort();
 }

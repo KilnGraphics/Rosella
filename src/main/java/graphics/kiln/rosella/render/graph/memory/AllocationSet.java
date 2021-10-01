@@ -1,4 +1,8 @@
 package graphics.kiln.rosella.render.graph.memory;
 
-public interface AllocationSet {
+import graphics.kiln.rosella.render.graph.resources.HandleProvider;
+
+public interface AllocationSet extends HandleProvider {
+
+    void destroy();
 }
