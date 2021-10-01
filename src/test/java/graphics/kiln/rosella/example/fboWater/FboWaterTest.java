@@ -62,7 +62,7 @@ public class FboWaterTest {
         // TODO: Update Assimp when non-broken version is released
         //  https://github.com/LWJGL/lwjgl3/issues/642
         if (System.getProperty("os.name").contains("Linux")) {
-            Configuration.ASSIMP_LIBRARY_NAME.set("/home/haydenv/IdeaProjects/hYdos/rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
+            Configuration.ASSIMP_LIBRARY_NAME.set("/home/user/home/user/IdeaProjects/KilnGraphics/Rosella/libassimp.so"); //FIXME: LWJGL bad. LWJGL 4 when https://github.com/LWJGL/lwjgl3/issues/642
         }
 
         mainFbo = rosella.common.fboManager.getActiveFbo();
