@@ -1,34 +1,31 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     java
     `maven-publish`
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.5.31"
     id("com.github.johnrengelman.shadow") version "7.0.0"
-
 }
 
-group = "kiln.graphics"
-version = "1.1.1"
+group = "graphics.kiln"
+version = "1.2.0-SNAPSHOT"
 
 val lwjglVersion = "3.3.0-SNAPSHOT"
-val lwjglNatives = when (org.gradle.internal.os.OperatingSystem.current()) {
-    org.gradle.internal.os.OperatingSystem.LINUX -> System.getProperty("os.arch").let {
-        if (it.startsWith("arm") || it.startsWith("aarch64")) {
-            val arch = if (it.contains("64") || it.startsWith("armv8")) {
-                "arm64"
-            } else {
-                "arm32"
-            }
-
-            "natives-linux-$arch"
-        } else {
+val lwjglNatives = when (OperatingSystem.current()) {
+    OperatingSystem.LINUX -> System.getProperty("os.arch").let {
+        if (it.startsWith("arm") || it.startsWith("aarch64"))
+            "natives-linux-${if (it.contains("64") || it.startsWith("armv8")) "arm64" else "arm32"}"
+        else
             "natives-linux"
-        }
     }
-    org.gradle.internal.os.OperatingSystem.MAC_OS -> if (System.getProperty("os.arch")
-            .startsWith("aarch64")
-    ) "natives-macos-arm64" else "natives-macos"
-    org.gradle.internal.os.OperatingSystem.WINDOWS -> "natives-windows"
-    else -> error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
+    OperatingSystem.MAC_OS -> "natives-macos"
+    OperatingSystem.WINDOWS -> System.getProperty("os.arch").let {
+        if (it.contains("64"))
+            "natives-windows${if (it.startsWith("aarch64")) "-arm64" else ""}"
+        else
+            "natives-windows-x86"
+    }
+    else -> throw Error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
 }
 
 repositories {
@@ -68,56 +65,65 @@ dependencies {
         runtimeOnly("org.lwjgl", "lwjgl-vulkan", classifier = lwjglNatives)
     }
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.junit.jupiter", "junit-jupiter", "5.7.1")
 }
 
-tasks.test {
-    useJUnitPlatform {
+base {
+    archivesName.set("rosella")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks {
+    test {
+        useJUnitPlatform()
     }
-}
 
-tasks.register<Test>("fastCITest") {
-    useJUnitPlatform {
-        excludeTags("exclude_frequent_ci", "requires_vulkan")
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        options.release.set(16)
     }
-}
 
-tasks.register<Test>("slowCITest") {
-    useJUnitPlatform {
-        excludeTags("requires_vulkan")
-    } // In the future we can add tags to exclude tests that require certain vulkan features which arent available on github
-}
+    withType<AbstractArchiveTask> {
+        from(file("LICENSE"))
+    }
 
-var sourcesJar = tasks.create("sourcesJar", Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
-}
+    register<Test>("fastCITest") {
+        useJUnitPlatform {
+            excludeTags("exclude_frequent_ci", "requires_vulkan")
+        }
+    }
 
-var javadocJar = tasks.create("javadocJar", Jar::class) {
-    archiveClassifier.set("javadoc")
-    from(tasks["javadoc"].outputs)
+    register<Test>("slowCITest") {
+        useJUnitPlatform {
+            // In the future we can add tags to exclude tests that require certain vulkan features which arent available on github
+            excludeTags("requires_vulkan")
+        }
+    }
 }
 
 publishing {
     publications {
-        create("mavenJava", MavenPublication::class) {
-            artifacts {
-                artifact(tasks["jar"])
-                artifact(sourcesJar)
-                artifact(javadocJar)
-            }
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
 
             pom {
                 name.set("Rosella")
                 packaging = "jar"
 
                 description.set("A Java Vulkan Rendering Engine")
-                url.set("https://github.com/Blaze4D-MC/Rosella")
+                url.set("https://github.com/KilnGraphics/Rosella")
 
                 licenses {
                     license {
-                        name.set("Lesser GPL v3.0")
-                        url.set("https://mit-license.org/")
+                        name.set("GNU Lesser General Public License v3.0")
+                        url.set("https://www.gnu.org/licenses/lgpl-3.0.txt")
                     }
                 }
 
@@ -126,25 +132,31 @@ publishing {
                         id.set("hYdos")
                         name.set("Hayden V")
                         email.set("haydenv06@gmail.com")
+                        url.set("https://hydos.cf/")
                     }
 
                     developer {
                         id.set("OroArmor")
                         name.set("Eli Orona")
                         email.set("eliorona@live.com")
-                        url.set("oroarmor.com")
+                        url.set("https://oroarmor.com/")
                     }
 
                     developer {
                         id.set("CodingRays")
+                        url.set("https://github.com/CodingRays")
                     }
 
                     developer {
-                        id.set("burgerguy")
+                        id.set("burgerdude")
+                        name.set("Ryan G")
+                        url.set("https://github.com/burgerguy")
                     }
 
                     developer {
                         id.set("ramidzkh")
+                        email.set("ramidzkh@gmail.com")
+                        url.set("https://github.com/ramidzkh")
                     }
                 }
             }
@@ -153,14 +165,27 @@ publishing {
 
     repositories {
         mavenLocal()
+
         maven {
-            setUrl(System.getenv("MAVEN_URL"))
+            val releasesRepoUrl = uri("${buildDir}/repos/releases")
+            val snapshotsRepoUrl = uri("${buildDir}/repos/snapshots")
+            name = "Project"
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+        }
+
+        maven {
+            val releasesRepoUrl = uri("https://maven.hydos.cf/releases")
+            val snapshotsRepoUrl = uri("https://maven.hydos.cf/snapshots")
+            name = "hydos"
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+
+            val u = System.getenv("MAVEN_USERNAME") ?: return@maven
+            val p = System.getenv("MAVEN_PASSWORD") ?: return@maven
+
             credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
+                username = u
+                password = p
             }
-            name = "hydosMaven"
-            isAllowInsecureProtocol = true
         }
     }
 }
