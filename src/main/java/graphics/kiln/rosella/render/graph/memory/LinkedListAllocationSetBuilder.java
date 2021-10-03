@@ -41,6 +41,11 @@ public class LinkedListAllocationSetBuilder implements AllocationSetBuilder {
         return null;
     }
 
+    @Override
+    public void abort() {
+
+    }
+
     private class BufferMetadata {
         public final BufferReference reference;
         private long handle;

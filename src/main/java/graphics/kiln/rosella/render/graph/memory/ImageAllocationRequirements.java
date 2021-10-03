@@ -1,4 +1,8 @@
 package graphics.kiln.rosella.render.graph.memory;
 
-public record ImageAllocationRequirements() {
+import graphics.kiln.rosella.render.graph.resources.ImageSpec;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+public record ImageAllocationRequirements(@NotNull ImageSpec spec, int usageFlags, @Nullable MemoryTypeRestriction restriction) {
 }

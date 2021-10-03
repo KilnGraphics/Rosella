@@ -2,6 +2,7 @@ package graphics.kiln.rosella.render.graph.resources;
 
 import graphics.kiln.rosella.util.ImageFormat;
 import org.lwjgl.vulkan.VK10;
+import org.lwjgl.vulkan.VkExtent3D;
 
 public record ImageSpec(ImageFormat format, int width, int height, int depth, int mipLevels, int arrayLayers, ImageSampleCount sampleCount) {
 
@@ -45,5 +46,21 @@ public record ImageSpec(ImageFormat format, int width, int height, int depth, in
             return VK10.VK_IMAGE_TYPE_2D;
         }
         return VK10.VK_IMAGE_TYPE_1D;
+    }
+
+    public void fillExtent(VkExtent3D extent) {
+        extent.width(this.width);
+
+        if(this.height > 0) {
+            extent.height(this.height);
+        } else {
+            extent.height(1);
+        }
+
+        if(this.depth > 0) {
+            extent.depth(this.depth);
+        } else {
+            extent.depth(1);
+        }
     }
 }

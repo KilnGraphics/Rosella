@@ -382,7 +382,7 @@ public class SerializedGraphBuilder {
         }
 
         private BufferAllocationRequirements generateAllocationRequirements() {
-            return new BufferAllocationRequirements();
+            return new BufferAllocationRequirements(0, this.allocationSpecI.additionalUsageFlags() | this.usageFlags, null); // TODO size
         }
     }
 
