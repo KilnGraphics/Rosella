@@ -11,7 +11,7 @@ import org.lwjgl.vulkan.VkBufferCreateInfo;
 
 import java.nio.LongBuffer;
 
-public class VMABuffer {
+public class VMABuffer implements VMACloseable {
     private long handle = VK10.VK_NULL_HANDLE;
     private long allocation = VK10.VK_NULL_HANDLE;
 

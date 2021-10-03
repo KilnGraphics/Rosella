@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.util.vma.Vma;
 import org.lwjgl.vulkan.VK10;
 
-public class VMAImage {
+public class VMAImage implements VMACloseable {
 
     private long handle = VK10.VK_NULL_HANDLE;
     private long allocation = VK10.VK_NULL_HANDLE;
