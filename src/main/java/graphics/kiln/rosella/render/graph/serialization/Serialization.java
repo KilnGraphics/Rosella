@@ -3,6 +3,13 @@ package graphics.kiln.rosella.render.graph.serialization;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import graphics.kiln.rosella.render.graph.ops.QueueRecordable;
+import graphics.kiln.rosella.render.graph.resources.HandleProvider;
+import graphics.kiln.rosella.util.VkUtils;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VK10;
+import org.lwjgl.vulkan.VkCommandBuffer;
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +31,21 @@ public record Serialization(long uuid,
                 Collections.unmodifiableList(waitSemaphores),
                 Collections.unmodifiableList(signalSemaphores)
         );
+    }
+
+    public void record(@NotNull VkCommandBuffer commandBuffer, @NotNull HandleProvider handles) {
+        try(MemoryStack stack = MemoryStack.stackPush()) {
+            VkCommandBufferBeginInfo beginInfo = VkCommandBufferBeginInfo.calloc(stack);
+            beginInfo.sType(VK10.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+
+            VkUtils.ok(VK10.vkBeginCommandBuffer(commandBuffer, beginInfo));
+
+            for(QueueRecordable op : this.ops) {
+                op.record(commandBuffer, handles);
+            }
+
+            VkUtils.ok(VK10.vkEndCommandBuffer(commandBuffer));
+        }
     }
 
     public JsonObject convertToJson() {

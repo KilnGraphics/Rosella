@@ -153,7 +153,7 @@ public class SerializedGraphBuilder {
 
             final List<Serialization> serializations = this.submissions.stream().map(SerializationBuilder::build).toList();
             SerializedGraph graph = new SerializedGraph(serializations, 0);
-            result.cancel(true);
+            result.complete(graph);
         } finally {
             this.lock.unlock();
         }
@@ -303,6 +303,10 @@ public class SerializedGraphBuilder {
             this.allocationSpecI = null;
 
             this.initialStateE = initialState;
+        }
+
+        protected void completeBuild() {
+
         }
 
         public boolean isInternal() {
