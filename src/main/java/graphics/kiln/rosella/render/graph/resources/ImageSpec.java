@@ -63,4 +63,8 @@ public record ImageSpec(ImageFormat format, int width, int height, int depth, in
             extent.depth(1);
         }
     }
+
+    public ImageSubresourceSpec getSubresourceSpec() {
+        return new ImageSubresourceSpec(format.supportedAspectMask, mipLevels, arrayLayers);
+    }
 }
