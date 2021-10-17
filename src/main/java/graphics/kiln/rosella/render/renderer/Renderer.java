@@ -203,14 +203,6 @@ public class Renderer {
     }
 
     public void freeSwapChain() {
-        for (RawShaderProgram shader : common.shaderManager.getCachedShaders().keySet()) {
-            if (shader.getDescriptorPool() != VK_NULL_HANDLE) {
-                // TODO: make descriptor pool a class
-                vkDestroyDescriptorPool(rosella.common.device.getRawDevice(), shader.getDescriptorPool(), null);
-                shader.setDescriptorPool(VK_NULL_HANDLE);
-            }
-        }
-
         for (FrameBufferObject fbo : common.fboManager.fbos) {
             fbo.clearCommandBuffers(rosella.common.device, commandPool);
         }

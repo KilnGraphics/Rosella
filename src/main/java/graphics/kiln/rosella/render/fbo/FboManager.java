@@ -31,6 +31,16 @@ public class FboManager {
         for (FrameBufferObject fbo : fbos) {
             fbo.free(common);
         }
+
+        // Since we've just freed all of these, they can't be used for anything else so keeping them
+        // around is just trouble waiting to happen (notably, calling free twice would result in
+        // double-freeing all the FBOs).
+        // Note that clearing mainFbo does mean that it's legal to call setMainFbo again - while this
+        // is ultimately required to re-create the swapchain if the window is resized, it does mean
+        // no-one else should references to the main FBO.
+        fbos.clear();
+        mainFbo = null;
+        activeFbo = null;
     }
 
     public void recreateSwapchainImageViews(Swapchain swapchain, VkCommon common) {
